@@ -120,10 +120,13 @@ int main(int argc,char *argv[]){
       if( exists_test(infile.str()) ){
 
       chain->AddFile(infile.str().c_str());
-      //cout << "adding " << infile.str() << " to list...                           " << "\r" <<  flush; //have to use carriage return for flush
+      cout << "adding " << infile.str() << " to list...                           " << endl; //have to use carriage return for flush
 
       }
-      else{break;}
+      else{
+	//cout << "Couldn't find file " << infile.str() << "                        " << endl; 
+	break;
+      }
     } 
 
   }
@@ -260,8 +263,9 @@ int main(int argc,char *argv[]){
     //ddaschannel *curChannel = pChannels[0]; //only useful if we're DDAS built events
     
     ddaschannel *curChannel = pDDASEvent->GetData()[0]; //only looking at first event in whole DDASEvent, presumably there is only one per size because Andy "unbuilt" it
-
-    int curChanNo = GetGlobalChannelNum(curChannel,2);
+    int trigChan =0; //channel for PIN1 at front of stack
+    int curChanNo = -1;
+    curChanNo = GetGlobalChannelNum(curChannel,2);
     unsigned int curEnergy = curChannel->GetEnergy();
     double  curTime       = curChannel->GetCoarseTime();
     double  curCFDTime    = curChannel->GetTime();
@@ -270,11 +274,20 @@ int main(int argc,char *argv[]){
     int nCh = 0;
 
 
+
     /*****************************************
    
     EVENT BUILDER
 
     ****************************************/
+
+    //only want to create events where PIN1 is the trigger
+    if(!curChanNo==trigChan){ 
+      lastEntry = iEntry + 1;
+      continue;
+    }
+
+
     double coinWindow     =  5000;//2000;        // Time (ns)
     double promptWindow   =  2000;
     double coinGammaWindow=  1000;        // Time (ns)
@@ -288,14 +301,14 @@ int main(int argc,char *argv[]){
 
     int fImplantEFMaxStrip = -1;
     int fImplantEBMaxStrip = -1;
-    int fImplantEFMaxERaw  = 0;
-    int fImplantEBMaxERaw  = 0;
+    unsigned int fImplantEFMaxERaw  = 0;
+    unsigned int fImplantEBMaxERaw  = 0;
     double decaytime = 0;
 
     int fDecayEFMaxStrip = -1;
     int fDecayEBMaxStrip = -1;
-    int fDecayEFMaxERaw  = 0;
-    int fDecayEBMaxERaw  = 0;
+    unsigned int fDecayEFMaxERaw  = 0;
+    unsigned int fDecayEBMaxERaw  = 0;
     int fDecayEFMaxTraceAmp = 0;
 
 
@@ -508,44 +521,7 @@ int main(int argc,char *argv[]){
 	serChannel = pDDASEvent->GetData()[0];
 	int serChanNo   = GetGlobalChannelNum(serChannel,2);
 
-	if(serChanNo == 1){
-	  // We found PIN1-PIN2 in coincidence.
-	  nCh++;
-	}
-	else if(serChanNo == 2){
-	  // We found PIN1-RF TAC in coincidence.
-	  nCh++;
-	}
-	else if(serChanNo == 3){
-	  // We found PIN2-RF TAC in coincidence.
-	  nCh++;
-	}
-	else if(serChanNo == 4){
-	  // We found PIN1-XFP TAC in coincidence.
-	  nCh++;
-	}
-	else if(serChanNo == 5){
-	  // We found PIN2-XFP TAC in coincidence.
-	  curTOF = serChannel->GetEnergy();
-	  nCh++;
-	}
-	else if(serChanNo == 6){
-	  // We found XFP in coincidence.
-	  nCh++;
-	}
-	else if(serChanNo == 15){
-	  // We found scintillator in coincidence.
-	  nCh++;
-	}
-	else if(serChanNo >= 32 && serChanNo <= 47){
-	  // SSSD
-	  nCh++;
-	}
-	else if(serChanNo >= 48 && serChanNo <= 63){
-	  // SSSD low gain
-	  nCh++;
-	}
-	else if(serChanNo >= 64 && serChanNo <= 103){
+	if(serChanNo >= 64 && serChanNo <= 103){
 	  // DSSD Fronts high gain
 	  if(serChannel->GetEnergy()>fDecayEFMaxERaw) {
 	    fDecayEFMaxERaw = serChannel->GetEnergy();
@@ -553,30 +529,19 @@ int main(int argc,char *argv[]){
 	    fDecayEFMaxStrip = serChanNo = 64;
 	    //double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
 	    //nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
-	  nCh++;
-	  decaytime = (double)serChannel->GetCoarseTime();
-	}
-	else if(serChanNo >= 104 && serChanNo <= 143){
-	  // DSSD Fronts low gain
 	  }
 	  nCh++;
-	  //nChEFLow++;
+	  decaytime = (double)serChannel->GetCoarseTime();
 	}
 	else if(serChanNo >= 144 && serChanNo <= 183){
 	  // DSSD Backs high gain
 	  if(serChannel->GetEnergy()>fDecayEBMaxERaw) {
 	    fDecayEBMaxERaw = serChannel->GetEnergy();
-	    fDecayEBMaxStrip = serChanNo-64;
-	    fDecayEBMaxERaw = serChannel->GetEnergy();
+	    fDecayEBMaxStrip = serChanNo-144;
 	    //        fImplantEBMaxStrip = serChanNo-184;
 	    //fImplantEBMaxStrip = serChanNo-184;
-	  nCh++;
-	}
-	else if(serChanNo >= 184 && serChanNo <= 223){
-	  // DSSD Backs low gain
 	  }
 	  nCh++;
-	  //nChEBLow++;
 	}
 	else{
 	  // Found something else . . .
@@ -588,7 +553,7 @@ int main(int argc,char *argv[]){
 
       } //end of loop over correlations
 
-
+      channelsCorr.clear();
 
       if(fImplantEFMaxStrip > -1 && fImplantEBMaxStrip >-1 &&
 	 fDecayEFMaxStrip   > -1 && fDecayEBMaxStrip   >-1 &&
