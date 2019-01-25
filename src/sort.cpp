@@ -463,9 +463,6 @@ int main(int argc,char *argv[]){
 	  //cerr << "ERROR: Unaccounted channel " << serChanNo << endl;
 	}
 
-	if( abs(fImplantEBMaxERaw - fImplantEFMaxERaw) > 100 ){
-	  cout << "May be issue with assigning implantation events" << endl;
-	}
 
 	//really need to check that front-back are reporting similar energy to associate the right event
 
@@ -509,6 +506,11 @@ int main(int argc,char *argv[]){
 
 	
       } //end of loop over coincidences
+
+	if( abs(fImplantEBMaxERaw - fImplantEFMaxERaw) > 1000 && fImplantEBMaxERaw > 0 && fImplantEFMaxERaw > 0){
+	  cout << "May be issue with assigning implantation events" << endl;
+	}
+
 
       
       Histo->h_mult->Fill(nCh);
