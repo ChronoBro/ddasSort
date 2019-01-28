@@ -13,6 +13,23 @@
 
 using namespace std;
 
+
+struct DSSDevent
+{
+  //can make this more complicated later, keeping things simple for now
+
+  float energy;  //high gain MeV
+  //float energyR;  // high gain channels
+  //float energyRlow;  //low gain channels
+  //float energylow; //low gain MeV
+  //float energyMax;
+  int strip;
+  //int overflow;
+  //int neighbours;
+  float time;
+};
+
+
 //shoutout to PherricOxide on StackOverflow for a quick test if a file exists
 inline bool exists_test (const std::string& name) {
   struct stat buffer;   
@@ -300,6 +317,10 @@ int main(int argc,char *argv[]){
     vector<int> channelsCorr;
     channelsCoin.push_back(iEntry); //a channel is alwasy in coincidence with itself
 
+    vector<DSSDevent> backEvents;
+    vector<DSSDevent> frontEvents;
+
+
     int fImplantEFMaxStrip = -1;
     int fImplantEBMaxStrip = -1;
     unsigned int fImplantEFMaxERaw  = 0;
@@ -376,8 +397,10 @@ int main(int argc,char *argv[]){
       //It appears that some events are being built where PIN1 is triggered, falls into the PID GATE, but no information from DSSDs are found. I find this to be highly unlikely so there must be some issue with the event builder
       //Once I started looking for events BEFORE the trigger then this problem seems to have gone away
 
-    //loop over events found in Coincidence
-    //for (std::vector<int>::iterator it = channelsCoin.begin() ; it != channelsCoin.end(); ++it){
+      //loop over events found in Coincidence
+      //For DSSD silicon detectors, need to check that front-back energy fired is consistent, are there calibrations for low-gain data?
+
+      //for (std::vector<int>::iterator it = channelsCoin.begin() ; it != channelsCoin.end(); ++it){ //in this loop iterator is pointer
       for(auto &it : channelsCoin){
 	chain->GetEntry(it);
 	//ddaschannel * serChannel = new ddaschannel;
@@ -432,8 +455,16 @@ int main(int argc,char *argv[]){
 	  nCh++;
 	}
 	else if(serChanNo >= 104 && serChanNo <= 143){
+	  //need to create list of events, with channel fired and energy
+	  DSSDevent frontFired;
+	  frontFired.energy = serChannel->GetEnergy();
+	  frontFired.strip = 40 - (serChanNo-104); //should look into this mapping at some point
+	  frontFired.time = serChannel->GetCoarseTime();
+
+	  frontEvents.push_back(frontFired);
+
 	  // DSSD Fronts low gain
-	  fImplantEFMaxStrip = 40 - (serChanNo-104); //it appears that sometimes PIN1 fires but there are no DSSD events... seems very odd
+	  //fImplantEFMaxStrip = 40 - (serChanNo-104); //it appears that sometimes PIN1 fires but there are no DSSD events... seems very odd
 	  if(serChannel->GetEnergy()>fImplantEFMaxERaw) { //do we always want the max strip? 
 	    fImplantEFMaxERaw = serChannel->GetEnergy();
 	    // //        fImplantEFMaxStrip = serChanNo-104;
@@ -449,7 +480,16 @@ int main(int argc,char *argv[]){
 	}
 	else if(serChanNo >= 184 && serChanNo <= 223){
 	  // DSSD Backs low gain
-	  fImplantEBMaxStrip = 40 - (serChanNo-184);
+	  //fImplantEBMaxStrip = 40 - (serChanNo-184);
+	  DSSDevent backFired;
+	  backFired.energy = serChannel->GetEnergy();
+	  backFired.strip = 40 - (serChanNo-184); //should look into this mapping at some point
+	  backFired.time = serChannel->GetCoarseTime();
+
+	  backEvents.push_back(backFired);
+	  
+
+
 	  if(serChannel->GetEnergy()>fImplantEBMaxERaw) {
 	    fImplantEBMaxERaw = serChannel->GetEnergy();
 	    //        fImplantEBMaxStrip = serChanNo-184;
@@ -507,9 +547,6 @@ int main(int argc,char *argv[]){
 	
       } //end of loop over coincidences
 
-	if( abs(fImplantEBMaxERaw - fImplantEFMaxERaw) > 1000 && fImplantEBMaxERaw > 0 && fImplantEFMaxERaw > 0){
-	  cout << "May be issue with assigning implantation events" << endl;
-	}
 
 
       
@@ -519,6 +556,7 @@ int main(int argc,char *argv[]){
       if( fGate->IsInside(curTOF,PIN1energy) ){
 	  foundIonOfInterest = true;
 	}
+
 
       // if( fGate->IsInside(curTOF,PIN1energy) && fImplantEFMaxStrip > -1 && fImplantEBMaxStrip > -1){  //want to make sure that DSSD fired...
       // 	foundIonOfInterest = true;	
@@ -530,36 +568,78 @@ int main(int argc,char *argv[]){
       if(!foundIonOfInterest){ 	//only look at events that are inside gate
 	continue;
       }
+
+      //loop through DSSD events to see if there are any matching events
+      //should implement this above primarily, 
+      
+      cout << endl << "Found " << frontEvents.size() << " coincident front DSSD events" << endl;
+      cout << "Found " << backEvents.size() << " coincident back DSSD events" << endl;
+      for(auto &front : frontEvents){
+
+	double Tdiff = coinWindow; //maximum value, so long as coincidence events are the only ones passed into DSSDevent vectors
+
+	for(auto &back : backEvents){
+	  double Ediff = abs(front.energy - back.energy);
+	  Tdiff = abs(front.time - back.time);
+	  if(Ediff < 1000){
+	    cout << endl;
+	    cout << "Found energy match event" << endl;
+	    cout << "Tdiff = " << Tdiff << endl;
+	    cout << "Ediff = " << Ediff << endl;
+	    cout << "Front strip = " << front.strip << endl;
+	    cout << "Back strip = " << back.strip << endl;
+	  }
+
+
+	}
+
+      }
+      
+
+      backEvents.clear();
+      frontEvents.clear();
+
+      cout << endl;
+      cout << "fImplantEBMaxERaw = " << fImplantEBMaxERaw << endl;
+      cout << "fImplantEFMaxERaw = " << fImplantEFMaxERaw << endl;
+
+
+      if( abs(fImplantEBMaxERaw - fImplantEFMaxERaw) > 1000 && fImplantEBMaxERaw > 0 && fImplantEFMaxERaw > 0){
+	cout << endl << "May be issue with assigning implantation events" << endl; //this seems to appear frequently... 
+      }
+
       
       cout << endl << "Found Ion!" << endl;
 
       //now look for decay correlations
-      for(int iSearch = iEntry-1;iSearch < fNEntries;iSearch--){
-	if(iEntry ==0 || iSearch < 0 || iSearch == iEntry){
-	  break; //don't want iSearch to go below zero
-	}
-	chain->GetEntry(iSearch);
-	//ddaschannel * serChannel = new ddaschannel;
-	serChannel = pDDASEvent->GetData()[0];
-	int serChanNo   = GetGlobalChannelNum(serChannel,2);
-	double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-	nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
+
+      //no need to look at past events for correlations
+      // for(int iSearch = iEntry-1;iSearch < fNEntries;iSearch--){
+      // 	if(iEntry ==0 || iSearch < 0 || iSearch == iEntry){
+      // 	  break; //don't want iSearch to go below zero
+      // 	}
+      // 	chain->GetEntry(iSearch);
+      // 	//ddaschannel * serChannel = new ddaschannel;
+      // 	serChannel = pDDASEvent->GetData()[0];
+      // 	int serChanNo   = GetGlobalChannelNum(serChannel,2);
+      // 	double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
+      // 	nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
 
       
   
-	//cout << nextTDiff << endl;
-	//lastEntry = iSearch;
+      // 	//cout << nextTDiff << endl;
+      // 	//lastEntry = iSearch;
 
-	if(abs(nextTDiff) < corrWindow/2){
-	  channelsCorr.push_back(iSearch);
-	}
-	else{
-	  break; //as long as events are time ordered this shouldn't be a problem
-	}
+      // 	if(abs(nextTDiff) < corrWindow/2){
+      // 	  channelsCorr.push_back(iSearch);
+      // 	}
+      // 	else{
+      // 	  break; //as long as events are time ordered this shouldn't be a problem
+      // 	}
 
-      }    
+      // }    
 
-      //now look for coincidence in entries after trigger
+      //now look for correlations in entries after trigger
       for(int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
 	chain->GetEntry(iSearch);
 	//ddaschannel * serChannel = new ddaschannel;
@@ -619,6 +699,15 @@ int main(int argc,char *argv[]){
 	if(serChanNo >= 64 && serChanNo <= 103){
 	  // DSSD Fronts high gain
 
+	  DSSDevent frontFired;
+	  frontFired.energy = serChannel->GetEnergy();
+	  frontFired.strip = serChanNo-64;
+	  frontFired.time = serChannel->GetCoarseTime();
+
+	  frontEvents.push_back(frontFired);
+
+	  
+
 	  stripCheckFront = serChanNo-64;
 	  if(abs(fImplantEFMaxStrip-stripCheckFront)<2 ){
 	      energyCheckFront = serChannel->GetEnergy();
@@ -636,6 +725,15 @@ int main(int argc,char *argv[]){
 	}
 	else if(serChanNo >= 144 && serChanNo <= 183){
 	  // DSSD Backs high gain
+	  DSSDevent backFired;
+	  backFired.energy = serChannel->GetEnergy();
+	  backFired.strip = serChanNo-144;
+	  backFired.time = serChannel->GetCoarseTime();
+
+	  backEvents.push_back(backFired);
+	  
+
+
 	  
 	  stripCheckBack = serChanNo-144;
 	  if(abs(fImplantEBMaxStrip-stripCheckBack)<2 ){
@@ -655,7 +753,7 @@ int main(int argc,char *argv[]){
 	  nCh++;
 	}
 	else if(energyCheckBack > 0 && energyCheckFront > 0 && abs(energyCheckBack - energyCheckFront) < 1000 && abs(timeCheckFront -timeCheckBack) < coinWindow){
-	    cout << "Found potential decay event!" << endl;
+	  //cout << "Found potential decay event!" << endl;
 	}
 	else{
 	  // Found something else . . .
@@ -666,11 +764,45 @@ int main(int argc,char *argv[]){
 
       } //end of loop over correlations
 
+
+      //loop over DSSD events found in correlations
+      cout << endl << "Found " << frontEvents.size() << " correlated front DSSD events" << endl;
+      cout << "Found " << backEvents.size() << " correlated back DSSD events" << endl;
+      for(auto &front : frontEvents){
+
+	double Tdiff = coinWindow; //maximum value, so long as coincidence events are the only ones passed into DSSDevent vectors
+
+	for(auto &back : backEvents){
+	  double Ediff = abs(front.energy - back.energy);
+	  Tdiff = abs(front.time - back.time);
+	  if(Ediff < 100 && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < 2 && abs(fImplantEBMaxStrip - back.strip) < 2){
+	    cout << endl;
+	    cout << "Found energy match event" << endl;
+	    cout << "Tdiff = " << Tdiff << endl;
+	    cout << "Ediff = " << Ediff << endl;
+	    cout << "Front strip = " << front.strip << endl;
+	    cout << "Back strip = " << back.strip << endl;
+	  }
+
+
+	}
+
+      }
+      
+
+
+
+
+
       cout << "Found " <<  channelsCorr.size() << " correlations with Ion implantation event" << endl;
       cout << "fImplantEFMaxStrip = " << fImplantEFMaxStrip << endl;
       cout << "fDecayEFMaxStrip = " << fDecayEFMaxStrip << endl;
       cout << "fImplantEBMaxStrip = " << fImplantEBMaxStrip << endl;
       cout << "fDecayEBMaxStrip = " << fDecayEBMaxStrip << endl;
+
+      cout << "fDecayEBMaxERaw = " << fDecayEBMaxERaw << endl;
+      cout << "fDecayEFMaxERaw = " << fDecayEFMaxERaw << endl;
+
       channelsCorr.clear();
 
       if(fImplantEFMaxStrip > -1 && fImplantEBMaxStrip >-1 &&
@@ -694,6 +826,10 @@ int main(int argc,char *argv[]){
 	//delete fRand;
 	//delete fDSSDHighCal;
       }
+
+
+      backEvents.clear();
+      frontEvents.clear();
 
 
       //could fill a tree with only DDASEvents that comprise of specific isotope
