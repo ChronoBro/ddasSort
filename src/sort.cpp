@@ -18,15 +18,15 @@ struct DSSDevent
 {
   //can make this more complicated later, keeping things simple for now
 
-  float energy;  //high gain MeV
+  unsigned int energy = -1;  //high gain MeV
   //float energyR;  // high gain channels
   //float energyRlow;  //low gain channels
   //float energylow; //low gain MeV
   //float energyMax;
-  int strip;
+  int strip = 0;
   //int overflow;
   //int neighbours;
-  float time;
+  double time = 0;
 };
 
 
@@ -183,7 +183,7 @@ int main(int argc,char *argv[]){
   fSeGACalibFunc = new TList();
 
 
-  ifstream alphaCalib("alphaCalib.dat");
+  ifstream alphaCalib("Calibrations/alphaCalib.dat");
 
   for(Int_t i=0; i<80; i++){
     sprintf(name,"f_cal_%02i_sp",i);
@@ -300,7 +300,7 @@ int main(int argc,char *argv[]){
 
     //only want to create events where PIN1 is the trigger
     //may need to look into this and see if this is working properly
-    if(!curChanNo==trigChan){ 
+    if(curChanNo!=trigChan){ 
       lastEntry = iEntry + 1;
       continue;
     }
@@ -569,9 +569,13 @@ int main(int argc,char *argv[]){
 	continue;
       }
 
+      cout << endl << "Found Ion!" << endl;
+
       //loop through DSSD events to see if there are any matching events
-      //should implement this above primarily, 
-      
+      //should implement this above
+
+
+      //need to vet this method a little more, it seems that the back likes to fire a bunch of times when there is an implantation event, its not clear to me how to assign the events in that case... maybe it's better to just throw those events out. 
       cout << endl << "Found " << frontEvents.size() << " coincident front DSSD events" << endl;
       cout << "Found " << backEvents.size() << " coincident back DSSD events" << endl;
       for(auto &front : frontEvents){
@@ -579,16 +583,22 @@ int main(int argc,char *argv[]){
 	double Tdiff = coinWindow; //maximum value, so long as coincidence events are the only ones passed into DSSDevent vectors
 
 	for(auto &back : backEvents){
-	  double Ediff = abs(front.energy - back.energy);
+	  unsigned int Ediff = abs(front.energy - back.energy); //when dealing with unsigned ints, negative numbers get wrapped around to largest numbers
+	                                                        //This was causing problems when trying to determine Ediff for decay events
+	  if(front.energy > back.energy) {Ediff = front.energy - back.energy;}
+	  else {Ediff = back.energy - front.energy;}
+
 	  Tdiff = abs(front.time - back.time);
-	  if(Ediff < 1000){
+	  //if(Ediff < 1000){
 	    cout << endl;
-	    cout << "Found energy match event" << endl;
+	    cout << "Found coincident DSSDevent" << endl;
 	    cout << "Tdiff = " << Tdiff << endl;
 	    cout << "Ediff = " << Ediff << endl;
+	    cout << "FrontE = " << front.energy << endl;
+	    cout << "BackE = " << back.energy << endl;
 	    cout << "Front strip = " << front.strip << endl;
 	    cout << "Back strip = " << back.strip << endl;
-	  }
+	    //}
 
 
 	}
@@ -609,7 +619,7 @@ int main(int argc,char *argv[]){
       }
 
       
-      cout << endl << "Found Ion!" << endl;
+
 
       //now look for decay correlations
 
@@ -706,7 +716,8 @@ int main(int argc,char *argv[]){
 
 	  frontEvents.push_back(frontFired);
 
-	  
+
+	  //cout << frontFired.energy << endl;
 
 	  stripCheckFront = serChanNo-64;
 	  if(abs(fImplantEFMaxStrip-stripCheckFront)<2 ){
@@ -768,20 +779,46 @@ int main(int argc,char *argv[]){
       //loop over DSSD events found in correlations
       cout << endl << "Found " << frontEvents.size() << " correlated front DSSD events" << endl;
       cout << "Found " << backEvents.size() << " correlated back DSSD events" << endl;
+
+      DSSDevent decayEventFront;
+      DSSDevent decayEventBack;
+      double EdiffMin = 1000;
+      double TdiffMin = coinWindow;
+      bool foundPotDecay = false;
       for(auto &front : frontEvents){
 
 	double Tdiff = coinWindow; //maximum value, so long as coincidence events are the only ones passed into DSSDevent vectors
 
 	for(auto &back : backEvents){
-	  double Ediff = abs(front.energy - back.energy);
+	  unsigned int Ediff = abs(front.energy - back.energy);
+
+	  if(front.energy > back.energy) {Ediff = front.energy - back.energy;}
+	  else {Ediff = back.energy - front.energy;}
+
 	  Tdiff = abs(front.time - back.time);
-	  if(Ediff < 100 && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < 2 && abs(fImplantEBMaxStrip - back.strip) < 2){
+	  if(Ediff < 1000 && back.energy > 0 && front.energy > 0 && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < 2 && abs(fImplantEBMaxStrip - back.strip) < 2){
 	    cout << endl;
-	    cout << "Found energy match event" << endl;
+	    cout << "Found potential decay event" << endl;
 	    cout << "Tdiff = " << Tdiff << endl;
 	    cout << "Ediff = " << Ediff << endl;
+	    cout << "FrontE = " << front.energy << endl;
+	    cout << "BackE = " << back.energy << endl;
 	    cout << "Front strip = " << front.strip << endl;
 	    cout << "Back strip = " << back.strip << endl;
+
+	    if(Ediff < EdiffMin){ // will eventually need a better criterion, as there may be multiple "correlated" events that match above condition
+	      decayEventFront.energy = front.energy;
+	      decayEventFront.strip = front.strip;
+	      decayEventFront.time = front.time;
+
+	      decayEventBack.energy = back.energy;
+	      decayEventBack.strip = back.strip;
+	      decayEventBack.time = back.time;
+
+	      EdiffMin = Ediff;
+	      foundPotDecay = true;
+	    }
+
 	  }
 
 
@@ -790,42 +827,51 @@ int main(int argc,char *argv[]){
       }
       
 
+      if(foundPotDecay){
+	Histo->hDecayXY->Fill(fImplantEBMaxStrip-20,(-1*(decayEventFront.strip-39))-20);
+	
+	TF1 *fDSSDHighCal = (TF1*)fDSSDCalibFunc->At(fDecayEBMaxStrip);
+	TRandom  * fRand          = new TRandom();
+	
+	double DSSDEvalue = fDSSDHighCal->Eval(decayEventBack.energy+fRand->Uniform());
+	cout << "DSSDEvalue = " << DSSDEvalue << endl;
+	Histo->hDecayEnergy->Fill(DSSDEvalue);
+	Histo->hDecayTime->Fill(decayEventBack.time - curTime);
+      }
 
 
+      // cout << "Found " <<  channelsCorr.size() << " correlations with Ion implantation event" << endl;
+      // cout << "fImplantEFMaxStrip = " << fImplantEFMaxStrip << endl;
+      // cout << "fDecayEFMaxStrip = " << fDecayEFMaxStrip << endl;
+      // cout << "fImplantEBMaxStrip = " << fImplantEBMaxStrip << endl;
+      // cout << "fDecayEBMaxStrip = " << fDecayEBMaxStrip << endl;
 
-
-      cout << "Found " <<  channelsCorr.size() << " correlations with Ion implantation event" << endl;
-      cout << "fImplantEFMaxStrip = " << fImplantEFMaxStrip << endl;
-      cout << "fDecayEFMaxStrip = " << fDecayEFMaxStrip << endl;
-      cout << "fImplantEBMaxStrip = " << fImplantEBMaxStrip << endl;
-      cout << "fDecayEBMaxStrip = " << fDecayEBMaxStrip << endl;
-
-      cout << "fDecayEBMaxERaw = " << fDecayEBMaxERaw << endl;
-      cout << "fDecayEFMaxERaw = " << fDecayEFMaxERaw << endl;
+      // cout << "fDecayEBMaxERaw = " << fDecayEBMaxERaw << endl;
+      // cout << "fDecayEFMaxERaw = " << fDecayEFMaxERaw << endl;
 
       channelsCorr.clear();
 
-      if(fImplantEFMaxStrip > -1 && fImplantEBMaxStrip >-1 &&
-	 fDecayEFMaxStrip   > -1 && fDecayEBMaxStrip   >-1 &&
-	 (abs(fImplantEFMaxStrip-fDecayEFMaxStrip)<2) &&
-	 (abs(fImplantEBMaxStrip-fDecayEBMaxStrip)<2) &&
-	 nextTDiff>=000) {
+      // if(fImplantEFMaxStrip > -1 && fImplantEBMaxStrip >-1 &&
+      // 	 fDecayEFMaxStrip   > -1 && fDecayEBMaxStrip   >-1 &&
+      // 	 (abs(fImplantEFMaxStrip-fDecayEFMaxStrip)<2) &&
+      // 	 (abs(fImplantEBMaxStrip-fDecayEBMaxStrip)<2) &&
+      // 	 nextTDiff>=000) {
 
-	cout << "Found decay!" << endl;
+      // 	cout << "Found decay!" << endl;
       
-	Histo->hDecayXY->Fill(fImplantEBMaxStrip-20,(-1*(fDecayEFMaxStrip-39))-20);
+      // 	Histo->hDecayXY->Fill(fImplantEBMaxStrip-20,(-1*(fDecayEFMaxStrip-39))-20);
 
-	//Histo->hDecayTime->Fill(nextTDiff);
-	TF1 *fDSSDHighCal = (TF1*)fDSSDCalibFunc->At(fDecayEBMaxStrip);
-	TRandom  * fRand          = new TRandom();
-	Double_t DSSDEvalue = fDSSDHighCal->Eval(fDecayEBMaxERaw+fRand->Uniform());
-	//Double_t DSSDEvalueAmp = fDSSDHighCal->Eval(fDecayEFMaxTraceAmp+fRand->Uniform());
-	Histo->hDecayEnergy->Fill(DSSDEvalue);
-	Histo->hDecayTime->Fill(decaytime);
-	//Histo->hDecayEnergyAmp->Fill(DSSDEvalueAmp);
-	//delete fRand;
-	//delete fDSSDHighCal;
-      }
+      // 	//Histo->hDecayTime->Fill(nextTDiff);
+      // 	TF1 *fDSSDHighCal = (TF1*)fDSSDCalibFunc->At(fDecayEBMaxStrip);
+      // 	TRandom  * fRand          = new TRandom();
+      // 	Double_t DSSDEvalue = fDSSDHighCal->Eval(fDecayEBMaxERaw+fRand->Uniform());
+      // 	//Double_t DSSDEvalueAmp = fDSSDHighCal->Eval(fDecayEFMaxTraceAmp+fRand->Uniform());
+      // 	Histo->hDecayEnergy->Fill(DSSDEvalue);
+      // 	Histo->hDecayTime->Fill(decaytime);
+      // 	//Histo->hDecayEnergyAmp->Fill(DSSDEvalueAmp);
+      // 	//delete fRand;
+      // 	//delete fDSSDHighCal;
+      // }
 
 
       backEvents.clear();
