@@ -68,7 +68,7 @@ histo::histo(std::string name0)
   h_raw_DSSD_hitsXY->GetYaxis()->SetTitle("y (mm)");
   
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
-  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",1000,0,20000); // ms
+  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",1000,0,1E9); // ms
   hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",2500,0,15000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
