@@ -1,0 +1,30 @@
+//not sure this will be useful unless I can abstract to use for other cases...
+
+#include <vector>
+#include <iostream>
+
+
+struct siEvent{
+  double energy = 0;  //high gain MeV
+  unsigned int energyR = -1; //Raw signal
+  int strip = 0;
+  double time = 0;
+};
+
+class DSSD{
+ public:
+  DSSD();
+  DSSD(int nStripsFront0, int nStripsBack0);
+  ~DSSD();
+  bool calibrate(); //will return true if successful, false if not
+  bool match(vector<siEvent> backEvents, vector<siEvent> frontEvents); //match front and back events with each other, false if no matches, true if found at least one match
+  bool setGeometry(); //will read in map of x-y strip to a point in the lab frame, true if successful, false if not
+
+
+  vector<siEvent> matchedEvents;
+
+ private:
+  int nStripsX;
+  int nStripsY;
+
+};

@@ -10,19 +10,22 @@
 #include "TCutG.h"
 #include "TRandom.h"
 #include <vector>
+#include "ddasDet.h"
 
 using namespace std;
 
 
-struct DSSDevent
-{
+struct DSSDevent{
   //can make this more complicated later, keeping things simple for now
 
   double energy = 0;  //high gain MeV
   unsigned int energyR = -1; //Raw signal
-  int strip = 0;
+  int channel = -1;
+  int strip = -1;
   double time = 0;
+  
 };
+
 
 
 //shoutout to PherricOxide on StackOverflow for a quick test if a file exists
@@ -132,7 +135,7 @@ int main(int argc,char *argv[]){
       if( exists_test(infile.str()) ){
 
       chain->AddFile(infile.str().c_str());
-      cout << "adding " << infile.str() << " to list...                           " << endl; //have to use carriage return for flush
+      cout << "adding " << infile.str() << " to TChain...                           " << endl; //have to use carriage return for flush
 
       }
       else{
@@ -147,7 +150,7 @@ int main(int argc,char *argv[]){
   
   cout << endl;
 
-  int fNEntries = chain->GetEntries();
+  long long int fNEntries = chain->GetEntries(); //64bit int, because I was using int for the entries I wasn't able to access long lists, hence sort failing for a long list of data files
 
   cout << "Number of entries in TChain = " << chain->GetEntries() << endl;
   cout << endl;
@@ -178,6 +181,7 @@ int main(int argc,char *argv[]){
   fSeGACalibFunc = new TList();
 
 
+
   ifstream alphaCalib("Calibrations/alphaCalib.dat");
 
   for(Int_t i=0; i<80; i++){
@@ -186,6 +190,7 @@ int main(int argc,char *argv[]){
     double slope;
     double offset;
     alphaCalib >> chan >> offset >> slope; 
+    
     TF1 *fCal = new TF1(name,"pol1",0,35000);
     fCal->SetParameter(0, offset);
     fCal->SetParameter(1, slope);
@@ -242,12 +247,12 @@ int main(int argc,char *argv[]){
   ddaschannel * curChannel = new ddaschannel;
   ddaschannel * serChannel =new ddaschannel; //If you call new ddaschannels in a loop it will cause a memory leak. 
 
-  
+
   
   chain->SetBranchAddress("ddasevent", &pDDASEvent); //this setups pointer to address of events in tree dchan, with the structure of a ddasevent
   
   //int lastEntry=chain->GetEntries()-1; //set default to be end of loop so it stops. Need to update entry in list so that events don't get double counted if they get grouped into an event
-  int lastEntry = 0;
+  long long int lastEntry = 0; 
 
   //below would be used for filling a tree with only events involving ION of interest
   //Would also need to include "correlated" events as well
@@ -260,12 +265,13 @@ int main(int argc,char *argv[]){
   // oTree->Branch("ddasEvent",&ionEvent);
 
 
-  for(int iEntry=0;iEntry<chain->GetEntries();iEntry=lastEntry){
-  
+  for(long long int iEntry=0;iEntry<chain->GetEntries();iEntry=lastEntry){
+
+   
     double progress0 =  (double)iEntry/(double)chain->GetEntries();
-    loadBar(progress0);
-    
-    cout << iEntry;
+    if(iEntry % 10000 == 0){   
+      loadBar(progress0);    
+    }   
 
     chain->GetEntry(iEntry);  
     if(pDDASEvent->GetNEvents()>1) {cerr << "-->ERROR: Must be run on non-built event data." << endl; exit(0);} //case and point from below comment
@@ -275,6 +281,9 @@ int main(int argc,char *argv[]){
     //ddaschannel *curChannel = pChannels[0]; //only useful if we're DDAS built events
     
     ddaschannel *curChannel = pDDASEvent->GetData()[0]; //only looking at first event in whole DDASEvent, presumably there is only one per size because Andy "unbuilt" it
+    //I'd ultimately like to be able to work on built and "unbuilt" data in the same way
+
+
     int trigChan =0; //channel for PIN1 at front of stack
     int curChanNo = -1;
     curChanNo = GetGlobalChannelNum(curChannel,2);
@@ -285,6 +294,10 @@ int main(int argc,char *argv[]){
     double PIN1energy = 0;
     int nCh = 0;
 
+    ddasDet test(0); //call this in scope that you want so that .clear() (in destructor) is called when it goes out of scope, otherwise seems to work
+    test.fillEvent(curChannel, pDDASEvent);
+    vector<Event> testEvent = test.getEvents();
+    //cout << endl << "number of events filled in test = " << testEvent.size() << endl;
 
 
     /*****************************************
@@ -301,36 +314,38 @@ int main(int argc,char *argv[]){
     }
 
 
-    double coinWindow     =  2000;//5000;//2000;        // Time (ns)
+    double coinWindow     =  5000;//5000;//2000;        // Time (ns) //now that coincidence window seems to be working it would be nice to open up window and see
+                                                                     //what happens
     double promptWindow   =  2000;
     double coinGammaWindow=  1000;        // Time (ns)
     double corrWindow     =  1E9;        // Time (ns)  now 1000ms (1s)
     double nextTDiff = 1E9;
     bool foundCoin = false;
     bool foundIonOfInterest = false;
-    vector<int> channelsCoin; //create a list of entries that are in Coin with beginning of window
-    vector<int> channelsCorr;
+    vector<int> channelsCoin; //create a list of entries (channels fired) that are in Coin with trigger
+    vector<int> channelsCorr; //create a list of entries (channels fired) that are correlated with trigger
+
     channelsCoin.push_back(iEntry); //a channel is alwasy in coincidence with itself
 
     vector<DSSDevent> backEvents;
-    vector<DSSDevent> frontEvents;
+    vector<DSSDevent> frontEvents; 
 
 
-    int fImplantEFMaxStrip = -1;
-    int fImplantEBMaxStrip = -1;
+    int fImplantEFMaxStrip = -100;
+    int fImplantEBMaxStrip = -100;
     unsigned int fImplantEFMaxERaw  = 0;
     unsigned int fImplantEBMaxERaw  = 0;
     double decaytime = 0;
 
-    int fDecayEFMaxStrip = -1;
-    int fDecayEBMaxStrip = -1;
+    int fDecayEFMaxStrip = -100;
+    int fDecayEBMaxStrip = -100;
     unsigned int fDecayEFMaxERaw  = 0;
     unsigned int fDecayEBMaxERaw  = 0;
     int fDecayEFMaxTraceAmp = 0;
 
 
     //look for coincidences before trigger first
-    for(int iSearch = iEntry-1;iSearch < fNEntries;iSearch--){
+    for(long long int iSearch = iEntry-1;iSearch < fNEntries;iSearch--){
       if(iEntry ==0 || iSearch < 0 || iSearch == iEntry){
 	break; //don't want iSearch to go below zero
       }
@@ -341,6 +356,7 @@ int main(int argc,char *argv[]){
       double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
       nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
 
+      
       
   
       //cout << nextTDiff << endl;
@@ -390,10 +406,10 @@ int main(int argc,char *argv[]){
   
       //Major Issue:
       //It appears that some events are being built where PIN1 is triggered, falls into the PID GATE, but no information from DSSDs are found. I find this to be highly unlikely so there must be some issue with the event builder
-      //Once I started looking for events BEFORE the trigger then this problem seems to have gone away
+      //Once I started looking for events BEFORE the trigger then this problem seems to mostly have gone away
 
       //loop over events found in Coincidence
-      //For DSSD silicon detectors, need to check that front-back energy fired is consistent, are there calibrations for low-gain data?
+      //For DSSD silicon detectors, need to check that front-back energy fired is consistent, are there calibrations for low-gain data?-->I don't believe so
 
       //for (std::vector<int>::iterator it = channelsCoin.begin() ; it != channelsCoin.end(); ++it){ //in this loop iterator is pointer
       for(auto &it : channelsCoin){
@@ -453,13 +469,13 @@ int main(int argc,char *argv[]){
 	  //need to create list of events, with channel fired and energy
 	  DSSDevent frontFired;
 	  frontFired.energyR = serChannel->GetEnergy();
-	  frontFired.strip = 40 - (serChanNo-104); //should look into this mapping at some point
+	  frontFired.strip = 40 - (serChanNo-104); //should look into this mapping at some point 
 	  frontFired.time = serChannel->GetCoarseTime();
-
+	  frontFired.channel = serChanNo;
 	  frontEvents.push_back(frontFired);
 
 	  // DSSD Fronts low gain
-	  //fImplantEFMaxStrip = 40 - (serChanNo-104); //it appears that sometimes PIN1 fires but there are no DSSD events... seems very odd
+	  //fImplantEFMaxStrip = 40 - (serChanNo-104); //it appears that sometimes PIN1 fires but there are no DSSD events... seems odd
 	  if(serChannel->GetEnergy()>fImplantEFMaxERaw) { //do we always want the max strip? 
 	    fImplantEFMaxERaw = serChannel->GetEnergy();
 	    // //        fImplantEFMaxStrip = serChanNo-104;
@@ -480,7 +496,7 @@ int main(int argc,char *argv[]){
 	  backFired.energyR = serChannel->GetEnergy();
 	  backFired.strip = 40 - (serChanNo-184); //should look into this mapping at some point
 	  backFired.time = serChannel->GetCoarseTime();
-
+	  backFired.channel = serChanNo;
 	  backEvents.push_back(backFired);
 	  
 
@@ -548,14 +564,9 @@ int main(int argc,char *argv[]){
       Histo->h_mult->Fill(nCh);
       Histo->h_PID->Fill(curTOF,PIN1energy);
       
-      if( fGate->IsInside(curTOF,PIN1energy) ){
+      if( fGate->IsInside(curTOF,PIN1energy) ){ //once I have routine for checking DSSD events, should require that there are front+back events
 	  foundIonOfInterest = true;
 	}
-
-
-      // if( fGate->IsInside(curTOF,PIN1energy) && fImplantEFMaxStrip > -1 && fImplantEBMaxStrip > -1){  //want to make sure that DSSD fired...
-      // 	foundIonOfInterest = true;	
-      // }
       
 
       channelsCoin.clear();
@@ -571,20 +582,29 @@ int main(int argc,char *argv[]){
 
 
       //need to vet this method a little more, it seems that the back likes to fire a bunch of times when there is an implantation event, its not clear to me how to assign the events in that case... maybe it's better to just throw those events out. 
+      //would be nice to implement an addback method if neighboring channel fires, then perhaps check that E_tot backs = E_tot fronts
       cout << endl << "Found " << frontEvents.size() << " coincident front DSSD events" << endl;
       cout << "Found " << backEvents.size() << " coincident back DSSD events" << endl;
+
+      // unsigned int frontEtot = 0.;
+      // unsigned int backEtot = 0.;
+      //to create an addback routine, should keep one strip fixed (say one front) and add all backs and see if energy matches
+      //then repeat algorithm if they don't match (outside some toleance) and try to reach some convergence
+      //at the very least should assign strip with the largest reported energy, which is already being done for implantation
+
+      //going to take events with the shortest time between them
+      double TdiffMin = coinWindow;  //maximum value, so long as coincidence events are the only ones passed into DSSDevent vectors
       for(auto &front : frontEvents){
-
-	double Tdiff = coinWindow; //maximum value, so long as coincidence events are the only ones passed into DSSDevent vectors
-
+ 
 	for(auto &back : backEvents){
 	  unsigned int Ediff = abs(front.energyR - back.energyR); //when dealing with unsigned ints, negative numbers get wrapped around to largest numbers
 	                                                        //This was causing problems when trying to determine Ediff for decay events
 	  if(front.energyR > back.energyR) {Ediff = front.energyR - back.energyR;}
 	  else {Ediff = back.energyR - front.energyR;}
 
-	  Tdiff = abs(front.time - back.time);
+	  double Tdiff = abs(front.time - back.time);
 	  //if(Ediff < 1000){
+	  //if(Tdiff<TdiffMin){ //I believe should use this determination if for assigning strip, along with maxE
 	    cout << endl;
 	    cout << "Found coincident DSSDevent" << endl;
 	    cout << "Tdiff = " << Tdiff << endl;
@@ -592,7 +612,11 @@ int main(int argc,char *argv[]){
 	    cout << "FrontE = " << front.energyR << endl;
 	    cout << "BackE = " << back.energyR << endl;
 	    cout << "Front strip = " << front.strip << endl;
+	    cout << "Front channel = " << front.channel << endl;
 	    cout << "Back strip = " << back.strip << endl;
+	    cout << "Back channel = " << back.channel << endl;
+	    TdiffMin = Tdiff; //presumably the strips that fire closest in time should be the implantation strips-->or max energy 
+	    //}
 	    //}
 
 
@@ -608,10 +632,12 @@ int main(int argc,char *argv[]){
       cout << "fImplantEBMaxERaw = " << fImplantEBMaxERaw << endl;
       cout << "fImplantEFMaxERaw = " << fImplantEFMaxERaw << endl;
 
+     
+      //same issue with unsigned ints below... UGH!
 
-      if( abs(fImplantEBMaxERaw - fImplantEFMaxERaw) > 1000 && fImplantEBMaxERaw > 0 && fImplantEFMaxERaw > 0){
-	cout << endl << "May be issue with assigning implantation events" << endl; //this seems to appear frequently... 
-      }
+      // if( abs(fImplantEBMaxERaw - fImplantEFMaxERaw) > 1000 && fImplantEBMaxERaw > 0 && fImplantEFMaxERaw > 0){
+      // 	cout << endl << "May be issue with assigning implantation events" << endl; //this seems to appear frequently... 
+      // }
 
       
 
@@ -619,32 +645,10 @@ int main(int argc,char *argv[]){
       //now look for decay correlations
 
       //no need to look at past events for correlations
-      // for(int iSearch = iEntry-1;iSearch < fNEntries;iSearch--){
-      // 	if(iEntry ==0 || iSearch < 0 || iSearch == iEntry){
-      // 	  break; //don't want iSearch to go below zero
-      // 	}
-      // 	chain->GetEntry(iSearch);
-      // 	//ddaschannel * serChannel = new ddaschannel;
-      // 	serChannel = pDDASEvent->GetData()[0];
-      // 	int serChanNo   = GetGlobalChannelNum(serChannel,2);
-      // 	double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-      // 	nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
-
-      
-  
-      // 	//cout << nextTDiff << endl;
-      // 	//lastEntry = iSearch;
-
-      // 	if(abs(nextTDiff) < corrWindow/2){
-      // 	  channelsCorr.push_back(iSearch);
-      // 	}
-      // 	else{
-      // 	  break; //as long as events are time ordered this shouldn't be a problem
-      // 	}
-
-      // }    
 
       //now look for correlations in entries after trigger
+
+      //should include some to make sure that we aren't associating decay events with the wrong trigger
       for(int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
 	chain->GetEntry(iSearch);
 	//ddaschannel * serChannel = new ddaschannel;
@@ -654,40 +658,25 @@ int main(int argc,char *argv[]){
 	nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
 	//lastEntry = iSearch;
 
-	if(nextTDiff < corrWindow){//For some reason adding && nextTDiff > 100 broke this...  //should wait a little bit before actually looking for decays (to let electronics come to steady state)
-	  channelsCorr.push_back(iSearch);             //not sure how long the waiting should actually be, should look at individual traces to determine 
+	if(nextTDiff < corrWindow && nextTDiff > coinWindow/2. && nextTDiff >0){
+	  //For some reason adding && nextTDiff > 100 broke this...  because it was breaking the loop instantly dummy
+	  //should wait a little bit before actually looking for decays (to let electronics come to steady state)
+	  //not sure how long the waiting should actually be, although I think waiting outside the the coincidence window is a good idea
+	  channelsCorr.push_back(iSearch);
 	}
-	else{
-	  break; //as long as events are time ordered this shouldn't be a problem
+	else if(nextTDiff < coinWindow/2.){
+	  continue;
 	}
+	else if(nextTDiff > corrWindow || serChanNo == trigChan){//also want to exclude "correlations" if there is another implantation event
+	                                                         //I wonder if there is a way to untangle ambiguity of two implantation events
 
+	  if(serChanNo == trigChan){lastEntry = iSearch;} //move to the next trigger if found
+	  break; //as long as events are time ordered this shouldn't be a problem, should confirm time-ordered property
+	}
       }
 
       cout << endl << "Found " <<  channelsCorr.size() << " correlations with Ion implantation event" << endl;
 
-      //original event builder method
-      // for(int iSearch = lastEntry+1;iSearch <= fNEntries;iSearch++){
-      // 	chain->GetEntry(iSearch);
-      // 	//ddaschannel * serChannel = new ddaschannel;
-      // 	serChannel = pDDASEvent->GetData()[0];
-      // 	int serChanNo   = GetGlobalChannelNum(serChannel,2);
-      // 	double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-      // 	nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
-  
-      // 	//cout << nextTDiff << endl;
-
-
-      // 	if(nextTDiff < 0){
-      // 	  //skip event
-      // 	}
-      // 	else if(abs(nextTDiff) > corrWindow){
-      // 	  break;
-      // 	}
-      // 	else{
-      // 	  channelsCorr.push_back(iSearch);
-      // 	}
-      // 	//delete[] serChannel;
-      // }    
 
       int stripCheckBack = -3;
       int stripCheckFront = -3;
@@ -709,7 +698,7 @@ int main(int argc,char *argv[]){
 	  frontFired.energyR = serChannel->GetEnergy();
 	  frontFired.strip = serChanNo-64;
 	  frontFired.time = serChannel->GetCoarseTime();
-
+	  frontFired.channel = serChanNo;
 	  frontEvents.push_back(frontFired);
 
 
@@ -736,7 +725,7 @@ int main(int argc,char *argv[]){
 	  backFired.energyR = serChannel->GetEnergy();
 	  backFired.strip = serChanNo-144;
 	  backFired.time = serChannel->GetCoarseTime();
-
+	  backFired.channel = serChanNo;
 	  backEvents.push_back(backFired);
 	  
 
@@ -779,11 +768,16 @@ int main(int argc,char *argv[]){
       DSSDevent decayEventFront;
       DSSDevent decayEventBack;
       double EdiffMin = 1000;
-      double TdiffMin = coinWindow;
+      double EdiffThreshold = 200; //keV
+      int stripTolerance = 2;
+      double Emax = 0;
+      TdiffMin = coinWindow;
       bool foundPotDecay = false;
-      double Tmin = 0;
 
-     	
+      
+      //I could really use a vector of "valid" DSSD events... I guess I should go ahead with abstraction      
+      
+      //for now going to take 'max' energy event in order to filter only proton events
 
       for(auto &front : frontEvents){
 
@@ -791,8 +785,8 @@ int main(int argc,char *argv[]){
 
 	for(auto &back : backEvents){
 
-	  TF1 *fDSSDbackCal = (TF1*)fDSSDCalibFunc->At(front.strip);
-	  TF1 *fDSSDfrontCal = (TF1*)fDSSDCalibFunc->At(back.strip);
+	  TF1 *fDSSDbackCal = (TF1*)fDSSDCalibFunc->At(back.channel-104);
+	  TF1 *fDSSDfrontCal =(TF1*)fDSSDCalibFunc->At(front.channel-64);
 	  
 	  back.energy = fDSSDbackCal->Eval(back.energyR);
 	  front.energy = fDSSDfrontCal->Eval(front.energyR);
@@ -804,7 +798,7 @@ int main(int argc,char *argv[]){
 	  else {Ediff = back.energy - front.energy;}
 
 	  Tdiff = abs(front.time - back.time);
-	  if(Ediff < 100 && back.energy > 0 && front.energy > 0 && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < 2 && abs(fImplantEBMaxStrip - back.strip) < 2){
+	  if(Ediff < EdiffThreshold && back.energy > 0 && front.energy > 0 && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < stripTolerance && abs(fImplantEBMaxStrip - back.strip) < stripTolerance){
 	    cout << endl;
 	    cout << "Found potential decay event" << endl;
 	    cout << "Tdiff = " << Tdiff << endl;
@@ -812,11 +806,20 @@ int main(int argc,char *argv[]){
 	    cout << "FrontE = " << front.energy << endl;
 	    cout << "BackE = " << back.energy << endl;
 	    cout << "Front strip = " << front.strip << endl;
+	    cout << "Front channel = " << front.channel << endl;
 	    cout << "Back strip = " << back.strip << endl;
+	    cout << "Back channel = " << back.channel << endl;
 	    cout << "Recorded decay time = " << time << endl; 
 
 
-	    if(Ediff < EdiffMin){ // will eventually need a better criterion, as there may be multiple "correlated" events that match above condition
+	    //if(Ediff < EdiffMin && Tdiff < TdiffMin){ // will eventually need a better criterion, as there may be multiple "correlated" events that match above condition
+
+	    //have to take multiple decay events or I will miss a lot...
+	    //also this method will make a large difference into what you will see as decays... tread carefully
+
+	    //if(Tdiff < TdiffMin){ //going to take minimum time, like previously algorithm
+	                          //need to start consolidating these methods into classes...
+	    if(back.energy > Emax){
 	      decayEventFront.energy = front.energy;
 	      decayEventFront.strip = front.strip;
 	      decayEventFront.time = front.time;
@@ -825,63 +828,36 @@ int main(int argc,char *argv[]){
 	      decayEventBack.strip = back.strip;
 	      decayEventBack.time = back.time;
 
+	      Emax = back.energy;
 	      EdiffMin = Ediff;
+	      TdiffMin = Tdiff;
 	      foundPotDecay = true;
+	      //}
+	      //}
 	    }
 
 	  }
 
-
 	}
 
-      }
+      } //end loop over correlated DSSD events
       
+
+      // large amount of channels firing with small amounts of energy may be beta-particles being detected
+      // should report ALL valid DSSD events, since there may be some beta+proton evets, this seems to be the case for some events
+      // if they are beta+proton events then the events should have some time correlation->half-life of implant child nucleus
 
       if(foundPotDecay){
 	Histo->hDecayXY->Fill(fImplantEBMaxStrip-20,(-1*(decayEventFront.strip-39))-20);
 	//TF1 *fDSSDHighCal = (TF1*)fDSSDCalibFunc->At(fDecayEBMaxStrip);
 	
 	//cout << "DSSDEvalue = " << DSSDEvalue << endl;
-	cout << endl << "Reported E = " << decayEventBack.energy << endl;
-	Histo->hDecayEnergy->Fill(decayEventBack.energy);
-	Histo->hDecayTime->Fill(decayEventBack.time - curTime);
+	cout << endl << "Reported E = " << decayEventFront.energy << endl;
+	Histo->hDecayEnergy->Fill(decayEventFront.energy);
+	Histo->hDecayTime->Fill(decayEventFront.time - curTime);
       }
 
-
-      
-      // cout << "fImplantEFMaxStrip = " << fImplantEFMaxStrip << endl;
-      // cout << "fDecayEFMaxStrip = " << fDecayEFMaxStrip << endl;
-      // cout << "fImplantEBMaxStrip = " << fImplantEBMaxStrip << endl;
-      // cout << "fDecayEBMaxStrip = " << fDecayEBMaxStrip << endl;
-
-      // cout << "fDecayEBMaxERaw = " << fDecayEBMaxERaw << endl;
-      // cout << "fDecayEFMaxERaw = " << fDecayEFMaxERaw << endl;
-
       channelsCorr.clear();
-
-      // if(fImplantEFMaxStrip > -1 && fImplantEBMaxStrip >-1 &&
-      // 	 fDecayEFMaxStrip   > -1 && fDecayEBMaxStrip   >-1 &&
-      // 	 (abs(fImplantEFMaxStrip-fDecayEFMaxStrip)<2) &&
-      // 	 (abs(fImplantEBMaxStrip-fDecayEBMaxStrip)<2) &&
-      // 	 nextTDiff>=000) {
-
-      // 	cout << "Found decay!" << endl;
-      
-      // 	Histo->hDecayXY->Fill(fImplantEBMaxStrip-20,(-1*(fDecayEFMaxStrip-39))-20);
-
-      // 	//Histo->hDecayTime->Fill(nextTDiff);
-      // 	TF1 *fDSSDHighCal = (TF1*)fDSSDCalibFunc->At(fDecayEBMaxStrip);
-      // 	TRandom  * fRand          = new TRandom();
-      // 	Double_t DSSDEvalue = fDSSDHighCal->Eval(fDecayEBMaxERaw+fRand->Uniform());
-      // 	//Double_t DSSDEvalueAmp = fDSSDHighCal->Eval(fDecayEFMaxTraceAmp+fRand->Uniform());
-      // 	Histo->hDecayEnergy->Fill(DSSDEvalue);
-      // 	Histo->hDecayTime->Fill(decaytime);
-      // 	//Histo->hDecayEnergyAmp->Fill(DSSDEvalueAmp);
-      // 	//delete fRand;
-      // 	//delete fDSSDHighCal;
-      // }
-
-
       backEvents.clear();
       frontEvents.clear();
 
