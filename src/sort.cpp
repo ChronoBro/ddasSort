@@ -23,6 +23,7 @@ struct DSSDevent{
   int channel = -1;
   int strip = -1;
   double time = 0;
+  long long int entry = 0;
   
 };
 
@@ -209,14 +210,27 @@ int main(int argc,char *argv[]){
   alphaCalib.close();
 
   // Load SeGA Calibrartions
+  int SeGAchannel = 16;
+  //ddasDet *SEGA[16];
+  vector<ddasDet> SEGA;
   fSeGACalFile = new TFile("Calibrations/SeGACalibrations.root","READ");
   for(Int_t i=0; i<16; i++){
     sprintf(name,"f_cal_SeGA_%02i",i);
     TF1 *funG= (TF1*)fSeGACalFile->FindObjectAny(name);
     TF1 *fCalG = new TF1(name,"pol1",0,35000);
+    vector<double> params;
+    //SEGA[i] = new ddasDet(SeGAchannel);
+    ddasDet fillArray(SeGAchannel);
+    params.push_back(funG->GetParameter(0));
+    params.push_back(funG->GetParameter(1));
+    fillArray.setCalibration(params);
+    SEGA.push_back(fillArray);
+
+
     fCalG->SetParameter(0, funG->GetParameter(0));
     fCalG->SetParameter(1, funG->GetParameter(1));
     fSeGACalibFunc->Add(fCalG);
+    SeGAchannel++;
     delete funG;
   }
   fSeGACalFile->Close();
@@ -382,7 +396,7 @@ int main(int argc,char *argv[]){
     }    
 
     //now look for coincidence in entries after trigger
-    for(int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
+    for(long long int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
       chain->GetEntry(iSearch);
       //ddaschannel * serChannel = new ddaschannel;
       serChannel = pDDASEvent->GetData()[0];
@@ -482,6 +496,7 @@ int main(int argc,char *argv[]){
 	  frontFired.strip = 40 - (serChanNo-104); //should look into this mapping at some point 
 	  frontFired.time = serChannel->GetCoarseTime();
 	  frontFired.channel = serChanNo;
+	  frontFired.entry = it;
 	  frontEvents.push_back(frontFired);
 
 	  // DSSD Fronts low gain
@@ -507,6 +522,7 @@ int main(int argc,char *argv[]){
 	  backFired.strip = 40 - (serChanNo-184); //should look into this mapping at some point
 	  backFired.time = serChannel->GetCoarseTime();
 	  backFired.channel = serChanNo;
+	  backFired.entry = it;
 	  backEvents.push_back(backFired);
 	  
 
@@ -659,7 +675,7 @@ int main(int argc,char *argv[]){
       //now look for correlations in entries after trigger
 
       //should include some to make sure that we aren't associating decay events with the wrong trigger
-      for(int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
+      for(long long int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
 	chain->GetEntry(iSearch);
 	//ddaschannel * serChannel = new ddaschannel;
 	serChannel = pDDASEvent->GetData()[0];
@@ -815,10 +831,12 @@ int main(int argc,char *argv[]){
 	      decayEventFront.energy = front.energy;
 	      decayEventFront.strip = front.strip;
 	      decayEventFront.time = front.time;
+	      decayEventFront.entry = front.entry;
 
 	      decayEventBack.energy = back.energy;
 	      decayEventBack.strip = back.strip;
 	      decayEventBack.time = back.time;
+	      decayEventBack.entry = back.entry;
 
 	      Emax = back.energy;
 	      EdiffMin = Ediff;
@@ -849,14 +867,92 @@ int main(int argc,char *argv[]){
 	double time = decayEventFront.time -curTime;
 	Histo->hDecayTime->Fill(time);
 	if(time < 3E8){
-	Histo->hDecayEnergyTGate->Fill(decayEventFront.energy);
+	  Histo->hDecayEnergyTGate->Fill(decayEventFront.energy);
+	}
+
+	long long int decayEntry = decayEventFront.entry;
+
+	//now look for gamma coincidences
+	for(long long int iSearch = decayEntry-1;iSearch < fNEntries;iSearch--){
+	  if(iEntry ==0 || iSearch < 0 || iSearch == iEntry){
+	    break; //don't want iSearch to go below zero
+	  }
+	  chain->GetEntry(iSearch);
+	  //ddaschannel * serChannel = new ddaschannel;
+	  serChannel = pDDASEvent->GetData()[0];
+	  int serChanNo   = GetGlobalChannelNum(serChannel,2);
+	  double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
+	  nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
+
+      
+      
+  
+	  //cout << nextTDiff << endl;
+	  //lastEntry = iSearch;
+
+	  if(abs(nextTDiff) < coinWindow/2){
+	    //channelsCoin.push_back(iSearch);
+	    for(int i=0;i<16;i++){
+	      SEGA[i].fillEvent(serChannel,pDDASEvent);
+	    }
+
+	  }
+	  else{
+	    break; //as long as events are time ordered this shouldn't be a problem
+	  }
+
+	}    
+
+
+	for(long long int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
+	  chain->GetEntry(iSearch);
+	  //ddaschannel * serChannel = new ddaschannel;
+	  serChannel = pDDASEvent->GetData()[0];
+	  int serChanNo   = GetGlobalChannelNum(serChannel,2);
+	  double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
+	  nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
+	  //lastEntry = iSearch;
+
+
+
+	  if(abs(nextTDiff) < coinWindow/2){
+	    //channelsCoin.push_back(iSearch);
+	    for(int i=0;i<16;i++){
+
+	      if( SEGA[i].fillEvent(serChannel,pDDASEvent) ){
+		cout << "Found SEGA event in coincidence with decay!" << endl;
+	      }
+
+	    }
+
+	  }
+	  else{
+	    break; //as long as events are time ordered this shouldn't be a problem
+	  }
+
+	}
+
+	//now fill histos with SEGA events found
+	for(int i=0;i<16;i++){
+
+	  if(SEGA[i].getEvents().size() >0){
+	    for(auto &event : SEGA[i].getEvents()){
+	      Histo->hGammaEnergy->Fill(event.energy);
+	      Histo->hSeGAEnergy->Fill(event.channel-16,event.energy);
+	    }
+	  }
+
 	}
 
 
+      } //end ifPotDecay
 
-
+      //these do need to be cleared since called outside of scope of entry loop
+      for(int i=0;i<16;i++){
+	SEGA[i].clear();
       }
 
+      //technically shouldn't need these clears since vectors were initialized in loop over entries
       channelsCorr.clear();
       backEvents.clear();
       frontEvents.clear();

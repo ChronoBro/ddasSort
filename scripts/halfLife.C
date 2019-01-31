@@ -3,8 +3,8 @@ TCanvas CdecayTime("CdecayTime","CdecayTime",800,600);
 TCanvas CdecayEnergy("CdecayEnergy","CdecayEnergy", 800,600);
 
 void halfLife(){
-  //gStyle->SetOptStat(0); //turn off stat box on histogram
-  gStyle->SetOptFit(1111);
+  gStyle->SetOptStat(0); //turn off stat box on histogram
+  //gStyle->SetOptFit(1111);
   
   ostringstream dataName;
   ostringstream directory;
