@@ -61,6 +61,7 @@ class histo
   TH2I  *hImplantXY;
   TH2I  *hDecayXY;
   TH1D  *hDecayTime;
+  TH1D  *hDecayEnergyTGate;
   TH1D  *hDecayEnergy;
   TH1D  *hDecayEnergyAmp;
   TH1D  *hGammaEnergy;

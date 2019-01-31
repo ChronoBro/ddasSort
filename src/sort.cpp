@@ -40,7 +40,9 @@ int GetGlobalChannelNum(ddaschannel *dchan, int firstSlot){
 
 void loadBar(double progress){
 
-  fputs("\e[?25l", stdout); /* hide the cursor */
+  //being silly and using cerr to show loading bar while piping a log to a file
+
+  fputs("\e[?25l", stderr); /* hide the cursor */
 
   ostringstream percent;
 
@@ -59,17 +61,17 @@ void loadBar(double progress){
 
   int barWidth = 50;//100;//70;
 
-  std::cout << " [";
+  std::cerr << " [";
   int pos = barWidth * progress;
   for (int i = 0; i < barWidth; ++i) {
-    if (i < pos) std::cout << "=";
-    else if (i == pos) std::cout << ">";
-    else std::cout << " ";
+    if (i < pos) std::cerr << "=";
+    else if (i == pos) std::cerr << ">";
+    else std::cerr << " ";
   }
-  std::cout << "] " << percent.str() << " %                        \r";
-  std::cout.flush();
+  std::cerr << "] " << percent.str() << " %                      \r";
+  std::cerr.flush();
 
-  fputs("\e[?25h", stdout); /* show the cursor */
+  fputs("\e[?25h", stderr); /* show the cursor */
 
 }
 
@@ -77,7 +79,7 @@ int main(int argc,char *argv[]){
 
 
 
-  cout << endl << "NSCL DDAS sorting for unbuilt Events" << endl << endl;
+  cerr << endl << "NSCL DDAS sorting for unbuilt Events" << endl << endl;
 
 
 
@@ -184,6 +186,7 @@ int main(int argc,char *argv[]){
 
   ifstream alphaCalib("Calibrations/alphaCalib.dat");
 
+  fDSSDCalFile = new TFile("Calibrations/Alpha/AlphaCalib_293.root","READ");
   for(Int_t i=0; i<80; i++){
     sprintf(name,"f_cal_%02i_sp",i);
     int chan=0.;
@@ -191,9 +194,16 @@ int main(int argc,char *argv[]){
     double offset;
     alphaCalib >> chan >> offset >> slope; 
     
+    TF1 *fun = (TF1*)fDSSDCalFile->FindObjectAny(name);
     TF1 *fCal = new TF1(name,"pol1",0,35000);
-    fCal->SetParameter(0, offset);
+    
+    
+    fCal->SetParameter(0, offset); //Dan Calib
     fCal->SetParameter(1, slope);
+
+    // fCal->SetParameter(0, fun->GetParameter(0)); //Chris Calib
+    // fCal->SetParameter(1, fun->GetParameter(1));
+
     fDSSDCalibFunc->Add(fCal);
   }
   alphaCalib.close();
@@ -238,7 +248,7 @@ int main(int argc,char *argv[]){
 
    ****************************************/
 
-  cout << " Processing Events..." << endl; 
+  cerr << " Processing Events..." << endl; 
 
 
 
@@ -294,9 +304,9 @@ int main(int argc,char *argv[]){
     double PIN1energy = 0;
     int nCh = 0;
 
-    ddasDet test(0); //call this in scope that you want so that .clear() (in destructor) is called when it goes out of scope, otherwise seems to work
+    ddasDet test(0); //call this in scope that you want to use it so that .clear() (in destructor) is called when it goes out of scope, otherwise seems to work
     test.fillEvent(curChannel, pDDASEvent);
-    vector<Event> testEvent = test.getEvents();
+    vector<Event> testEvents = test.getEvents();
     //cout << endl << "number of events filled in test = " << testEvent.size() << endl;
 
 
@@ -704,13 +714,6 @@ int main(int argc,char *argv[]){
 
 	  //cout << frontFired.energy << endl;
 
-	  stripCheckFront = serChanNo-64;
-	  if(abs(fImplantEFMaxStrip-stripCheckFront)<2 ){
-	      energyCheckFront = serChannel->GetEnergy();
-	      double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-	      timeCheckFront  = (serChannel->GetCoarseTime()-delay) - curTime;
-	  }
-
 	  if(serChannel->GetEnergy()>fDecayEFMaxERaw) { //do we want the max energy for decay? Would it be more prudent to read out if strips are consistent?
 	    fDecayEFMaxERaw = serChannel->GetEnergy();
 	    // //        fImplantEFMaxStrip = serChanNo-104;
@@ -730,14 +733,6 @@ int main(int argc,char *argv[]){
 	  
 
 
-	  
-	  stripCheckBack = serChanNo-144;
-	  if(abs(fImplantEBMaxStrip-stripCheckBack)<2 ){
-	      energyCheckBack = serChannel->GetEnergy();
-	      double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-	      timeCheckBack  = (serChannel->GetCoarseTime()-delay) - curTime;
-	  }
-
 
 
 	  if(serChannel->GetEnergy()>fDecayEBMaxERaw) {
@@ -747,9 +742,6 @@ int main(int argc,char *argv[]){
 	    //fImplantEBMaxStrip = serChanNo-184;
 	  }
 	  nCh++;
-	}
-	else if(energyCheckBack > 0 && energyCheckFront > 0 && abs(energyCheckBack - energyCheckFront) < 1000 && abs(timeCheckFront -timeCheckBack) < coinWindow){
-	  //cout << "Found potential decay event!" << endl;
 	}
 	else{
 	  // Found something else . . .
@@ -854,7 +846,15 @@ int main(int argc,char *argv[]){
 	//cout << "DSSDEvalue = " << DSSDEvalue << endl;
 	cout << endl << "Reported E = " << decayEventFront.energy << endl;
 	Histo->hDecayEnergy->Fill(decayEventFront.energy);
-	Histo->hDecayTime->Fill(decayEventFront.time - curTime);
+	double time = decayEventFront.time -curTime;
+	Histo->hDecayTime->Fill(time);
+	if(time < 3E8){
+	Histo->hDecayEnergyTGate->Fill(decayEventFront.energy);
+	}
+
+
+
+
       }
 
       channelsCorr.clear();

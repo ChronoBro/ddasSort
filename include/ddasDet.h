@@ -1,7 +1,7 @@
 #include <iostream>
 #include <vector>
 #include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
-
+#include "math.h"
 
 
 struct Event{
@@ -14,14 +14,22 @@ struct Event{
 
 class ddasDet{
  public:
-  ddasDet();
-  ddasDet(int givenChannel);
-  ~ddasDet();
-  void fillEvent(ddaschannel* , DDASEvent* );
+  ddasDet(){assignedChannel = -1;isCalibrated=false;}
+  ddasDet(int givenChannel){assignedChannel = givenChannel;isCalibrated=false;}
+  ~ddasDet(){events.clear();}
+  bool fillEvent(ddaschannel* , DDASEvent* );//true if filled event, false if not
   std::vector<Event> getEvents(){return events;}
   int getChannelNumber(ddaschannel *dchan, int firstSlot) {return dchan->GetCrateID()*64+(dchan->GetSlotID()-firstSlot)*16+dchan->GetChannelID();}
+  void reset(){events.clear();params.clear();isCalibrated=false;}
+  void setCalibration(std::vector<double> par); //ordered list of parameters p0,p1,p2,...
 
  private:
   int assignedChannel;
   std::vector<Event> events;
+  bool isCalibrated;
+  double calibrate(unsigned int energyR);
+  std::vector<double> params;
+  
+  
+
 };
