@@ -5,7 +5,7 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
 
   if(assignedChannel >= 0){
 
-    Event fillerEvent;
+    //Event fillerEvent;
     foundChannel = eventPointer->GetData()[0]; //taking only the first event, thus this method will only work on unbuilt events
     //will have to make another method for handling fully built events
     
@@ -27,7 +27,7 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
   }
   else if (assignedChannel == -1){
 
-    Event fillerEvent;
+    //Event fillerEvent;
     foundChannel = eventPointer->GetData()[0]; //taking only the first event, thus this method will only work on unbuilt events
     //will have to make another method for handling fully built events
     fillerEvent.channel = getChannelNumber(foundChannel,2);

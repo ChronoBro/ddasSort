@@ -218,6 +218,7 @@ int main(int argc,char *argv[]){
     sprintf(name,"f_cal_SeGA_%02i",i);
     TF1 *funG= (TF1*)fSeGACalFile->FindObjectAny(name);
     TF1 *fCalG = new TF1(name,"pol1",0,35000);
+
     vector<double> params;
     //SEGA[i] = new ddasDet(SeGAchannel);
     ddasDet fillArray(SeGAchannel);
@@ -225,12 +226,12 @@ int main(int argc,char *argv[]){
     params.push_back(funG->GetParameter(1));
     fillArray.setCalibration(params);
     SEGA.push_back(fillArray);
-
+    SeGAchannel++;
 
     fCalG->SetParameter(0, funG->GetParameter(0));
     fCalG->SetParameter(1, funG->GetParameter(1));
     fSeGACalibFunc->Add(fCalG);
-    SeGAchannel++;
+
     delete funG;
   }
   fSeGACalFile->Close();
@@ -895,7 +896,11 @@ int main(int argc,char *argv[]){
 	  if(abs(nextTDiff) < coinWindow/2){
 	    //channelsCoin.push_back(iSearch);
 	    for(int i=0;i<16;i++){
-	      SEGA[i].fillEvent(serChannel,pDDASEvent);
+
+	      if( SEGA[i].fillEvent(serChannel,pDDASEvent) ){
+		cout << "Found SEGA event in coincidence with decay!" << endl;
+	      }
+
 	    }
 
 	  }
@@ -935,16 +940,19 @@ int main(int argc,char *argv[]){
 	}
 
 	//now fill histos with SEGA events found
+	double Egamma_tot = 0;
+	
 	for(int i=0;i<16;i++){
 
-	  if(SEGA[i].getEvents().size() >0){
-	    for(auto &event : SEGA[i].getEvents()){
-	      Histo->hGammaEnergy->Fill(event.energy);
-	      Histo->hSeGAEnergy->Fill(event.channel-16,event.energy);
-	    }
+	  for(auto &event : SEGA[i].getEvents()){
+	    Histo->hGammaEnergy->Fill(event.energy);
+	    Histo->hSeGAEnergy->Fill(event.channel-16,event.energy);
+	    Histo->hGammaVsDecay->Fill(decayEventFront.energy,event.energy);
+	    Egamma_tot += event.energy;
 	  }
-
+	  
 	}
+	cout << "Egamma_tot = " << Egamma_tot << endl;
 
 
       } //end ifPotDecay

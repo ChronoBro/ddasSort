@@ -73,6 +73,7 @@ histo::histo(std::string name0)
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",2500,0,15000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
+  hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",2500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
   hSeGAEnergy  = new TH2D("hSeGAEnergy","SeGA gamma energies",16,0,16,5000,0,10000);
   hImplantXY   = new TH2I("hImplantXY", "DSSD hit pattern (xy position)",  40,-20,20,40,-20,20);

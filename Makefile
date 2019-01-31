@@ -4,7 +4,7 @@ OBJDIR = objs/
 
 
 #OBJECTS = objs/det.o objs/detector.o objs/histo.o objs/caen.o  objs/elist.o  objs/solution.o objs/einstein.o objs/newton.o objs/correl.o
-OBJECTS = objs/histo.o objs/ddasDet.o
+OBJECTS = objs/histo.o objs/ddasDet.o objs/ddasArray.o
 #ALLOBJECTS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 ALLOBJECTS := $(patsubst $(SRCDIR)%.cpp,$(OBJDIR)%.o,$(wildcard $(SRCDIR)*.cpp))
 

@@ -65,6 +65,7 @@ class histo
   TH1D  *hDecayEnergy;
   TH1D  *hDecayEnergyAmp;
   TH1D  *hGammaEnergy;
+  TH2D  *hGammaVsDecay;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
 
