@@ -884,7 +884,7 @@ int main(int argc,char *argv[]){
 	  serChannel = pDDASEvent->GetData()[0];
 	  int serChanNo   = GetGlobalChannelNum(serChannel,2);
 	  double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-	  nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
+	  nextTDiff  = (serChannel->GetCoarseTime()-delay) - decayEventFront.time;
 
       
       
@@ -912,7 +912,7 @@ int main(int argc,char *argv[]){
 	  serChannel = pDDASEvent->GetData()[0];
 	  int serChanNo   = GetGlobalChannelNum(serChannel,2);
 	  double delay = fh_ChannelDelays->GetBinContent(serChanNo+1);  // ---=== UNCOMMENT FOR DELAY ===---
-	  nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
+	  nextTDiff  = (serChannel->GetCoarseTime()-delay) - decayEventFront.time;
 	  //lastEntry = iSearch;
 
 
