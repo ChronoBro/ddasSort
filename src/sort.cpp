@@ -725,6 +725,7 @@ int main(int argc,char *argv[]){
 	  frontFired.strip = serChanNo-64;
 	  frontFired.time = serChannel->GetCoarseTime();
 	  frontFired.channel = serChanNo;
+	  frontFired.entry = it;
 	  frontEvents.push_back(frontFired);
 
 
@@ -745,6 +746,7 @@ int main(int argc,char *argv[]){
 	  backFired.strip = serChanNo-144;
 	  backFired.time = serChannel->GetCoarseTime();
 	  backFired.channel = serChanNo;
+	  backFired.entry = it;
 	  backEvents.push_back(backFired);
 	  
 
@@ -904,7 +906,7 @@ int main(int argc,char *argv[]){
 	}    
 
 
-	for(long long int iSearch = iEntry+1;iSearch<fNEntries;iSearch++){
+	for(long long int iSearch = decayEntry+1;iSearch<fNEntries;iSearch++){
 	  chain->GetEntry(iSearch);
 	  //ddaschannel * serChannel = new ddaschannel;
 	  serChannel = pDDASEvent->GetData()[0];
