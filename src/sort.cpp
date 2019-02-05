@@ -10,9 +10,13 @@
 #include "TCutG.h"
 #include "TRandom.h"
 #include <vector>
-#include "ddasDet.h"
+//#include "ddasDet.h"
+#include "ddasArray.h"
+#include <csignal>
 
 using namespace std;
+
+
 
 
 struct DSSDevent{
@@ -120,6 +124,7 @@ int main(int argc,char *argv[]){
 
   int maxSubRun = 9;
 
+  //TChain dataChain("dchan");
   TChain * chain = new TChain("dchan"); //name of tree has to be same in each root file 
 
   for(int iFile=runStart;iFile<=runEnd;iFile++){
@@ -138,6 +143,7 @@ int main(int argc,char *argv[]){
       if( exists_test(infile.str()) ){
 
       chain->AddFile(infile.str().c_str());
+      //dataChain.AddFile(infile.str().c_str());
       cout << "adding " << infile.str() << " to TChain...                           " << endl; //have to use carriage return for flush
 
       }
@@ -214,11 +220,15 @@ int main(int argc,char *argv[]){
   //ddasDet *SEGA[16];
   vector<ddasDet> SEGA;
   fSeGACalFile = new TFile("Calibrations/SeGACalibrations.root","READ");
+  vector<int> SEGAchannels;
+  vector< vector<double> > SEGAparamList;
   for(Int_t i=0; i<16; i++){
     sprintf(name,"f_cal_SeGA_%02i",i);
     TF1 *funG= (TF1*)fSeGACalFile->FindObjectAny(name);
     TF1 *fCalG = new TF1(name,"pol1",0,35000);
 
+    SEGAchannels.push_back(SeGAchannel);
+    
     vector<double> params;
     //SEGA[i] = new ddasDet(SeGAchannel);
     ddasDet fillArray(SeGAchannel);
@@ -226,6 +236,8 @@ int main(int argc,char *argv[]){
     params.push_back(funG->GetParameter(1));
     fillArray.setCalibration(params);
     SEGA.push_back(fillArray);
+    SEGAparamList.push_back(params);
+
     SeGAchannel++;
 
     fCalG->SetParameter(0, funG->GetParameter(0));
@@ -235,6 +247,9 @@ int main(int argc,char *argv[]){
     delete funG;
   }
   fSeGACalFile->Close();
+
+  ddasArray SEGAarray(SEGAchannels);
+  SEGAarray.setCalibration(SEGAparamList);
   
   // Open channel delays file.
   fChannelDelays = new TFile("Calibrations/ChannelDelays.root","READ");
@@ -248,9 +263,9 @@ int main(int argc,char *argv[]){
   
   // Load PID gate
   TFile *fGateFile = new TFile("PIDGates.root","READ");
-  //  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
-  //  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
 
   cout << "--> Loaded Gate: " << fGate->GetName() << endl << endl;
@@ -339,7 +354,7 @@ int main(int argc,char *argv[]){
     }
 
 
-    double coinWindow     =  5000;//5000;//2000;        // Time (ns) //now that coincidence window seems to be working it would be nice to open up window and see
+    double coinWindow     =  2000;//5000;//2000;        // Time (ns) //now that coincidence window seems to be working it would be nice to open up window and see
                                                                      //what happens
     double promptWindow   =  2000;
     double coinGammaWindow=  1000;        // Time (ns)
@@ -382,10 +397,9 @@ int main(int argc,char *argv[]){
       nextTDiff  = (serChannel->GetCoarseTime()-delay) - curTime;
 
       
-      
   
       //cout << nextTDiff << endl;
-      lastEntry = iSearch;
+      //lastEntry = iSearch; -->never want this here
 
       if(abs(nextTDiff) < coinWindow/2){
 	channelsCoin.push_back(iSearch);
@@ -417,14 +431,15 @@ int main(int argc,char *argv[]){
 
 
 
-      if(channelsCoin.size() > 100){
+      if(channelsCoin.size() > 110){
 	cout << endl<< "something must have gone wrong..." << endl;
 	cout << "Coincidences = " <<channelsCoin.size() << endl;
+	continue;
       }
       
       if(channelsCoin.size() > 500){
-	cout << endl<< "something must have REALLY gone wrong..." << endl;
-	cout << "Coincidences = " <<channelsCoin.size() << endl;
+	//cout << endl<< "something must have REALLY gone wrong..." << endl;
+	//cout << "Coincidences = " <<channelsCoin.size() << endl;
 	channelsCoin.clear();
 	continue;
       }
@@ -602,7 +617,7 @@ int main(int argc,char *argv[]){
 	continue;
       }
 
-      cout << endl << "Found Ion!" << endl;
+      //cout << endl << "Found Ion!" << endl;
 
       //loop through DSSD events to see if there are any matching events
       //should implement this above
@@ -610,8 +625,8 @@ int main(int argc,char *argv[]){
 
       //need to vet this method a little more, it seems that the back likes to fire a bunch of times when there is an implantation event, its not clear to me how to assign the events in that case... maybe it's better to just throw those events out. 
       //would be nice to implement an addback method if neighboring channel fires, then perhaps check that E_tot backs = E_tot fronts
-      cout << endl << "Found " << frontEvents.size() << " coincident front DSSD events" << endl;
-      cout << "Found " << backEvents.size() << " coincident back DSSD events" << endl;
+      //cout << endl << "Found " << frontEvents.size() << " coincident front DSSD events" << endl;
+      //cout << "Found " << backEvents.size() << " coincident back DSSD events" << endl;
 
       // unsigned int frontEtot = 0.;
       // unsigned int backEtot = 0.;
@@ -632,16 +647,16 @@ int main(int argc,char *argv[]){
 	  double Tdiff = abs(front.time - back.time);
 	  //if(Ediff < 1000){
 	  //if(Tdiff<TdiffMin){ //I believe should use this determination if for assigning strip, along with maxE
-	    cout << endl;
-	    cout << "Found coincident DSSDevent" << endl;
-	    cout << "Tdiff = " << Tdiff << endl;
-	    cout << "Ediff = " << Ediff << endl;
-	    cout << "FrontE = " << front.energyR << endl;
-	    cout << "BackE = " << back.energyR << endl;
-	    cout << "Front strip = " << front.strip << endl;
-	    cout << "Front channel = " << front.channel << endl;
-	    cout << "Back strip = " << back.strip << endl;
-	    cout << "Back channel = " << back.channel << endl;
+	    // cout << endl;
+	    // cout << "Found coincident DSSDevent" << endl;
+	    // cout << "Tdiff = " << Tdiff << endl;
+	    // cout << "Ediff = " << Ediff << endl;
+	    // cout << "FrontE = " << front.energyR << endl;
+	    // cout << "BackE = " << back.energyR << endl;
+	    // cout << "Front strip = " << front.strip << endl;
+	    // cout << "Front channel = " << front.channel << endl;
+	    // cout << "Back strip = " << back.strip << endl;
+	    // cout << "Back channel = " << back.channel << endl;
 	    TdiffMin = Tdiff; //presumably the strips that fire closest in time should be the implantation strips-->or max energy 
 	    //}
 	    //}
@@ -655,9 +670,9 @@ int main(int argc,char *argv[]){
       backEvents.clear();
       frontEvents.clear();
 
-      cout << endl;
-      cout << "fImplantEBMaxERaw = " << fImplantEBMaxERaw << endl;
-      cout << "fImplantEFMaxERaw = " << fImplantEFMaxERaw << endl;
+      // cout << endl;
+      // cout << "fImplantEBMaxERaw = " << fImplantEBMaxERaw << endl;
+      // cout << "fImplantEFMaxERaw = " << fImplantEFMaxERaw << endl;
 
      
       //same issue with unsigned ints below... UGH!
@@ -691,7 +706,7 @@ int main(int argc,char *argv[]){
 	  //not sure how long the waiting should actually be, although I think waiting outside the the coincidence window is a good idea
 	  channelsCorr.push_back(iSearch);
 	}
-	else if(nextTDiff < coinWindow/2.){
+	else if(abs(nextTDiff) < coinWindow/2.){
 	  continue;
 	}
 	else if(nextTDiff > corrWindow || serChanNo == trigChan){//also want to exclude "correlations" if there is another implantation event
@@ -702,7 +717,7 @@ int main(int argc,char *argv[]){
 	}
       }
 
-      cout << endl << "Found " <<  channelsCorr.size() << " correlations with Ion implantation event" << endl;
+      // cout << endl << "Found " <<  channelsCorr.size() << " correlations with Ion implantation event" << endl;
 
 
       int stripCheckBack = -3;
@@ -773,18 +788,19 @@ int main(int argc,char *argv[]){
 
 
       //loop over DSSD events found in correlations
-      cout << endl << "Found " << frontEvents.size() << " correlated front DSSD events" << endl;
-      cout << "Found " << backEvents.size() << " correlated back DSSD events" << endl;
+       // cout << endl << "Found " << frontEvents.size() << " correlated front DSSD events" << endl;
+       // cout << "Found " << backEvents.size() << " correlated back DSSD events" << endl;
 
       DSSDevent decayEventFront;
       DSSDevent decayEventBack;
       double EdiffMin = 1000;
       double EdiffThreshold = 200; //keV
+      double Ethreshold = 100; //keV
       int stripTolerance = 2;
       double Emax = 0;
       TdiffMin = coinWindow;
       bool foundPotDecay = false;
-
+      double timeMin = corrWindow;
       
       //I could really use a vector of "valid" DSSD events... I guess I should go ahead with abstraction      
       
@@ -803,25 +819,26 @@ int main(int argc,char *argv[]){
 	  front.energy = fDSSDfrontCal->Eval(front.energyR);
 
 	  double Ediff = abs(front.energy - back.energy);
-	  double time = back.time - curTime;
+	  double time = front.time - curTime;
 
 	  if(front.energy > back.energy) {Ediff = front.energy - back.energy;}
 	  else {Ediff = back.energy - front.energy;}
 
 	  Tdiff = abs(front.time - back.time);
-	  if(Ediff < EdiffThreshold && back.energy > 0 && front.energy > 0 && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < stripTolerance && abs(fImplantEBMaxStrip - back.strip) < stripTolerance){
-	    cout << endl;
-	    cout << "Found potential decay event" << endl;
-	    cout << "Tdiff = " << Tdiff << endl;
-	    cout << "Ediff = " << Ediff << endl;
-	    cout << "FrontE = " << front.energy << endl;
-	    cout << "BackE = " << back.energy << endl;
-	    cout << "Front strip = " << front.strip << endl;
-	    cout << "Front channel = " << front.channel << endl;
-	    cout << "Back strip = " << back.strip << endl;
-	    cout << "Back channel = " << back.channel << endl;
-	    cout << "Recorded decay time = " << time << endl; 
+	  if(Ediff < EdiffThreshold && back.energy > Ethreshold && front.energy > Ethreshold && Tdiff < coinWindow && abs(fImplantEFMaxStrip - front.strip) < stripTolerance && abs(fImplantEBMaxStrip - back.strip) < stripTolerance && time < (timeMin + coinWindow/2.) ){
+	    // cout << endl;
+	    // cout << "Found potential decay event" << endl;
+	    // cout << "Tdiff = " << Tdiff << endl;
+	    // cout << "Ediff = " << Ediff << endl;
+	    // cout << "FrontE = " << front.energy << endl;
+	    // cout << "BackE = " << back.energy << endl;
+	    // cout << "Front strip = " << front.strip << endl;
+	    // cout << "Front channel = " << front.channel << endl;
+	    // cout << "Back strip = " << back.strip << endl;
+	    // cout << "Back channel = " << back.channel << endl;
+	    // cout << "Recorded decay time = " << time << endl; 
 
+	    timeMin = time;
 
 	    //if(Ediff < EdiffMin && Tdiff < TdiffMin){ // will eventually need a better criterion, as there may be multiple "correlated" events that match above condition
 
@@ -830,7 +847,7 @@ int main(int argc,char *argv[]){
 
 	    //if(Tdiff < TdiffMin){ //going to take minimum time, like previously algorithm
 	                          //need to start consolidating these methods into classes...
-	    if(back.energy > Emax){
+	    if(front.energy > Emax){
 	      decayEventFront.energy = front.energy;
 	      decayEventFront.strip = front.strip;
 	      decayEventFront.time = front.time;
@@ -841,7 +858,7 @@ int main(int argc,char *argv[]){
 	      decayEventBack.time = back.time;
 	      decayEventBack.entry = back.entry;
 
-	      Emax = back.energy;
+	      Emax = front.energy;
 	      EdiffMin = Ediff;
 	      TdiffMin = Tdiff;
 	      foundPotDecay = true;
@@ -849,7 +866,7 @@ int main(int argc,char *argv[]){
 	      //}
 	    }
 
-	  }
+	    }
 
 	}
 
@@ -865,7 +882,7 @@ int main(int argc,char *argv[]){
 	//TF1 *fDSSDHighCal = (TF1*)fDSSDCalibFunc->At(fDecayEBMaxStrip);
 	
 	//cout << "DSSDEvalue = " << DSSDEvalue << endl;
-	cout << endl << "Reported E = " << decayEventFront.energy << endl;
+	//cout << endl << "Reported E = " << decayEventFront.energy << endl;
 	Histo->hDecayEnergy->Fill(decayEventFront.energy);
 	double time = decayEventFront.time -curTime;
 	Histo->hDecayTime->Fill(time);
@@ -898,7 +915,7 @@ int main(int argc,char *argv[]){
 	    for(int i=0;i<16;i++){
 
 	      if( SEGA[i].fillEvent(serChannel,pDDASEvent) ){
-		cout << "Found SEGA event in coincidence with decay!" << endl;
+		//cout << "Found SEGA event in coincidence with decay!" << endl;
 	      }
 
 	    }
@@ -927,9 +944,13 @@ int main(int argc,char *argv[]){
 	    for(int i=0;i<16;i++){
 
 	      if( SEGA[i].fillEvent(serChannel,pDDASEvent) ){
-		cout << "Found SEGA event in coincidence with decay!" << endl;
+		//cout << "Found SEGA event in coincidence with decay!" << endl;
 	      }
 
+	    }
+
+	    if( SEGAarray.fillEvent(serChannel,pDDASEvent) ){
+	      //cout << "Found SEGA array event in coincidence with decay!" << endl;
 	    }
 
 	  }
@@ -943,7 +964,7 @@ int main(int argc,char *argv[]){
 	double Egamma_tot = 0;
 	
 	for(int i=0;i<16;i++){
-
+	  
 	  for(auto &event : SEGA[i].getEvents()){
 	    Histo->hGammaEnergy->Fill(event.energy);
 	    Histo->hSeGAEnergy->Fill(event.channel-16,event.energy);
@@ -952,7 +973,7 @@ int main(int argc,char *argv[]){
 	  }
 	  
 	}
-	cout << "Egamma_tot = " << Egamma_tot << endl;
+	//cout << "Egamma_tot = " << Egamma_tot << endl;
 
 
       } //end ifPotDecay
@@ -962,6 +983,7 @@ int main(int argc,char *argv[]){
 	SEGA[i].clear();
       }
 
+      SEGAarray.clear();
       //technically shouldn't need these clears since vectors were initialized in loop over entries
       channelsCorr.clear();
       backEvents.clear();
@@ -976,6 +998,8 @@ int main(int argc,char *argv[]){
   //cout << endl << "made it out of loop of events" << endl;
 
   Histo->write(); // this forces the histrograms to be read out to file
+
+  //delete Histo;
 
   return 1;
 }

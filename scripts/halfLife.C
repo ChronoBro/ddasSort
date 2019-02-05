@@ -9,9 +9,11 @@ void halfLife(){
   ostringstream dataName;
   ostringstream directory;
   directory << "../root-files/";
-  dataName << directory.str() << "allRunsDanCal.root";
+  dataName << directory.str() << "testSr74.root";
 
   double fitRange = 3E8;
+  fitRange = 6E8; // 1E9=1s
+
 
   TFile * data = new TFile(dataName.str().c_str());
   
@@ -22,7 +24,7 @@ void halfLife(){
   decayTime->GetYaxis()->SetTitle("Counts");
   decayTime->GetXaxis()->SetTitle("ms");
 
-  decayTime->Rebin(25);
+  decayTime->Rebin(30);
   decayTime->Sumw2();
 
   decayTime->GetXaxis()->SetRangeUser(0,fitRange);
@@ -32,6 +34,7 @@ void halfLife(){
 
 
   TF1 * exp = new TF1("exp","expo(0) + pol0(2)",0,fitRange); //1E9 is true end of range
+  //TF1 * exp = new TF1("exp","expo(0)",0,fitRange); //1E9 is true end of range
   decayTime->Fit(exp,"EMR"); //P for pearson test, and uses weight as sqrt(binentries) which is exactly what I want it to do. 
   
   int nParFit = 3;

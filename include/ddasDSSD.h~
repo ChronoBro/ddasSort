@@ -1,0 +1,17 @@
+#include "ddasArray.h"
+
+
+class ddasDSSD{
+ public:
+  ddasDSSD(){;}
+  ddasDSSD(int nStripsX, int nStripsY){fronts = new ddasArray(nStripsX);backs = new ddasArray(nStripsY);}
+  ddasDSSD(std::vector<int> frontChannels, std::vector<int> backChannels){;}
+  ~ddasDSSD(){delete fronts;delete backs;}
+  void fillEvents(Event fillerEvent);
+
+ private:
+  ddasArray * fronts;
+  ddasArray * backs;
+
+
+};

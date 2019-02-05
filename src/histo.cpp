@@ -1,8 +1,12 @@
+
 #include "histo.h"
 
 
 histo::histo(){
+  name = "root-files/sort.root";
   //default constructor
+  file = new TFile(name.c_str(),"RECREATE"); 
+  histos();
 }
 
 //overloaded constructor
@@ -29,11 +33,15 @@ histo::histo(std::string name0)
   //create root file for storing stuff
   //file = new TFile ("root-files/sort.root","RECREATE");
   file = new TFile (outFilename.str().c_str(),"RECREATE");
+  histos();
+ 
+}
+//*********************************************
+
+void histo::histos(){
   file->cd();
 
-
-
-
+  //define histograms here
 
   dirHistos = new TDirectoryFile("Histos","Histos");
   dirHistos->cd();
@@ -73,6 +81,7 @@ histo::histo(std::string name0)
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",2500,0,15000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
+  hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);
   hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",2500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
   hSeGAEnergy  = new TH2D("hSeGAEnergy","SeGA gamma energies",16,0,16,5000,0,10000);
@@ -84,34 +93,14 @@ histo::histo(std::string name0)
   hDecayXY->GetYaxis()->SetTitle("y (mm)");
 
 
-
-
-  //ostringstream outstring;
-
-  // ECsI = new TH1I*[NCsI];
-
-  // for(int icsi = 0;icsi <NCsI;icsi++){
-  //     outstring.str("");
-  //     outstring << "ECsI_" << icsi;
-  //     string name2 = outstring.str();
-  //     dirCsIRaw->cd();
-  //     ECsI[icsi] = new TH1I(name2.c_str(),"",1024,0,4095);
-  //   }
-
-  // relDifference = new TH1D("relDif","relDif",200,-1,1);
-  // timeDif = new TH1D("timeDif","timeDif",1024,0,4095);
-  // relVtime = new TH2D("relVtime","relVtime",200,-1,1,200,-10,10);
-  // gainMatch = new TH2D("gainMatch","gainMatch",1024,0,4095,1024,0,4095);
-  // timeDifCalibrated = new TH1D("timeDifCalibrated","timeDifCalibrated",200,-10,10);
-
 }
-//*********************************************
 
 
 void histo::write()
 {
   file->Write();
   std::cerr << " DONE! --->histos written to file root-files/" << name << "                                           " << std::endl << std::endl;
+  //file->Close();
   /*
     for (int i=0;i<Ntele;i++)
     {

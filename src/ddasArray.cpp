@@ -15,7 +15,7 @@ ddasArray::~ddasArray(){
 
 ddasArray::ddasArray(int nChannels){
 
-  isMapSet = true;
+  isMapSet = false;
   isCalibrated = false;
 
   for(int i=0;i<nChannels;i++){
@@ -23,6 +23,11 @@ ddasArray::ddasArray(int nChannels){
     detectors.push_back(fillerDet);
   }
 
+}
+
+ddasArray::ddasArray(std::vector<int> channels){
+  isCalibrated = false;
+  setMap(channels);
 }
 
 void ddasArray::setMap(std::vector<int> channels){
@@ -45,7 +50,9 @@ bool ddasArray::fillEvent(ddaschannel * foundChannel, DDASEvent * eventPointer){
 
     bool foundDetEvent = det.fillEvent(foundChannel,eventPointer);
     if(foundDetEvent){
-      masterEventList.push_back(det.getFillerEvent());
+      masterEventList.push_back(det.getFillerEvent());  
+      //std::cout << "filling the fucking array" << std::endl;
+      //std::cout << masterEventList.size() << std::endl;
     }
 
     foundEvent = foundDetEvent || foundEvent; //return true if at least one detector found an event

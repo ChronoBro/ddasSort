@@ -17,6 +17,7 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
     if(isCalibrated){
       fillerEvent.energy = calibrate(fillerEvent.signal);
     }
+
     
     if(fillerEvent.channel == assignedChannel){
       //std::cout << "Filled Event" << std::endl;
@@ -33,6 +34,7 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
     fillerEvent.channel = getChannelNumber(foundChannel,2);
     fillerEvent.signal = foundChannel->GetEnergy();
     fillerEvent.time = foundChannel->GetCoarseTime();
+
     
     events.push_back(fillerEvent);
     return true;
@@ -41,6 +43,44 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
   return false;
 
 }
+
+bool ddasDet::fillEvent(Event fillerEvent0){
+
+
+  if(assignedChannel >= 0){
+
+    
+    fillerEvent.channel = fillerEvent0.channel;
+    //std::cout << fillerEvent.channel << std::endl;
+    fillerEvent.signal = fillerEvent0.signal;
+    fillerEvent.time = fillerEvent0.time;
+
+    if(isCalibrated){
+      fillerEvent.energy = calibrate(fillerEvent0.signal);
+    }
+
+    if(fillerEvent0.channel == assignedChannel){
+      //std::cout << "Filled Event" << std::endl;
+      events.push_back(fillerEvent);
+      return true;
+    }
+    
+  }
+  else if (assignedChannel == -1){
+
+    // fillerEvent.channel = fillerEvent0.channel;
+    // fillerEvent.signal = fillerEvent0.signal;
+    // fillerEvent.time = fillerEvent0.time;
+    // fillerEvent.energy = fillerEvent0.energy;
+    
+    events.push_back(fillerEvent0);
+    return true;
+  }
+
+  return false;
+
+}
+
 
 void ddasDet::setCalibration(std::vector<double> par){
 

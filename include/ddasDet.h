@@ -7,8 +7,9 @@
 struct Event{
   double energy = -1;  //calibrated energy
   unsigned int signal = -1; //Raw signal
-  int channel = 0;
+  int channel = -1;
   double time = 0;
+  long long int entry = -1;
 };
 
 
@@ -24,6 +25,9 @@ class ddasDet{
   void setCalibration(std::vector<double> par); //ordered list of polynomial parameters p0,p1,p2,...
   void clear(){events.clear();}
   Event getFillerEvent(){return fillerEvent;}
+  void pop(){events.erase(events.begin());}
+  void addEvent(Event event){events.push_back(event);}
+  bool fillEvent(Event fillerEvent0);
 
  private:
   int assignedChannel;

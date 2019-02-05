@@ -10,9 +10,10 @@ class ddasArray{
  public:
   ddasArray();
   ddasArray(int nChannels);
+  ddasArray(std::vector<int>);
   ~ddasArray();
   void setMap(std::vector<int> channels);
-  void clear(){detectors.clear();masterEventList.clear();}
+  void clear(){masterEventList.clear();}
   void reset(){detectors.clear();isMapSet = false;channelList.clear();masterEventList.clear();}
   bool fillEvent(ddaschannel * , DDASEvent *);
   std::vector<int> getChannelList(){return channelList;}

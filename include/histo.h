@@ -29,9 +29,10 @@ class histo
 
  public:
   histo();                  //!< constructor
-  ~histo(){};
+  ~histo(){write();delete file;}
   histo(std::string name0);
   void write(); //!< write the root spectra to file
+  void histos();
   
   TH1I * energyCheck;
   TH2I * h_raw_summary;
@@ -65,6 +66,7 @@ class histo
   TH1D  *hDecayEnergy;
   TH1D  *hDecayEnergyAmp;
   TH1D  *hGammaEnergy;
+  TH1D  *hPromptGammaEnergy;
   TH2D  *hGammaVsDecay;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
