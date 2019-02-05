@@ -620,6 +620,8 @@ int main(int argc,char *argv[]){
       double decayTime = corrWindow;
       double decayEnergy = 0;
       double EmaxDecay = 0;
+      double reportedE = 0;
+      double reportedTime = 0;
 
       for(auto & decayEventFront : decayEventsFront.getEvents()){
 
@@ -648,8 +650,11 @@ int main(int argc,char *argv[]){
 	     && decayEnergy > EmaxDecay
 	     ){
 
+	    reportedE = decayEnergy;
+	    reportedTime = decayTime;
 	    EmaxDecay = decayEnergy;
 	    foundDecay = true;
+
 	  }
 	    
 
@@ -667,8 +672,8 @@ int main(int argc,char *argv[]){
 	  Histo->hGammaVsDecay->Fill(decayEnergy,segaEvent.energy);
 	}
 	  
-	Histo->hDecayEnergy->Fill(decayEnergy);
-	Histo->hDecayTime->Fill(decayTime);
+	Histo->hDecayEnergy->Fill(reportedE);
+	Histo->hDecayTime->Fill(reportedTime);
 	
 	break;
       }
