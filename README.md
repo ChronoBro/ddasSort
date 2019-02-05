@@ -1,1 +1,1 @@
-## Program for sorting NSCL DDAS data that has been unbuilt to include only one ddaschannel per DDASEvent
+Program for sorting NSCL DDAS data that has been unbuilt to include only one ddaschannel per DDASEvent
