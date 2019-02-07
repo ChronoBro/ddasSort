@@ -9,11 +9,11 @@ void halfLife(){
   ostringstream dataName;
   ostringstream directory;
   directory << "../root-files/";
-  dataName << directory.str() << "testSr74.root";
+  dataName << directory.str() << "sort3all73Sr.root";
 
   double fitRange = 3E8;
-  fitRange = 6E8; // 1E9=1s
-
+  //fitRange = 6E8; // 1E9=1s
+  //fitRange = 1E9;
 
   TFile * data = new TFile(dataName.str().c_str());
   
@@ -24,7 +24,7 @@ void halfLife(){
   decayTime->GetYaxis()->SetTitle("Counts");
   decayTime->GetXaxis()->SetTitle("ms");
 
-  decayTime->Rebin(30);
+  decayTime->Rebin(25);
   decayTime->Sumw2();
 
   decayTime->GetXaxis()->SetRangeUser(0,fitRange);

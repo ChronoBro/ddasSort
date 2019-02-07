@@ -64,10 +64,12 @@ class histo
   TH1D  *hDecayTime;
   TH1D  *hDecayEnergyTGate;
   TH1D  *hDecayEnergy;
+  TH1D  *hDecayEnergyAll;
   TH1D  *hDecayEnergyAmp;
   TH1D  *hGammaEnergy;
   TH1D  *hPromptGammaEnergy;
   TH2D  *hGammaVsDecay;
+  TH2D  *hGammaVsDecayAll;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
 

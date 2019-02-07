@@ -16,18 +16,6 @@
 using namespace std;
 
 
-struct DSSDevent{
-  //can make this more complicated later, keeping things simple for now
-
-  double energy = 0;  //high gain MeV
-  unsigned int energyR = -1; //Raw signal
-  int channel = -1;
-  int strip = -1;
-  double time = 0;
-  long long int entry = 0;
-  
-};
-
 
 
 //shoutout to PherricOxide on StackOverflow for a quick test if a file exists
@@ -122,7 +110,6 @@ int main(int argc,char *argv[]){
   int maxSubRun = 9;
 
   TChain dataChain("dchan");
-  TChain * chain = new TChain("dchan"); //name of tree has to be same in each root file 
 
   for(int iFile=runStart;iFile<=runEnd;iFile++){
  
@@ -139,7 +126,7 @@ int main(int argc,char *argv[]){
 
       if( exists_test(infile.str()) ){
 
-      chain->AddFile(infile.str().c_str());
+      
       dataChain.AddFile(infile.str().c_str());
       cout << "added " << infile.str() << " to TChain                           " << endl; //have to use carriage return for flush
 
@@ -156,9 +143,9 @@ int main(int argc,char *argv[]){
   
   cout << endl;
 
-  long long int fNEntries = chain->GetEntries(); //64bit int, because I was using int for the entries I wasn't able to access long lists, hence sort failing for a long list of data files
+  long long int fNEntries = dataChain.GetEntries(); //64bit int, because I was using int for the entries I wasn't able to access long lists, hence sort failing for a long list of data files
 
-  cout << "Number of entries in TChain = " << chain->GetEntries() << endl;
+  cout << "Number of entries in TChain = " << fNEntries << endl;
   cout << endl;
 
 
@@ -297,14 +284,14 @@ int main(int argc,char *argv[]){
     ////cout << fh_ChannelDelays->GetBinContent(4) << endl;
   }else{
     cerr << "WARNING: Could not find channel delay file. Delays set to ZERO." << endl;
-    fh_ChannelDelays = new TH1D("h_Delays","",300,0,300);
+    fh_ChannelDelays = new TH1D("h_Delays","",300,0,300); // <--- could add timeOffset to ddasDet and load in delay with detectors
   }
   
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates.root","READ");
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
 
@@ -361,10 +348,12 @@ int main(int argc,char *argv[]){
     ddasDet trigger(trigChan);
     ddasDet TOF(5); // PIN2-XFP TAC
     
-    double coinWindow     =  5000;//5000;//2000;        // Time (ns)
+    double coinWindow     =  10000;//5000;//2000;        // Time (ns)
     double promptWindow   =  2000;
     double coinGammaWindow=  1000;        // Time (ns)
     double corrWindow     =  1E9;        // Time (ns)  now 1000ms (1s)
+    double waitWindow     =  1E5; // 0.1 ms
+
     bool foundIonOfInterest = false;
     bool foundImplant = false;
     bool foundTrigger = false;
@@ -447,15 +436,6 @@ int main(int argc,char *argv[]){
 
     }
 
-    if(checkSEGA){ //readout prompt gammas
-      for(auto & SEGAdet : SEGA){
-	
-	for(auto segaEvent : SEGAdet.getEvents()){
-	  Histo->hPromptGammaEnergy->Fill(segaEvent.energy);
-	}
-
-      }
-    }
 
     //curTOF = TOF.getFillerEvent().signal;
     Histo->h_PID->Fill(curTOF, PIN1energy);
@@ -465,6 +445,20 @@ int main(int argc,char *argv[]){
                                               //once I have routine for checking DSSD events, should require that there are front+back events
                                               // DONE
       foundIonOfInterest = true;              //--->can also add other gates to find other ions
+
+
+      //only want to read out prompt gammaes if gated on ion
+
+      if(checkSEGA){ //readout prompt gammas
+	for(auto & SEGAdet : SEGA){
+	
+	  for(auto segaEvent : SEGAdet.getEvents()){
+	    Histo->hPromptGammaEnergy->Fill(segaEvent.energy);
+	  }
+
+	}
+      }
+
     }
 
 
@@ -513,16 +507,35 @@ int main(int argc,char *argv[]){
     //cout << "Front Implant Strip = " << fImplantEFMaxStrip << endl;
     //cout << "Back Implant Strip = " << fImplantEBMaxStrip << endl;
 
+
+    //setting a waiting time to cut out short-lived products
+    for(; abs(buffer.getFillerEvent().time - triggerTime) < waitWindow ;){
+      if(lastEntry >= dataChain.GetEntries()){break;}
+      dataChain.GetEntry(lastEntry++);
+      buffer.fillEvent(curChannel, pDDASEvent);
+   
+      progress0 =  (double)lastEntry/(double)dataChain.GetEntries();
+      if(lastEntry % 10000 == 0){   
+	loadBar(progress0);    
+      }   
+   
+    }
+
+    //clear buffer to trigger on DSSD events
     buffer.clear();
 
+
     //now look for correlations
-
-
     do{
+
+
+      
       bool foundDecay = false;
       bool foundDSSD = false;
+      bool foundDSSDfront = false;
+      bool foundDSSDback = false;
       bool secondImplant = false;
-      double DSSDtime = 0;
+      double DSSDtime = 0; //want to set trigger time of DSSD
 
       if(lastEntry >= dataChain.GetEntries()){break;}
       dataChain.GetEntry(lastEntry++);
@@ -545,17 +558,18 @@ int main(int argc,char *argv[]){
       for(auto & fronts : DSSDfrontHighGain){
 	if(fronts.fillEvent(buffer.getFillerEvent())){
 	  DSSDtime = buffer.getFillerEvent().time;
-	  foundDSSD = true;
+	  foundDSSDfront = true;
 	}
       }
 
       for(auto & backs : DSSDbackHighGain){
 	if(backs.fillEvent(buffer.getFillerEvent())){
 	  DSSDtime = buffer.getFillerEvent().time;
-	  foundDSSD = true;	  
+	  foundDSSDback = true;	  
 	}
       }
 
+      foundDSSD = foundDSSDfront && foundDSSDback; //check that both front and back fired
 
       if(!foundDSSD){continue;} // keep searching until a DSSD is found
 
@@ -589,8 +603,8 @@ int main(int argc,char *argv[]){
       for(auto & bufferEvent : buffer.getEvents()){
 
 	for(auto & DSSDfront : DSSDfrontHighGain){
-	  if(DSSDfront.fillEvent(bufferEvent)){
-	    decayEventsFront.fillEvent(DSSDfront.getFillerEvent()); //event gets calibrated when filler, if filled with buffer event energy=-1
+	  if(DSSDfront.fillEvent(bufferEvent)){ //event gets calibrated when filled
+	    decayEventsFront.fillEvent(DSSDfront.getFillerEvent()); // if filled with bufferEvent, energy=-1
 
 	  }	    
 	}
@@ -614,20 +628,36 @@ int main(int argc,char *argv[]){
       //cout << decayEventsFront.getEvents().size() << endl;
       //cout << decayEventsBack.getEvents().size() << endl;
 
-      double EdiffThreshold = 200; //keV
-      double Ethreshold = 100; //keV
+      //criterion for tagging as decay
+      double EdiffThreshold = 200; //keV <---perhaps using a ratio of Ediff to total E is a better criterion, essentially %err of the measurement
+
+      double EdiffPercentThreshold = 0.2; //<--- This cut out almost ALL of the low energy 'beta' events
+                                          // creating a 0.1 ms wait window did not cut out more events, so I believe this has more of an effect
+                                          // on spurious events
+                                          // Long wait window (0.1ms) and removal of this added a lot more low energy events
+
+      double Ethreshold = 100; //keV <--- setting threshold has a large impact on decays seen, likely from large number of background betas
+                               // 100 keV cuts out very low energy noise ~98 keV
       int stripTolerance = 2;
+
+
       double decayTime = corrWindow;
       double decayEnergy = 0;
       double EmaxDecay = 0;
       double reportedE = 0;
       double reportedTime = 0;
+      int decayChannel = -1;
+      
+
+
+      ddasDet decayEvents(-1);
 
       for(auto & decayEventFront : decayEventsFront.getEvents()){
 
 	int frontStrip = decayEventFront.channel - 64;
 	decayEnergy = decayEventFront.energy;
-	decayTime = decayEventFront.time - triggerTime;//trigger.getFillerEvent().time; <--- bad idea since I was checking for second implant
+	decayTime = decayEventFront.time - triggerTime;//trigger.getFillerEvent().time; <--- bad idea since I check for second implant 
+	                                               //with trigger.fillEvent(buffer.getFillerEvent()); 
 
 	//cout << "front strip = " << frontStrip << endl;
 	//cout << "Front E = " << decayEnergy << endl;
@@ -639,10 +669,13 @@ int main(int argc,char *argv[]){
 	  double Ediff = abs(decayEventFront.energy - decayEventBack.energy);
 	  int backStrip = decayEventBack.channel - 144;
 	    
+	  double EdiffPercent = abs(Ediff/decayEnergy);
+
 	  //cout << "back strip = " << backStrip << endl;
 	  //cout << "Back E = " << decayEventBack.energy << endl;
 
 	  if(Ediff < EdiffThreshold
+	     && EdiffPercent < EdiffPercentThreshold
 	     && decayEventBack.energy > Ethreshold 
 	     && decayEventFront.energy > Ethreshold 
 	     && abs(fImplantEFMaxStrip - frontStrip) < stripTolerance 
@@ -650,8 +683,10 @@ int main(int argc,char *argv[]){
 	     && decayEnergy > EmaxDecay
 	     ){
 
+	    decayEvents.fillEvent(decayEventFront); //<--- could read out all "valid" DSSD events found in decay
 	    reportedE = decayEnergy;
 	    reportedTime = decayTime;
+	    decayChannel = decayEventFront.channel;
 	    EmaxDecay = decayEnergy;
 	    foundDecay = true;
 
@@ -667,10 +702,34 @@ int main(int argc,char *argv[]){
       if(foundDecay){
 	//cout << "Found Decay Event!" << endl;
 	//dump gamma events
+
+	//dump out all decay events within coinWindow
+	for(auto & decayEvent : decayEvents.getEvents()){
+	  Histo->hDecayEnergyAll->Fill(decayEvent.energy);
+	  
+	  for(auto & segaEvent : segaEvents.getEvents()){
+	    //Histo->hGammaEnergy->Fill(segaEvent.energy);
+	    Histo->hGammaVsDecay->Fill(decayEvent.energy,segaEvent.energy);
+	  }
+	  
+	}
+	
+
 	for(auto & segaEvent : segaEvents.getEvents()){
 	  Histo->hGammaEnergy->Fill(segaEvent.energy);
 	  Histo->hGammaVsDecay->Fill(decayEnergy,segaEvent.energy);
+	  // if(segaEvent.energy > 9000){
+	  //   cout << "Found large energy SEGA event" << endl; //diagnostics of high energy events
+	  //   cout << segaEvent.channel << endl;               //its possible these events are underflow
+	  //                                                    //it appears these events only occur for channel 31, so they are likely unphysical
+	  // }
 	}
+
+	// if(decayEnergy > 7500){
+	//   cout << "Found large energy decay event" << endl;
+	//   cout << decayChannel << endl;
+	// } //diagnostics of higher energy events
+	  //its possible these events come from "bad" channels
 	  
 	Histo->hDecayEnergy->Fill(reportedE);
 	Histo->hDecayTime->Fill(reportedTime);
@@ -680,7 +739,7 @@ int main(int argc,char *argv[]){
 
 
 
-    } while(abs( buffer.getFillerEvent().time - triggerTime) < corrWindow );
+    } while(abs( buffer.getFillerEvent().time - triggerTime) < corrWindow ); //only do second search over correlation window
    
     //clear detectors that are called outside of event loop
 
