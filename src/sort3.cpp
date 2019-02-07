@@ -348,7 +348,7 @@ int main(int argc,char *argv[]){
     ddasDet trigger(trigChan);
     ddasDet TOF(5); // PIN2-XFP TAC
     
-    double coinWindow     =  10000;//5000;//2000;        // Time (ns)
+    double coinWindow     =  5000;//5000;//2000;        // Time (ns)
     double promptWindow   =  2000;
     double coinGammaWindow=  1000;        // Time (ns)
     double corrWindow     =  1E9;        // Time (ns)  now 1000ms (1s)
@@ -569,7 +569,8 @@ int main(int argc,char *argv[]){
 	}
       }
 
-      foundDSSD = foundDSSDfront && foundDSSDback; //check that both front and back fired
+      //foundDSSD = foundDSSDfront && foundDSSDback; //BAAAD idea since finding trigger...
+      foundDSSD = foundDSSDfront || foundDSSDback;
 
       if(!foundDSSD){continue;} // keep searching until a DSSD is found
 
@@ -702,6 +703,8 @@ int main(int argc,char *argv[]){
       if(foundDecay){
 	//cout << "Found Decay Event!" << endl;
 	//dump gamma events
+
+	if(decayChannel == 67 || decayChannel == 78 || decayChannel == 79){break;} //exclude bad channels
 
 	//dump out all decay events within coinWindow
 	for(auto & decayEvent : decayEvents.getEvents()){
