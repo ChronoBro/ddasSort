@@ -1,0 +1,8 @@
+diagnostics::diagnositics(){
+
+
+}
+
+diagnostics::~diagnostics(){
+
+}

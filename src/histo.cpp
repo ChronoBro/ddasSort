@@ -93,7 +93,8 @@ void histo::histos(){
   hDecayXY   = new TH2I("hDecayXY", "DSSD hit pattern (xy position)",  40,-20,20,40,-20,20);
   hDecayXY->GetXaxis()->SetTitle("x (mm)");
   hDecayXY->GetYaxis()->SetTitle("y (mm)");
-
+  rawSSDhiGain = new TH1I("rawSSDhiGain_all", "SSD raw All strips",(int)pow(2,10),0,pow(2,15));
+  rawScint = new TH1I("rawScint", "Raw Scintillator",(int)pow(2,10),0,pow(2,15));
 
 }
 

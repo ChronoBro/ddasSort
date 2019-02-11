@@ -72,7 +72,8 @@ class histo
   TH2D  *hGammaVsDecayAll;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
-
+  TH1I  *rawSSDhiGain;
+  TH1I  *rawScint;
 
   std::string name;
   

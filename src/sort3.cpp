@@ -12,6 +12,7 @@
 #include <vector>
 //#include "ddasDet.h"
 #include "ddasArray.h"
+#include "diagnostics.h"
 
 using namespace std;
 
@@ -183,6 +184,16 @@ int main(int argc,char *argv[]){
   vector< vector<double> > frontCalib;
   vector< vector<double> > backCalib;
 
+
+  vector<ddasDet> SSDhiGain;
+  for(int i=32;i<48;i++){
+    ddasDet fillDet(i);
+    SSDhiGain.push_back(fillDet);
+  }
+
+
+
+  //DSSD is 300 micron thick?
   vector<ddasDet> DSSDfrontHighGain;
   vector<ddasDet> DSSDbackHighGain;
   
@@ -290,13 +301,19 @@ int main(int argc,char *argv[]){
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates.root","READ");
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
 
   cout << "--> Loaded Gate: " << fGate->GetName() << endl << endl;
   fGateFile->Close();
+
+
+  //creating diagnostics class for counting...
+  diagnostics counterList;
+  counterList.add("foundIon");
+
 
 
   /*****************************************
@@ -334,6 +351,8 @@ int main(int argc,char *argv[]){
   // //std::vector<ddaschannel*> ionChannels;  //! vector of channels for a given DDASEvent, if regular built this will be useful
   // oTree->Branch("ddasEvent",&ionEvent);
 
+  // With below method working for finding events, should further abstract this so I can add different triggers and such
+
   for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
 
     if(pDDASEvent->GetNEvents()>1) {cerr << "-->ERROR: Must be run on non-built event data." << endl; exit(0);} //each DDASEvent has 1 ddaschannel
@@ -347,6 +366,7 @@ int main(int argc,char *argv[]){
     int trigChan =0; //channel for PIN1 at front of stack
     ddasDet trigger(trigChan);
     ddasDet TOF(5); // PIN2-XFP TAC
+
     
     double coinWindow     =  5000;//5000;//2000;        // Time (ns)
     double promptWindow   =  2000;
@@ -420,6 +440,7 @@ int main(int argc,char *argv[]){
 	//cout << "FoundTOF" << endl;
       }
 
+
       for(auto & DSSDfront : DSSDfrontLoGain){
 	if(DSSDfront.fillEvent(bufferEvent)){checkFront = true;}
 	//cout << "found front" << endl;
@@ -458,6 +479,7 @@ int main(int argc,char *argv[]){
 
 	}
       }
+
 
     }
 
@@ -536,6 +558,8 @@ int main(int argc,char *argv[]){
       bool foundDSSDback = false;
       bool secondImplant = false;
       double DSSDtime = 0; //want to set trigger time of DSSD
+      double SSDtime = 0;
+      bool foundSSD = false;
 
       if(lastEntry >= dataChain.GetEntries()){break;}
       dataChain.GetEntry(lastEntry++);
@@ -599,9 +623,14 @@ int main(int argc,char *argv[]){
       ddasDet decayEventsFront(-1);
       ddasDet decayEventsBack(-1);
       ddasDet segaEvents(-1);
+      ddasDet SSDEvents(-1);
+
+      ddasDet Scint(15); //Scintillator at back of stack?
 
       //dump buffer into detectors
       for(auto & bufferEvent : buffer.getEvents()){
+
+	Scint.fillEvent(bufferEvent);
 
 	for(auto & DSSDfront : DSSDfrontHighGain){
 	  if(DSSDfront.fillEvent(bufferEvent)){ //event gets calibrated when filled
@@ -620,7 +649,12 @@ int main(int argc,char *argv[]){
 	for(auto & SEGAdet : SEGA){
 	  if(SEGAdet.fillEvent(bufferEvent)){
 	    segaEvents.fillEvent(SEGAdet.getFillerEvent());
+	  }
+	}
 
+	for(auto & SSDstrip : SSDhiGain){
+	  if(SSDstrip.fillEvent(bufferEvent)){
+	    SSDEvents.fillEvent(SSDstrip.getFillerEvent());
 	  }
 	}
 
@@ -704,7 +738,11 @@ int main(int argc,char *argv[]){
 	//cout << "Found Decay Event!" << endl;
 	//dump gamma events
 
-	if(decayChannel == 67 || decayChannel == 78 || decayChannel == 79){break;} //exclude bad channels
+	//if(decayChannel == 67 || decayChannel == 78 || decayChannel == 79){break;} //exclude bad channels
+	                                                                             //shouldn't need above with %E_error check
+
+	if(decayTime < 2E8){Histo->hDecayEnergyTGate->Fill(decayEnergy);} //events found in first 200 ms
+
 
 	//dump out all decay events within coinWindow
 	for(auto & decayEvent : decayEvents.getEvents()){
@@ -736,6 +774,15 @@ int main(int argc,char *argv[]){
 	  
 	Histo->hDecayEnergy->Fill(reportedE);
 	Histo->hDecayTime->Fill(reportedTime);
+
+	for(auto & scintEvent : Scint.getEvents()){
+	  Histo->rawScint->Fill(scintEvent.signal);
+	}
+
+
+	for(auto & SSDEvent : SSDEvents.getEvents()){
+	  Histo->rawSSDhiGain->Fill(SSDEvent.signal);
+	}
 	
 	break;
       }
@@ -756,6 +803,10 @@ int main(int argc,char *argv[]){
 
     for(auto segaDet : SEGA){
       segaDet.clear();
+    }
+    
+    for(auto SSDstrip : SSDhiGain){
+      SSDstrip.clear();
     }
     
 
