@@ -301,9 +301,9 @@ int main(int argc,char *argv[]){
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates.root","READ");
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
-  //  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
 
   cout << "--> Loaded Gate: " << fGate->GetName() << endl << endl;
@@ -313,7 +313,9 @@ int main(int argc,char *argv[]){
   //creating diagnostics class for counting...
   diagnostics counterList;
   counterList.add("foundIon");
-
+  counterList.add("decays");
+  counterList.add("lostIonNoImplantation");
+  counterList.add("lostIonNoDecay");
 
 
   /*****************************************
@@ -466,7 +468,7 @@ int main(int argc,char *argv[]){
                                               //once I have routine for checking DSSD events, should require that there are front+back events
                                               // DONE
       foundIonOfInterest = true;              //--->can also add other gates to find other ions
-
+      counterList.count("foundIon");
 
       //only want to read out prompt gammaes if gated on ion
 
@@ -526,6 +528,8 @@ int main(int argc,char *argv[]){
     //only take events where the implantation event was found
     if(!foundIonOfInterest){continue;}
 
+    if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");} 
+
     //cout << "Front Implant Strip = " << fImplantEFMaxStrip << endl;
     //cout << "Back Implant Strip = " << fImplantEBMaxStrip << endl;
 
@@ -545,6 +549,7 @@ int main(int argc,char *argv[]){
 
     //clear buffer to trigger on DSSD events
     buffer.clear();
+
 
 
     //now look for correlations
@@ -735,6 +740,7 @@ int main(int argc,char *argv[]){
 
 
       if(foundDecay){
+	counterList.count("decays");
 	//cout << "Found Decay Event!" << endl;
 	//dump gamma events
 
@@ -790,6 +796,7 @@ int main(int argc,char *argv[]){
 
 
     } while(abs( buffer.getFillerEvent().time - triggerTime) < corrWindow ); //only do second search over correlation window
+
    
     //clear detectors that are called outside of event loop
 
@@ -816,6 +823,12 @@ int main(int argc,char *argv[]){
   } //end of loop over entries
 
   Histo->write(); // this forces the histrograms to be read out to file
+
+  cerr << "Total number of Ions of Interest found: " << counterList.returnValue("foundIon") << endl;
+  cerr << "Total number of decays found: " << counterList.returnValue("decays") << endl;
+  cerr << "Total number of Ions lost in implantation: " << counterList.returnValue("lostIonNoImplantation") << endl;
+  cerr << "Total number of Ions lost in decay: " << counterList.returnValue("foundIon") - counterList.returnValue("decays") - counterList.returnValue("lostIonNoImplantation") << endl;
+  cerr << endl;
 
   return 1;
 }

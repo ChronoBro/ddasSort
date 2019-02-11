@@ -35,7 +35,8 @@ void diagnostics::count(std::string counterName){
 	nCounter.n++;
       }	
   }
-  std::cout<< std::endl << "No matching counter found for " << counterName << std::endl;
+  
+  //std::cout<< std::endl << "No matching counter found for " << counterName << std::endl;
 
 }
 
