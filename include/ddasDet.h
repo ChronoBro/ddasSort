@@ -10,6 +10,7 @@ struct Event{
   int channel = -1;
   double time = 0;
   long long int entry = -1;
+  std::vector<unsigned short> trace;
 };
 
 
@@ -28,6 +29,7 @@ class ddasDet{
   void pop(){events.erase(events.begin());}
   void addEvent(Event event){events.push_back(event);}
   bool fillEvent(Event fillerEvent0);
+  std::vector<unsigned short> getTrace(){;}
 
  private:
   int assignedChannel;
@@ -36,6 +38,5 @@ class ddasDet{
   double calibrate(unsigned int energyR);
   std::vector<double> params;
   Event fillerEvent;
-  
 
 };

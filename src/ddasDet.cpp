@@ -13,6 +13,8 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
     //std::cout << fillerEvent.channel << std::endl;
     fillerEvent.signal = foundChannel->GetEnergy();
     fillerEvent.time = foundChannel->GetCoarseTime();
+    //std::vector<double> fill(foundChannel->GetTrace().begin(),foundChannel->GetTrace().end(), fillerEvent.trace.get_allocator());
+    fillerEvent.trace = foundChannel->GetTrace();
 
     if(isCalibrated){
       fillerEvent.energy = calibrate(fillerEvent.signal);
@@ -35,6 +37,10 @@ bool ddasDet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
     fillerEvent.signal = foundChannel->GetEnergy();
     fillerEvent.time = foundChannel->GetCoarseTime();
 
+    //std::vector<double> fill(foundChannel->GetTrace().begin(),foundChannel->GetTrace().end(),fillerEvent.trace.get_allocator());
+    fillerEvent.trace = foundChannel->GetTrace();
+
+    //fillerEvent.trace = foundChannel->GetTrace();
     
     events.push_back(fillerEvent);
     return true;
@@ -54,6 +60,10 @@ bool ddasDet::fillEvent(Event fillerEvent0){
     //std::cout << fillerEvent.channel << std::endl;
     fillerEvent.signal = fillerEvent0.signal;
     fillerEvent.time = fillerEvent0.time;
+    fillerEvent.trace = fillerEvent0.trace;
+    
+
+    //fillerEvent.trace = fillerEvent0.trace;
 
     if(isCalibrated){
       fillerEvent.energy = calibrate(fillerEvent0.signal);

@@ -9,7 +9,8 @@ void halfLife(){
   ostringstream dataName;
   ostringstream directory;
   directory << "../root-files/";
-  dataName << directory.str() << "sort3all73Sr_better.root";
+  //dataName << directory.str() << "sort3all73Sr_better.root";
+  dataName << directory.str() << "test101.root";
 
   double fitRange = 3E8;
   //fitRange = 6E8; // 1E9=1s
@@ -24,7 +25,7 @@ void halfLife(){
   decayTime->GetYaxis()->SetTitle("Counts");
   decayTime->GetXaxis()->SetTitle("ms");
 
-  decayTime->Rebin(20);
+  decayTime->Rebin(50);
   decayTime->Sumw2();
 
   decayTime->GetXaxis()->SetRangeUser(0,fitRange);

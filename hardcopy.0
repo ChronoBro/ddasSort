@@ -1,0 +1,50 @@
+added remote/root-files/run-0202-01_NoBuild.root to TChain
+added remote/root-files/run-0203-00_NoBuild.root to TChain
+added remote/root-files/run-0203-01_NoBuild.root to TChain
+added remote/root-files/run-0204-00_NoBuild.root to TChain
+added remote/root-files/run-0204-01_NoBuild.root to TChain
+added remote/root-files/run-0205-00_NoBuild.root to TChain
+added remote/root-files/run-0205-01_NoBuild.root to TChain
+added remote/root-files/run-0206-00_NoBuild.root to TChain
+added remote/root-files/run-0206-01_NoBuild.root to TChain
+added remote/root-files/run-0207-00_NoBuild.root to TChain
+added remote/root-files/run-0207-01_NoBuild.root to TChain
+added remote/root-files/run-0208-00_NoBuild.root to TChain
+added remote/root-files/run-0209-00_NoBuild.root to TChain
+added remote/root-files/run-0210-00_NoBuild.root to TChain
+added remote/root-files/run-0210-01_NoBuild.root to TChain
+added remote/root-files/run-0211-00_NoBuild.root to TChain
+added remote/root-files/run-0212-00_NoBuild.root to TChain
+added remote/root-files/run-0213-00_NoBuild.root to TChain
+added remote/root-files/run-0213-01_NoBuild.root to TChain
+added remote/root-files/run-0214-00_NoBuild.root to TChain
+added remote/root-files/run-0214-01_NoBuild.root to TChain
+added remote/root-files/run-0215-00_NoBuild.root to TChain
+added remote/root-files/run-0215-01_NoBuild.root to TChain
+added remote/root-files/run-0216-00_NoBuild.root to TChain
+added remote/root-files/run-0216-01_NoBuild.root to TChain
+added remote/root-files/run-0217-00_NoBuild.root to TChain
+added remote/root-files/run-0217-01_NoBuild.root to TChain
+added remote/root-files/run-0218-00_NoBuild.root to TChain
+added remote/root-files/run-0218-01_NoBuild.root to TChain
+added remote/root-files/run-0219-00_NoBuild.root to TChain
+added remote/root-files/run-0219-01_NoBuild.root to TChain
+added remote/root-files/run-0220-00_NoBuild.root to TChain
+added remote/root-files/run-0220-01_NoBuild.root to TChain
+
+Number of entries in TChain = 1625806122
+
+--> Loaded Gate: cut_73Sr
+
+ Processing Events...
+ DONE! --->histos written to file root-files/sort3Sr71set2.root
+
+Total number of Ions of Interest found: 119
+Total number of decays found: 59
+Total number of Ions lost in implantation: 13
+Total number of Ions lost in decay: 47
+Decays lost to second Implantation: 5
+
+[hoff@kilimanjaro ddasSort]$ cd root-files/
+[hoff@kilimanjaro root-files]$ rm sort3all73Sr_fixed.root
+[hoff@kilimanjaro root-files]$

@@ -4,7 +4,7 @@
 #include <sstream>
 #include <fstream>
 #include <iostream>
-
+#include "TGraph.h"
 #include "TH1I.h"
 #include "TH2I.h"
 #include "TH3I.h"
@@ -23,17 +23,23 @@ class histo
 
 
   //CsI
-  TDirectoryFile * dirHistos; //!< directory for the CsI info
-  TDirectory * channels;
-
 
  public:
+  TDirectoryFile * dirHistos; //!< directory for the CsI info
+  TDirectory * channels;
+  TDirectory * dirTraces;
+
+
   histo();                  //!< constructor
   ~histo(){write();delete file;}
   histo(std::string name0);
   void write(); //!< write the root spectra to file
   void histos();
-  
+
+  TGraph * traces[50]; //bad idea to hard code this... should come up with better method to fill traces
+
+  std::vector<TGraph*> graphTraces;
+
   TH1I * energyCheck;
   TH2I * h_raw_summary;
   TH1I  *h_raw_DSSD[80];
@@ -59,16 +65,20 @@ class histo
   TH2I  *h_cal_DSSD_hits;
 
   TH2I  *h_PID;
+  TH2I  *h_PIN1vsPIN2;
   TH2I  *hImplantXY;
   TH2I  *hDecayXY;
   TH1D  *hDecayTime;
   TH1D  *hDecayEnergyTGate;
   TH1D  *hDecayEnergy;
+  TH1D  *hDecayEnergyTot;
   TH1D  *hDecayEnergyAll;
   TH1D  *hDecayEnergyAmp;
   TH1D  *hGammaEnergy;
+  TH2D  *hGammaVsDecayTGated;
   TH1D  *hPromptGammaEnergy;
   TH2D  *hGammaVsDecay;
+  TH2D  *hGammaVsDecayEtot;
   TH2D  *hGammaVsDecayAll;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;

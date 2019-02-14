@@ -46,6 +46,7 @@ void histo::histos(){
   dirHistos = new TDirectoryFile("Histos","Histos");
   dirHistos->cd();
   channels = dirHistos->mkdir("channels","channels");
+  dirTraces = dirHistos->mkdir("traces","traces");
 
   //dirCsIRaw = dirCsI->mkdir("CsIRaw","raw");
   
@@ -65,6 +66,7 @@ void histo::histos(){
     h_raw_DSSD_M1[i] = new TH1I(name1,title,(Int_t)pow(2,15),0,pow(2,15));
   }
   
+  
   dirHistos->cd();
   h_mult   = new TH1I("h_mult",  "DSSD Multiplicity",      40,0,40);
   h_mult_F = new TH1I("h_mult_F","DSSD Front Multiplicity",40,0,40);
@@ -76,14 +78,18 @@ void histo::histos(){
   h_raw_DSSD_hitsXY->GetYaxis()->SetTitle("y (mm)");
   
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
+  h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
   hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",1000,0,1E9); // ms
   hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",1500,0,15000);
+  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",1500,0,15000);
   hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",1500,0,15000);
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",2500,0,15000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
   hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);
   hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
+  hGammaVsDecayEtot = new TH2D("hGammaVsDecayEtot","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
+  hGammaVsDecayTGated = new TH2D("hGammaVsDecayTGated","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayAll = new TH2D("hGammaVsDecayAll","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
   hSeGAEnergy  = new TH2D("hSeGAEnergy","SeGA gamma energies",16,0,16,5000,0,10000);
@@ -101,6 +107,11 @@ void histo::histos(){
 
 void histo::write()
 {
+  dirTraces->cd();
+  for(auto & trace : graphTraces){
+    trace->Write();
+  }
+
   file->Write();
   std::cerr << " DONE! --->histos written to file root-files/" << name << "                                           " << std::endl << std::endl;
   //file->Close();
