@@ -305,8 +305,8 @@ int main(int argc,char *argv[]){
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates2.root","READ");
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -494,6 +494,7 @@ int main(int argc,char *argv[]){
 	}
       }
 
+      //andy wants me to read out traces for DSSD implantation events
 
     }
 
@@ -523,6 +524,7 @@ int main(int argc,char *argv[]){
 
       }	
     }
+
 
     //clear event lists for stuff already used
     for(auto & fronts : DSSDfrontLoGain){
@@ -778,12 +780,12 @@ int main(int argc,char *argv[]){
 	  Etot+= decayEvent.energy; //now Etot should only be comprised of events that pass my valid event filter above
 
 
-	  if(decayEvent.energy < 1500 && nTraces < maxNtraces){
+	  if(decayEvent.energy < 6000 && nTraces < maxNtraces){
 	    int size = decayEvent.trace.size();
 	    double x[size];
 	    double y[size];
 	    ostringstream title;
-	    title << "Trace_E-" << decayEvent.energy << "_Event-" << counterList.returnValue("decays");
+	    title << "Trace_E-" << decayEvent.energy << "_Event-" << counterList.returnValue("decays") << "_Tree-" << dataChain.GetTreeNumber();
 
 	    for(int i=0;i<size;i++){
 	      x[i] = i;
@@ -795,13 +797,13 @@ int main(int argc,char *argv[]){
 	    gr->SetName(title.str().c_str());
 	    //Histo->dirTraces->cd();
 	    Histo->graphTraces.push_back(gr);
-	    //delete gr; //need to keep TGraph in memory for ROOT to pickup TGraph when writing out to file
+	    //delete gr; //need to keep TGraph in memory for ROOT to pickup TGraph when writing to file
 	    nTraces++;
 	  }
 
 	  for(auto & segaEvent : segaEvents.getEvents()){
 	    //Histo->hGammaEnergy->Fill(segaEvent.energy);
-	    Histo->hGammaVsDecayAll->Fill(decayEvent.energy,segaEvent.energy);
+	    Histo->hGammaVsDecayAll->Fill(decayEvent.energy, segaEvent.energy);
 	  }
 	  
 	}
