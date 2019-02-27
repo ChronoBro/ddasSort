@@ -8,6 +8,7 @@ R__LOAD_LIBRARY(/home/hoff/Projects/e12024/Analysis/lib/libddaschannel.so) //som
 #include <iterator>
 #include <numeric>
 
+
 //gROOT->ProcessLine(".L ../lib/libddaschannel.so");
 
 TH2F *raw_summary = new TH2F("raw_summary","raw_summary",250,0,250,(int)TMath::Power(2,12),0,TMath::Power(2,15));
@@ -22,8 +23,13 @@ TH1D *raw_channelGated =  new TH1D("raw_channelGated","raw_channelGated",(int)TM
 TH1D *max_channelCheck =  new TH1D("max_channelCheck","max_channelCheck",6000,-1000,5000);
 TH2I *QDCvPeak = new TH2I("QDCvPeak","QDCvPeak",6000,-1000,5000,6000,-1000,5000);
 TH2I *reportEvPeak = new TH2I("reportEvPeak","reportEvPeak",(int)TMath::Power(2,12),0,TMath::Power(2,15),6000,-1000,5000);
+TH2I *reportEvQDC = new TH2I("reportEvQDC","reportEvQDC",(int)TMath::Power(2,12),0,TMath::Power(2,15),6000,-1000,5000);
 TH2I *QDCvPeakChanCheck = new TH2I("QDCvPeakChanCheck","QDCvPeakChanCheck",6000,-1000,5000,6000,-1000,5000);
-
+TH1I *timing = new TH1I("Timing","Timing",1000,-500,500);
+TH1I *timingBad = new TH1I("TimingBad","TimingBad",1000,-500,500);
+TH2I *qdcBad = new TH2I("invertedQDC","invertedQDC",2000,-1000,1000,2000,-1000,1000);
+TH1I *chanBad = new TH1I("badChan","badChan",200,0,200);
+TH1D *gammaTot = new TH1D("gammaTot","gammaTot",10000,0,10000);
 
 // double Integrate(int x1,int x2,double *x,double *y, double baseline1) //Trapezoidal rule
 // {
@@ -53,6 +59,25 @@ TH2I *QDCvPeakChanCheck = new TH2I("QDCvPeakChanCheck","QDCvPeakChanCheck",6000,
 
 void waveformAnalysis(){
 
+  TFile          *fSeGACalFile; //!
+  char name[500],title[500];
+  TList * fSeGACalibFunc = new TList();
+  int SeGAchannel = 16;
+  fSeGACalFile = new TFile("../Calibrations/SeGACalibrations.root","READ");
+  for(Int_t i=0; i<16; i++){
+    sprintf(name,"f_cal_SeGA_%02i",i);
+    TF1 *funG= (TF1*)fSeGACalFile->FindObjectAny(name);
+    TF1 *fCalG = new TF1(name,"pol1",0,35000);
+
+    fCalG->SetParameter(0, funG->GetParameter(0));
+    fCalG->SetParameter(1, funG->GetParameter(1));
+    fSeGACalibFunc->Add(fCalG);
+
+    delete funG;
+  }
+  fSeGACalFile->Close();
+
+
   ifstream calib("../Calibrations/alphaCalib.dat");
 
   if(!calib.is_open()){
@@ -77,7 +102,7 @@ void waveformAnalysis(){
   }
 
   ostringstream infile;
-  int run = 306; //run 306 = 148Gd source test behind DSSD
+  int run = 315;//47;//306; //run 306 = 148Gd source test behind DSSD
   int subRun = 0;
   int chanCheck = 100;
 
@@ -123,17 +148,24 @@ void waveformAnalysis(){
   double maxTraces = 200.;
   double traceCounter = 0.;
 
+  double oldTime = 0;
+  double curTime = 2E9;
+  double oldQDC = 100;
+
+
 
   for(int i=0;i<nentries;i++){
     tr->GetEvent(i);
     channel_data=anEvent->GetData();
+    
+
     for(auto ch: channel_data){
       double reportedE = ch->GetEnergy();
       int chan = ch->GetCrateID()*64+(ch->GetSlotID()-2)*16+ch->GetChannelID();
       raw_summary->Fill(chan,ch->GetEnergy());
       raw_channel[chan]->Fill(ch->GetEnergy());
-
       //cout << chan << endl;
+      curTime = ch->GetCoarseTime();
 
       int gainCheck=0;
       for(int j=0;j<250;j++){
@@ -143,7 +175,15 @@ void waveformAnalysis(){
 	  break;
 	}
       }
-      
+
+      if(chan>=16 && chan < 32){
+      TF1 *fSeGAHighCal = (TF1*)fSeGACalibFunc->At(chan-16);
+      //Double_t value =  (TF1*)fSeGACalibFunc->At(chan-16)->Eval(ch->GetEnergy());
+      Double_t value = fSeGAHighCal->Eval(ch->GetEnergy());//+fRand->Uniform());
+      // //cout << "FOUND Gamma " << value << endl;
+      gammaTot->Fill(value);
+      }
+
       calibrated_summary->Fill(chan,ch->GetEnergy()*gains[gainCheck]+offsets[gainCheck]);
       //cout << ch->GetEnergy()*gains[gainCheck]+offsets[gainCheck] << endl;
       calibrated_channel[chan]->Fill(ch->GetEnergy()*gains[gainCheck]+offsets[gainCheck]);
@@ -199,6 +239,8 @@ void waveformAnalysis(){
       hEPeak->Fill(chan,max);
       QDCvPeak->Fill(qdc0,max);
       reportEvPeak->Fill(reportedE,max);
+      reportEvQDC->Fill(reportedE,qdc0);
+      timing->Fill(curTime-oldTime);
       if(chan==chanCheck) {
 	QDCvPeakChanCheck->Fill(qdc0,max);
 	raw_channelCheck->Fill(reportedE);
@@ -208,7 +250,9 @@ void waveformAnalysis(){
 	}
       }
 
-      if(reportedE > 0 && reportedE < 1000 && traceCounter < maxTraces && qdc0 < 0){// && max < 100){
+
+
+      if(reportedE > 0 && reportedE < 1000 && qdc0 < 0){// && max < 100){
 	//cout << "Found bad trace" << endl;
 	traceCounter++;
 	for(int iBin=0; iBin<samples;iBin++){
@@ -221,20 +265,30 @@ void waveformAnalysis(){
 	  maxCheck = max;
 	  derivativeCheck = derivative;
 	  QDCcheck = qdc0;
-	  std::ostringstream title;
-	  title << "Chan=" << chan << "-Max=" << max;
 
-	  dirTraces->cd();
-	  TGraph * badTrace = new TGraph(samples,x,y);
-	  badTrace->SetName("badTrace");
-	  badTrace->SetTitle(title.str().c_str()); //convert stringstream > string > character *
-	  badTrace->Write();
+	  timingBad->Fill(curTime - oldTime);
+	  qdcBad->Fill(qdc0,oldQDC);
+	  chanBad->Fill(chan);
 
-	  std::cout<<"Bad traces: "<< traceCounter << "                     \r" <<  std::flush; //need spaces to flush all characters
+	  if(traceCounter < maxTraces){
+	    std::ostringstream title;
+	    title << "Chan=" << chan << "-Max=" << max;
+
+	    dirTraces->cd();
+	    TGraph * badTrace = new TGraph(samples,x,y);
+	    badTrace->SetName("badTrace");
+	    badTrace->SetTitle(title.str().c_str()); //convert stringstream > string > character *
+	    badTrace->Write();
+
+	    std::cout<<"Bad traces: "<< traceCounter << "                     \r" <<  std::flush; //need spaces to flush all characters
+	  }
 
 
 	//abort();
       }
+      oldTime = curTime;
+      oldQDC = qdc0;
+
     }
     if(i%1000==0 || i==(nentries-1))
       std::cout<<"Processed "<<i<<"/"<<(nentries-1)<<" events\r"<<std::flush;
@@ -261,6 +315,12 @@ void waveformAnalysis(){
   QDCvPeakChanCheck->Write("");
   raw_channelCheck->Write("");
   raw_channelGated->Write("");
+  reportEvQDC->Write("");
+  timing->Write("");
+  timingBad->Write();
+  qdcBad->Write();
+  chanBad->Write();
+  gammaTot->Write();
   //badTrace->Write("");
   dirChan->cd();
   for(int i=0;i<250;i++) {

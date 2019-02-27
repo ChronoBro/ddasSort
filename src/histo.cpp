@@ -52,19 +52,20 @@ void histo::histos(){
   
   energyCheck = new TH1I("energyCheck","energyCheck",30000,0,30000);
   
-  h_raw_summary           = new TH2I("h_raw_summary",          "h_raw_summary",250,0,250,(int)pow(2,12),0,(int)pow(2,15));
+  h_raw_summary           = new TH2I("h_raw_summary","h_raw_summary",250,0,250,(int)pow(2,12),0,(int)pow(2,15));
+  h_PromptGamma_summary   = new TH2I("h_PromptGamma_summary","h_PromptGamma_summary",16,15.5,31.5,10000,0,10000);
 
   
-  channels->cd();
-  for(Int_t i=0; i<80; i++){
-    char name1[500], title[500];
-    sprintf(name1,"h_raw_DSSD_%02i",i);
-    sprintf(title,"RAW DSSD energy %02i",i);
-    h_raw_DSSD[i] = new TH1I(name1,title,(Int_t)pow(2,15),0,pow(2,15));
-    sprintf(name1,"h_raw_DSSD_M1_%02i",i);
-    sprintf(title,"RAW DSSD energy with one front and one back strip %02i",i);
-    h_raw_DSSD_M1[i] = new TH1I(name1,title,(Int_t)pow(2,15),0,pow(2,15));
-  }
+  // channels->cd();
+  // for(Int_t i=0; i<80; i++){
+  //   char name1[500], title[500];
+  //   sprintf(name1,"h_raw_DSSD_%02i",i);
+  //   sprintf(title,"RAW DSSD energy %02i",i);
+  //   h_raw_DSSD[i] = new TH1I(name1,title,(Int_t)pow(2,15),0,pow(2,15));
+  //   sprintf(name1,"h_raw_DSSD_M1_%02i",i);
+  //   sprintf(title,"RAW DSSD energy with one front and one back strip %02i",i);
+  //   h_raw_DSSD_M1[i] = new TH1I(name1,title,(Int_t)pow(2,15),0,pow(2,15));
+  // }
   
   
   dirHistos->cd();
@@ -80,10 +81,12 @@ void histo::histos(){
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
   hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",1000,0,1E9); // ms
-  hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",1500,0,15000);
-  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",1500,0,15000);
-  hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",1500,0,15000);
-  hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",2500,0,15000);
+  hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",1000,0,1E9); // ms
+  hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",15000,0,15000);
+  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",15000,0,15000);
+  hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",15000,0,15000);
+  hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",15000,0,15000);
+  hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",2500,0,15000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
   hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);

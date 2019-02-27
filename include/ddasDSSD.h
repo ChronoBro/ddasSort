@@ -4,15 +4,17 @@
 class ddasDSSD{
  public:
   ddasDSSD(){;}
-  ddasDSSD(int nStripsX, int nStripsY){fronts = new ddasArray(nStripsX);backs = new ddasArray(nStripsY);}
-  ddasDSSD(std::vector<int> frontChannels, std::vector<int> backChannels){;}
-  ~ddasDSSD(){delete fronts;delete backs;}
+  // ddasDSSD(int nStripsX, int nStripsY){fronts = new ddasArray(nStripsX);backs = new ddasArray(nStripsY);}
+  //ddasDSSD(std::vector<int> frontChannels, std::vector<int> backChannels){;}
+  ~ddasDSSD(){fronts.clear();backs.clear();}
   void fillEvents(Event fillerEvent);
   std::vector<Event> match();
 
  private:
-  ddasArray * fronts;
-  ddasArray * backs;
+  std::vector<ddasDet> fronts;
+  std::vector<ddasDet> backs;
+  //ddasDet frontEvents(-1.);
+  //ddasDet backEvents(-1.);
 
 
 };

@@ -2,7 +2,7 @@
 #include <vector>
 #include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
 #include "math.h"
-
+#include <algorithm>
 
 struct Event{
   double energy = -1;  //calibrated energy
@@ -30,6 +30,10 @@ class ddasDet{
   void addEvent(Event event){events.push_back(event);}
   bool fillEvent(Event fillerEvent0);
   std::vector<unsigned short> getTrace(){;}
+  static bool compareE(const Event & event1, const Event & event2); //static makes there be only 1 copy of this function regardless of how many ddasDet's get implemented. Takes it up a level, out of the class, allowing it to be used in sorting
+  void sortE();
+  void erase(int i){auto it = events.begin()+i;events.erase(it);}
+  int getAssignedChannel(){return assignedChannel;}
 
  private:
   int assignedChannel;

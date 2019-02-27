@@ -16,7 +16,7 @@
 
 using namespace std;
 
-
+//I think its time for a sort4 to consolidate these methods
 
 
 //shoutout to PherricOxide on StackOverflow for a quick test if a file exists
@@ -270,7 +270,6 @@ int main(int argc,char *argv[]){
     
     ddasDet fillerDet(SeGAchannel);
     
-
     vector<double> params;
     params.push_back(funG->GetParameter(0));
     params.push_back(funG->GetParameter(1));
@@ -324,7 +323,7 @@ int main(int argc,char *argv[]){
   counterList.add("lostIonNoImplantation");
   counterList.add("lostIonNoDecay");
   counterList.add("lostIonSecondImplant");
-
+  counterList.add("ImplantWaitWindow");
 
   /*****************************************
    
@@ -340,7 +339,7 @@ int main(int argc,char *argv[]){
   //std::vector<ddaschannel*> pChannels;  //! vector of channels for a given DDASEvent, if regular built this will be useful
   ddaschannel * curChannel = new ddaschannel;
   ddaschannel * serChannel =new ddaschannel; //If you call new ddaschannels in a loop it will cause a memory leak 
-                                             //--> Comes from TTree.SetBranchAddress() I suspect. 
+                                             //--> Comes from TTree.SetBranchAddress(), I suspect
 
 
   dataChain.SetBranchAddress("ddasevent", &pDDASEvent);
@@ -363,6 +362,11 @@ int main(int argc,char *argv[]){
 
   // With below method working for finding events, should further abstract this so I can add different triggers and such
 
+  int maxNtracesImplant = 300;
+  int nTracesImplant = 0;
+  int maxNtracesDecay = 300;
+  int nTracesDecay = 0;
+
   for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
 
     if(pDDASEvent->GetNEvents()>1) {cerr << "-->ERROR: Must be run on non-built event data." << endl; exit(0);} //each DDASEvent has 1 ddaschannel
@@ -378,7 +382,7 @@ int main(int argc,char *argv[]){
     ddasDet TOF(5); // PIN2-XFP TAC
     ddasDet PIN2(1); //PIN2 Energy
     
-    double coinWindow     =  2000;//5000;//2000;        // Time (ns)
+    double coinWindow     =  5000;//5000;//2000;        // Time (ns)
     double promptWindow   =  1000;
     double coinGammaWindow=  1000;        // Time (ns)
     double corrWindow     =  1E9;        // Time (ns)  now 1000ms (1s)
@@ -420,8 +424,6 @@ int main(int argc,char *argv[]){
     double PIN1energy = trigger.getFillerEvent().signal;
     double triggerTime = trigger.getFillerEvent().time;
 
-    //below a trigger was found
-    
     //fill up buffer with events in coincidence with trigger
     for(; abs(buffer.getFillerEvent().time - triggerTime) < coinWindow/2. ;){
       if(lastEntry >= dataChain.GetEntries()){break;}
@@ -460,6 +462,12 @@ int main(int argc,char *argv[]){
 	//cout << "found front" << endl;
       }
 
+      for(auto & DSSDfrontHi : DSSDfrontHighGain){
+	DSSDfrontHi.fillEvent(bufferEvent);
+	//cout << "found front" << endl;
+      }
+
+
       for(auto & DSSDback : DSSDbackLoGain){
 	if(DSSDback.fillEvent(bufferEvent)){checkBack = true;}
 	//cout << "found back" << endl;
@@ -470,8 +478,9 @@ int main(int argc,char *argv[]){
       }
 
     }
-
-
+     
+   
+      
     //curTOF = TOF.getFillerEvent().signal;
     Histo->h_PID->Fill(curTOF, PIN1energy);
     Histo->h_PIN1vsPIN2->Fill(PIN2Energy, PIN1energy);
@@ -489,6 +498,7 @@ int main(int argc,char *argv[]){
 	
 	  for(auto segaEvent : SEGAdet.getEvents()){
 	    Histo->hPromptGammaEnergy->Fill(segaEvent.energy);
+	    Histo->h_PromptGamma_summary->Fill(segaEvent.channel,segaEvent.energy);
 	  }
 
 	}
@@ -502,12 +512,14 @@ int main(int argc,char *argv[]){
     //take strip with highest energy deposition as implant strip
 
     unsigned int Emax = 0;
+    double implantTime = 0;
     for(auto & DSSDfront : DSSDfrontLoGain){
       
       for(auto frontEvent : DSSDfront.getEvents()){
 	if(frontEvent.signal > Emax){
 	  Emax = frontEvent.signal;
 	  fImplantEFMaxStrip =  40 - (frontEvent.channel - 104);
+	  implantTime = frontEvent.time;
 	}
       }
 
@@ -525,6 +537,49 @@ int main(int argc,char *argv[]){
       }	
     }
 
+    //readout implantation traces from HighGain for highest energy signal
+    //so much energy is deposited it appears that the High gains fire multiple times in coincidence window
+    for(auto & fronts : DSSDfrontHighGain){
+      int frontStrip = 	fronts.getAssignedChannel() - 64;
+      if(frontStrip == fImplantEFMaxStrip && foundIonOfInterest){
+	//cout << frontStrip << endl;
+	int frontEventPlace = 0;
+	int EmaxHiGain = 0;
+	for(auto & frontEvent : fronts.getEvents()){
+	  //	  cout << frontEvent.signal << endl;
+
+	  if(nTracesImplant < maxNtracesImplant && frontEvent.signal < 1 && abs(frontEvent.time - implantTime)<promptWindow){ //if .signal==0 then the adcs have saturated
+	    int size = frontEvent.trace.size();
+	    double x[size];
+	    double y[size];
+	    ostringstream title;
+	    title << "ImplantationEvent_" << counterList.returnValue("foundIon") + 1  << "_Tree-" << dataChain.GetTreeNumber();
+
+	    double base = 0;
+	    int sampleSize = int((double)size/20.);
+	    for(int iBin=0; iBin<sampleSize; iBin++){ base += (double)frontEvent.trace[iBin];}
+	    base = base/((double)sampleSize);
+	    
+	    for(int i=0;i<size;i++){
+	      x[i] = i;
+	      y[i] = frontEvent.trace[i]-base;
+	    }
+	    
+	    TGraph * gr = new TGraph(size,x,y);
+	    gr->SetName(title.str().c_str());
+	    Histo->graphTraces.push_back(gr);
+	    //delete gr; //need to keep TGraph in memory for ROOT to pickup TGraph when writing to file
+	    nTracesImplant++;
+	  }
+
+
+	}
+	break;
+      }
+
+    }
+  
+    //abort();
 
     //clear event lists for stuff already used
     for(auto & fronts : DSSDfrontLoGain){
@@ -535,24 +590,36 @@ int main(int argc,char *argv[]){
       backs.clear();
     }
 
+    for(auto & frontsHi : DSSDfrontHighGain){
+      frontsHi.clear();
+    }
+
     for(auto segaDet : SEGA){
       segaDet.clear();
     }
 
+    //its very clear from plotting different runs that the beam drifts considerably
+    Histo->h_raw_DSSD_hitsXY->Fill(fImplantEFMaxStrip-20,fImplantEBMaxStrip-20);
+
     //only take events where the implantation event was found
     if(!foundIonOfInterest){continue;}
 
-    if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");} 
+    if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
 
     //cout << "Front Implant Strip = " << fImplantEFMaxStrip << endl;
     //cout << "Back Implant Strip = " << fImplantEBMaxStrip << endl;
 
+    Histo->hImplantXY->Fill(fImplantEFMaxStrip-20,fImplantEBMaxStrip-20);
 
     //setting a waiting time to cut out short-lived products
     for(; abs(buffer.getFillerEvent().time - triggerTime) < waitWindow ;){
       if(lastEntry >= dataChain.GetEntries()){break;}
       dataChain.GetEntry(lastEntry++);
       buffer.fillEvent(curChannel, pDDASEvent);
+
+      if(trigger.fillEvent(buffer.getFillerEvent())){
+	counterList.count("ImplantWaitWindow");
+      }
    
       progress0 =  (double)lastEntry/(double)dataChain.GetEntries();
       if(lastEntry % 10000 == 0){   
@@ -644,7 +711,7 @@ int main(int argc,char *argv[]){
       ddasDet segaEvents(-1);
       ddasDet SSDEvents(-1);
 
-      ddasDet Scint(15); //Scintillator at back of stack?
+      ddasDet Scint(15); //Scintillator at back of stack? -->used for vetos
 
       //dump buffer into detectors
       for(auto & bufferEvent : buffer.getEvents()){
@@ -685,15 +752,17 @@ int main(int argc,char *argv[]){
       //criterion for tagging as decay
       double EdiffThreshold = 200; //keV <---perhaps using a ratio of Ediff to total E is a better criterion, essentially %err of the measurement
 
-      double EdiffPercentThreshold = 0.15; //<--- This cut out almost ALL of the low energy 'beta' events
+      double EdiffPercentThreshold = 0.2; //<--- This cut out almost ALL of the low energy 'beta' events
                                           // creating a 0.1 ms wait window did not cut out more events, so I believe this has more of an effect
                                           // on spurious events
                                           // Long wait window (0.1ms) and removal of this added a lot more low energy events
 
       double Ethreshold = 100; //keV <--- setting threshold has a large impact on decays seen, likely from large number of background betas
                                // 100 keV cuts out very low energy noise ~98 keV
-      int stripTolerance = 2;
 
+      int stripTolerance = 2; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
+                              //The range of a 5 MeV proton in Si is 200 um, each strip is 1 mm so if implantation pixel is accurate then 
+                              //then only a few pixels around implantation pixel needs to be considered
 
       double decayTime = corrWindow;
       double decayEnergy = 0;
@@ -704,7 +773,16 @@ int main(int argc,char *argv[]){
 
       //need to create better scheme for adding events back together, should only add if they have front+back coincidence, and are within a certain pixel range of implantation event
 
+      //going to sort DSSD fronts and backs in terms of energy (descending order) and match up strips. 
+      decayEventsFront.sortE();
+      decayEventsBack.sortE();
 
+      for(auto & decayEventBack : decayEventsBack.getEvents()){
+	int backStrip = decayEventBack.channel - 144;
+	Histo->h_mult_B->Fill(backStrip);
+      }
+
+      //should make a class that does the below and returns a list of decay events
 
       ddasDet decayEvents(-1);
 
@@ -713,23 +791,72 @@ int main(int argc,char *argv[]){
 	int frontStrip = decayEventFront.channel - 64;
 	decayEnergy = decayEventFront.energy;
 	decayTime = decayEventFront.time - triggerTime;//trigger.getFillerEvent().time; <--- bad idea since I check for second implant 
-	                                               //with trigger.fillEvent(buffer.getFillerEvent()); 
 
+	if(frontStrip == 14 || frontStrip == 15){continue;} //these strips are adding in a lot of noise, I think these two are cross-talking
+
+	// I want to test traces of decay pulses with issues found during pulser tests and reject if they seem "Bad"
+	// It appears that if I compute the QDC value manually and its negative then it is a bad pulse
+	// -->This gets rid of underflow, and other weird inversion effects (still not clear if inverted pulses are 'real')
+	// -->I can also get rid of overflow events if the QDC value is above a certain value
+	// If it is a bad pulse then I won't add it to list of valid events
+	// since I'm reading out energies from the front strips I can just check the front strip for these "bad" events and continue
+
+	//multiplicity here shows lots of firing from 0-16 strips
+	//Histo->h_mult_F->Fill(frontStrip);
+
+	//this is really only an issue for very low energy events ( <600keV )
+	if(decayEventFront.energy < 600){
+	  double base = 0;
+	  double qdc0 = 0;
+	  double max = 0;
+	  int sampleSize = int(double(decayEventFront.trace.size())/20.);
+
+	  //cout << sampleSize << endl;
+
+	  for(int iBin=0; iBin<sampleSize; iBin++){ base += (double)decayEventFront.trace[iBin];}
+	  base = base/((double)sampleSize);
+	  //	  cout << "base = " << base << endl;
+
+	  double derivative = 100;
+	  double derivativeOld = 200;
+
+	  for(unsigned int iBin=0; iBin<decayEventFront.trace.size(); iBin++) {
+	    double charge = (double)decayEventFront.trace[iBin] - base;
+	    qdc0 += charge;// - base;//ch->trace[iQDC] - base;
+	    if(iBin>0 && iBin<(decayEventFront.trace.size()-1)){
+	      derivative = ( (double)decayEventFront.trace[iBin+1]-(double)decayEventFront.trace[iBin-1] )/2.; //2 point stencil for approximating first derivative
+	    }
+
+	    if(abs(derivative) < abs(derivativeOld) ){
+	      if(max<charge && qdc0>0) max = charge;// - base; //checking if pulse is inverted, if it is then take local minimum
+	      else if(max>charge && qdc0<0) max=charge;
+	    }
+	    derivativeOld = derivative;
+	  }
+	  //cout << "max = " << max << endl;
+
+	  double triggerCheck = decayEventFront.trace[100] - base; // to get rid of "pile-up" events, which throws off the baseline
+
+	  if(qdc0<0 || qdc0 >1E5 || max < 0 || triggerCheck < -35){continue;}
+	}
+
+	//after going through above filter the multiplicity looks much more uniform,
 	Histo->h_mult_F->Fill(frontStrip);
 
 	//cout << "front strip = " << frontStrip << endl;
 	//cout << "Front E = " << decayEnergy << endl;
 	//cout << "decay time = " << decayTime << endl;
 
+	int it = 0;
 	for(auto & decayEventBack : decayEventsBack.getEvents()){
+	  
 	    
-	  //double Tdiff = abs(decayEventFront.time - decayEventBack.time);
+	  //double Tdiff = abs(decayEventFront.time - decayEventBack.time); -->no longer needed with 'buffer' method
 	  double Ediff = abs(decayEventFront.energy - decayEventBack.energy);
 	  int backStrip = decayEventBack.channel - 144;
 	    
 	  double EdiffPercent = abs(Ediff/decayEnergy);
 
-	  Histo->h_mult_B->Fill(backStrip);
 
 	  //cout << "back strip = " << backStrip << endl;
 	  //cout << "Back E = " << decayEventBack.energy << endl;
@@ -743,6 +870,8 @@ int main(int argc,char *argv[]){
 	     //&& decayEnergy > EmaxDecay
 	     ){
 
+	    Histo->hDecayXY->Fill(frontStrip-20, backStrip-20);
+
 	    decayEvents.fillEvent(decayEventFront); //<--- could read out all "valid" DSSD events found in decay
 	    if(decayEnergy > EmaxDecay){
 	      reportedE = decayEnergy;
@@ -751,24 +880,25 @@ int main(int argc,char *argv[]){
 	      EmaxDecay = decayEnergy;
 	    }
 	    foundDecay = true;
-
-	  }
+	    decayEventsBack.erase(it); //to make sure there isn't double counting of back events
+	    // decayEventsBack.erase(it);
+	    break; //<---should have been obvious that I want to move onto another search 
 	    
-
+	  }
+	  it++;
 	}
+
       }
 
 
 
-      int maxNtraces = 200;
-      int nTraces = 0;
+      // int maxNtraces = 300;
+      // int nTraces = 0;
       if(foundDecay){
 	counterList.count("decays");
-	//cout << "Found Decay Event!" << endl;
-	//dump gamma events
 
 	//if(decayChannel == 67 || decayChannel == 78 || decayChannel == 79){break;} //exclude bad channels
-	                                                                             //shouldn't need above with %E_error check
+	                                                                             //shouldn't need to exclude channels with %E_error check
 
 	if(decayTime < 2E8){Histo->hDecayEnergyTGate->Fill(reportedE);} //events found in first 200 ms
 
@@ -778,59 +908,56 @@ int main(int argc,char *argv[]){
 	  Histo->hDecayEnergyAll->Fill(decayEvent.energy);
 	  
 	  Etot+= decayEvent.energy; //now Etot should only be comprised of events that pass my valid event filter above
+	                            //Should make sure that there is a matching back firing for each front added to vector decayEvents
+	                            //This is now implemented by erasing elements from decayEventsBack if matched
 
-
-	  if(decayEvent.energy < 6000 && nTraces < maxNtraces){
+	  if(decayEvent.energy < 6000 && nTracesDecay < maxNtracesDecay){
+	    double base = 0;
 	    int size = decayEvent.trace.size();
 	    double x[size];
 	    double y[size];
 	    ostringstream title;
 	    title << "Trace_E-" << decayEvent.energy << "_Event-" << counterList.returnValue("decays") << "_Tree-" << dataChain.GetTreeNumber();
 
+	    int sampleSize = int((double)size/20.);
+	    for(int iBin=0; iBin<sampleSize; iBin++){ base += (double)decayEvent.trace[iBin];}
+	    base = base/((double)sampleSize);
+
+
 	    for(int i=0;i<size;i++){
 	      x[i] = i;
-	      y[i] = decayEvent.trace[i];
+	      y[i] = decayEvent.trace[i]-base;
 	    }
 
-	    //TH1S * h = new TH1S(title.str().c_str(),title.str().c_str(),size,&decayEvent.trace[0]);
 	    TGraph * gr = new TGraph(size,x,y);
 	    gr->SetName(title.str().c_str());
-	    //Histo->dirTraces->cd();
 	    Histo->graphTraces.push_back(gr);
 	    //delete gr; //need to keep TGraph in memory for ROOT to pickup TGraph when writing to file
-	    nTraces++;
+	    nTracesDecay++;
 	  }
 
 	  for(auto & segaEvent : segaEvents.getEvents()){
-	    //Histo->hGammaEnergy->Fill(segaEvent.energy);
 	    Histo->hGammaVsDecayAll->Fill(decayEvent.energy, segaEvent.energy);
 	  }
 	  
 	}
 	
-
+	if(decayTime < 2E8){Histo->hDecayEnergyTot_TGate->Fill(Etot);} //events found in first 200 ms
 
 	for(auto & segaEvent : segaEvents.getEvents()){
 	  Histo->hGammaEnergy->Fill(segaEvent.energy);
 	  Histo->hGammaVsDecay->Fill(reportedE,segaEvent.energy);
 	  Histo->hGammaVsDecayEtot->Fill(Etot,segaEvent.energy);
 	  if( abs(segaEvent.time - DSSDtime) < promptWindow/2. ){Histo->hGammaVsDecayTGated->Fill(reportedE,segaEvent.energy);}
-	  // if(segaEvent.energy > 9000){
-	  //   cout << "Found large energy SEGA event" << endl; //diagnostics of high energy events
-	  //   cout << segaEvent.channel << endl;               //its possible these events are underflow
-	  //                                                    //it appears these events only occur for channel 31, so they are likely unphysical
-	  // }
+	  if(segaEvent.energy > 708 && segaEvent.energy < 712){cout << endl << "710 gamma ray event in det# " << segaEvent.channel-16 << endl;}
 	}
-
-	// if(decayEnergy > 7500){
-	//   cout << "Found large energy decay event" << endl;
-	//   cout << decayChannel << endl;
-	// } //diagnostics of higher energy events
-	  //its possible these events come from "bad" channels
+	//check calibrations to investigate large energy values
 	  
 	Histo->hDecayEnergy->Fill(reportedE);
 	Histo->hDecayEnergyTot->Fill(Etot);
 	Histo->hDecayTime->Fill(reportedTime);
+
+	if(reportedE < 700){Histo->hDecayTimeEgate->Fill(reportedTime);}
 
 	for(auto & scintEvent : Scint.getEvents()){
 	  Histo->rawScint->Fill(scintEvent.signal);
@@ -873,6 +1000,9 @@ int main(int argc,char *argv[]){
 
   } //end of loop over entries
 
+  //Even though histo::write() is called in the destructor, it needs to be called here or program will segfault
+  //I assume the above has something to do with how ROOT handles memory 
+
   Histo->write(); // this forces the histrograms to be read out to file
 
   cerr << "Total number of Ions of Interest found: " << counterList.returnValue("foundIon") << endl;
@@ -880,7 +1010,9 @@ int main(int argc,char *argv[]){
   cerr << "Total number of Ions lost in implantation: " << counterList.returnValue("lostIonNoImplantation") << endl;
   cerr << "Total number of Ions lost in decay: " << counterList.returnValue("foundIon") - counterList.returnValue("decays") - counterList.returnValue("lostIonNoImplantation") << endl;
   cerr << "Decays lost to second Implantation: " << counterList.returnValue("lostIonSecondImplant") << endl;
+  //cerr << "Total triggers: " << counterList.returnValue("foundIon") + counterList.returnValue("lostIonSecondImplant") << endl;
+  cerr << "Implants Found in Wait Window: " << counterList.returnValue("ImplantWaitWindow") << endl;
   cerr << endl;
 
-  return 1;
+  return 1; //cuz I'm old school
 }

@@ -62,7 +62,7 @@ bool ddasDet::fillEvent(Event fillerEvent0){
     fillerEvent.time = fillerEvent0.time;
     fillerEvent.trace = fillerEvent0.trace;
     
-
+    fillerEvent = fillerEvent0;
     //fillerEvent.trace = fillerEvent0.trace;
 
     if(isCalibrated){
@@ -82,7 +82,8 @@ bool ddasDet::fillEvent(Event fillerEvent0){
     // fillerEvent.signal = fillerEvent0.signal;
     // fillerEvent.time = fillerEvent0.time;
     // fillerEvent.energy = fillerEvent0.energy;
-    
+
+    fillerEvent = fillerEvent0;
     events.push_back(fillerEvent0);
     return true;
   }
@@ -111,4 +112,18 @@ double ddasDet::calibrate(unsigned int energyR){
 
   return value;
 
+}
+
+bool ddasDet::compareE(const Event &event1, const Event &event2){
+  return (event1.energy > event2.energy);
+}
+
+void ddasDet::sortE(){
+
+  // if(!isCalibrated){
+  //   std::cout << "Cannot sort uncalibrated detectors" << std::endl;
+  //   return;
+  // }
+
+  std::sort (events.begin(), events.end(), compareE);
 }
