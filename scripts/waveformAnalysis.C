@@ -30,6 +30,8 @@ TH1I *timingBad = new TH1I("TimingBad","TimingBad",1000,-500,500);
 TH2I *qdcBad = new TH2I("invertedQDC","invertedQDC",2000,-1000,1000,2000,-1000,1000);
 TH1I *chanBad = new TH1I("badChan","badChan",200,0,200);
 TH1D *gammaTot = new TH1D("gammaTot","gammaTot",10000,0,10000);
+TH1D *times = new TH1D("time","time",3000,0,300);
+
 
 // double Integrate(int x1,int x2,double *x,double *y, double baseline1) //Trapezoidal rule
 // {
@@ -59,11 +61,20 @@ TH1D *gammaTot = new TH1D("gammaTot","gammaTot",10000,0,10000);
 
 void waveformAnalysis(){
 
+  double startTime = 0;
+  double endTime = 0;
+
+  double runTime = 0;
+
   TFile          *fSeGACalFile; //!
   char name[500],title[500];
+  double gains[250],offsets[250],channels[250];
+
   TList * fSeGACalibFunc = new TList();
   int SeGAchannel = 16;
   fSeGACalFile = new TFile("../Calibrations/SeGACalibrations.root","READ");
+  ifstream gammaCalib("../Calibrations/gammaCalib.dat");
+  int chanInput=0;
   for(Int_t i=0; i<16; i++){
     sprintf(name,"f_cal_SeGA_%02i",i);
     TF1 *funG= (TF1*)fSeGACalFile->FindObjectAny(name);
@@ -72,7 +83,7 @@ void waveformAnalysis(){
     fCalG->SetParameter(0, funG->GetParameter(0));
     fCalG->SetParameter(1, funG->GetParameter(1));
     fSeGACalibFunc->Add(fCalG);
-
+    gammaCalib >> chanInput >> offsets[chanInput] >> offsets[chanInput];
     delete funG;
   }
   fSeGACalFile->Close();
@@ -87,7 +98,7 @@ void waveformAnalysis(){
 
 
   TEnv *env = new TEnv("run22_calibration_coefficients.dat");
-  double gains[250],offsets[250],channels[250];
+
   for(int i=0;i<250;i++) {
     raw_channel[i] = new TH1D(Form("raw_channel%d",i),Form("raw_channel%d",i),(int)TMath::Power(2,12),0,TMath::Power(2,15));
     //calibrated_channel[i] = new TH1D(Form("calibrated_channel%d",i),Form("calibrated_channel%d",i),(int)TMath::Power(2,12),0,TMath::Power(2,15));
@@ -96,13 +107,17 @@ void waveformAnalysis(){
     // offsets[i]=env->GetValue(Form("Chan.%d.Offset",i),0.);
   }
 
+  chanInput = 0;
   for(int i=0;!calib.eof();i++){
-    calib >> channels[i] >> offsets[i] >> gains[i];
+    calib >> chanInput >> offsets[chanInput] >> gains[chanInput];
     //cout << "still going" << endl;
   }
 
   ostringstream infile;
-  int run = 315;//47;//306; //run 306 = 148Gd source test behind DSSD
+  int run = 69;//315;//35;//36;//315;//315;//47;//306; //run 306 = 148Gd source test behind DSSD
+               //315 -> mixed 125Sb source
+               //52 ->60Co source
+               //34 & 35 152Eu source
   int subRun = 0;
   int chanCheck = 100;
 
@@ -166,15 +181,19 @@ void waveformAnalysis(){
       raw_channel[chan]->Fill(ch->GetEnergy());
       //cout << chan << endl;
       curTime = ch->GetCoarseTime();
+      times->Fill(curTime/60E9);
 
-      int gainCheck=0;
-      for(int j=0;j<250;j++){
-	//cout << j << endl;
-	if(chan == channels[j]){
-	  gainCheck = j;
-	  break;
-	}
-      }
+      if(i==0 && curTime > 0){startTime=curTime;}
+      if(i==(nentries-1)){endTime=curTime;}
+
+      // int gainCheck=0;
+      // for(int j=0;j<250;j++){
+      // 	//cout << j << endl;
+      // 	if(chan == channels[j]){
+      // 	  gainCheck = j;
+      // 	  break;
+      // 	}
+      // }
 
       if(chan>=16 && chan < 32){
       TF1 *fSeGAHighCal = (TF1*)fSeGACalibFunc->At(chan-16);
@@ -182,12 +201,14 @@ void waveformAnalysis(){
       Double_t value = fSeGAHighCal->Eval(ch->GetEnergy());//+fRand->Uniform());
       // //cout << "FOUND Gamma " << value << endl;
       gammaTot->Fill(value);
+      calibrated_summary->Fill(chan,value);
+      calibrated_channel[chan]->Fill(value);
       }
-
-      calibrated_summary->Fill(chan,ch->GetEnergy()*gains[gainCheck]+offsets[gainCheck]);
+      else{
+      calibrated_summary->Fill(chan,ch->GetEnergy()*gains[chan]+offsets[chan]);
       //cout << ch->GetEnergy()*gains[gainCheck]+offsets[gainCheck] << endl;
-      calibrated_channel[chan]->Fill(ch->GetEnergy()*gains[gainCheck]+offsets[gainCheck]);
-
+      calibrated_channel[chan]->Fill(ch->GetEnergy()*gains[chan]+offsets[chan]);
+      }
       // double base = 0;
       // double qdc0 = 0;
       // double max  = 0;
@@ -306,6 +327,10 @@ void waveformAnalysis(){
   // cout << "QDC = " << QDCcheck << endl;
   // cout << "max = " << maxCheck << endl;
   // cout << "derivative = " << derivativeCheck << endl;
+
+  runTime = endTime-startTime;
+  cout << endl;
+  cout << "run time = " << runTime/1E9 << " seconds" << endl;
   raw_summary->Write("");
   calibrated_summary->Write("");
   hEQDC->Write("");
@@ -321,6 +346,7 @@ void waveformAnalysis(){
   qdcBad->Write();
   chanBad->Write();
   gammaTot->Write();
+  times->Write();
   //badTrace->Write("");
   dirChan->cd();
   for(int i=0;i<250;i++) {

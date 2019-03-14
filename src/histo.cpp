@@ -80,13 +80,13 @@ void histo::histos(){
   
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
-  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",1000,0,1E9); // ms
-  hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",1000,0,1E9); // ms
-  hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",15000,0,15000);
-  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",15000,0,15000);
-  hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",15000,0,15000);
-  hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",15000,0,15000);
-  hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",2500,0,15000);
+  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",2000,0,2E9); // ms
+  hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",2000,0,2E9); // ms
+  hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",10000,0,10000);
+  hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
   hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);
@@ -103,6 +103,7 @@ void histo::histos(){
   hDecayXY->GetXaxis()->SetTitle("x (mm)");
   hDecayXY->GetYaxis()->SetTitle("y (mm)");
   rawSSDhiGain = new TH1I("rawSSDhiGain_all", "SSD raw All strips",(int)pow(2,10),0,pow(2,15));
+  calibratedSSDhiGain = new TH1D("calibratedSSDhiGainAll","SSD energy",10000,0,10000);
   rawScint = new TH1I("rawScint", "Raw Scintillator",(int)pow(2,10),0,pow(2,15));
 
 }

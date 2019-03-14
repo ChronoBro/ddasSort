@@ -181,17 +181,26 @@ int main(int argc,char *argv[]){
 
 
   ifstream alphaCalib("Calibrations/alphaCalib.dat");
+  ifstream alphaCalibSSD("Calibrations/alphaCalibrationSSD.dat");
 
   fDSSDCalFile = new TFile("Calibrations/Alpha/AlphaCalib_293.root","READ");
   vector<int> frontChannels;
   vector<int> backChannels;
-  vector< vector<double> > frontCalib;
-  vector< vector<double> > backCalib;
+
+
 
 
   vector<ddasDet> SSDhiGain;
   for(int i=32;i<48;i++){
+    int chan = 0.;
+    double slope;
+    double offset;
+    alphaCalibSSD >> chan >> offset >> slope; 
+    vector<double> params;
+    params.push_back(offset);
+    params.push_back(slope);
     ddasDet fillDet(i);
+    fillDet.setCalibration(params);
     SSDhiGain.push_back(fillDet);
   }
 
@@ -204,6 +213,8 @@ int main(int argc,char *argv[]){
   vector<ddasDet> DSSDfrontLoGain;
   vector<ddasDet> DSSDbackLoGain;
 
+  vector< vector<double> > frontCalib;
+  vector< vector<double> > backCalib;
 
 
   for(Int_t i=0; i<80; i++){
@@ -321,9 +332,11 @@ int main(int argc,char *argv[]){
   counterList.add("foundIon");
   counterList.add("decays");
   counterList.add("lostIonNoImplantation");
+  counterList.add("lostIonOneStripImplantation");
   counterList.add("lostIonNoDecay");
   counterList.add("lostIonSecondImplant");
   counterList.add("ImplantWaitWindow");
+
 
   /*****************************************
    
@@ -362,9 +375,9 @@ int main(int argc,char *argv[]){
 
   // With below method working for finding events, should further abstract this so I can add different triggers and such
 
-  int maxNtracesImplant = 300;
+  int maxNtracesImplant = 1000;
   int nTracesImplant = 0;
-  int maxNtracesDecay = 300;
+  int maxNtracesDecay = 1000;
   int nTracesDecay = 0;
 
   for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
@@ -385,8 +398,8 @@ int main(int argc,char *argv[]){
     double coinWindow     =  5000;//5000;//2000;        // Time (ns)
     double promptWindow   =  1000;
     double coinGammaWindow=  1000;        // Time (ns)
-    double corrWindow     =  1E9;        // Time (ns)  now 1000ms (1s)
-    double waitWindow     =  1E5; // 0.1 ms
+    double corrWindow     =  1E9;//1E9;        // Time (ns)  now 1000ms (1s)
+    double waitWindow     =  5E4;//1E5 =  0.1 ms
 
     bool foundIonOfInterest = false;
     bool foundImplant = false;
@@ -553,7 +566,7 @@ int main(int argc,char *argv[]){
 	    double x[size];
 	    double y[size];
 	    ostringstream title;
-	    title << "ImplantationEvent_" << counterList.returnValue("foundIon") + 1  << "_Tree-" << dataChain.GetTreeNumber();
+	    title << "ImplantationEvent_" << counterList.returnValue("foundIon") + 1  << "_strip-" << frontStrip << "_Tree-" << dataChain.GetTreeNumber();
 
 	    double base = 0;
 	    int sampleSize = int((double)size/20.);
@@ -604,7 +617,8 @@ int main(int argc,char *argv[]){
     //only take events where the implantation event was found
     if(!foundIonOfInterest){continue;}
 
-    if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
+    if(fImplantEFMaxStrip == -100 && fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
+    else if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
 
     //cout << "Front Implant Strip = " << fImplantEFMaxStrip << endl;
     //cout << "Back Implant Strip = " << fImplantEBMaxStrip << endl;
@@ -760,7 +774,7 @@ int main(int argc,char *argv[]){
       double Ethreshold = 100; //keV <--- setting threshold has a large impact on decays seen, likely from large number of background betas
                                // 100 keV cuts out very low energy noise ~98 keV
 
-      int stripTolerance = 2; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
+      int stripTolerance = 3; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
                               //The range of a 5 MeV proton in Si is 200 um, each strip is 1 mm so if implantation pixel is accurate then 
                               //then only a few pixels around implantation pixel needs to be considered
 
@@ -837,7 +851,7 @@ int main(int argc,char *argv[]){
 
 	  double triggerCheck = decayEventFront.trace[100] - base; // to get rid of "pile-up" events, which throws off the baseline
 
-	  if(qdc0<0 || qdc0 >1E5 || max < 0 || triggerCheck < -35){continue;}
+	  if(qdc0<0 || qdc0 >1E5 || max < 0 || triggerCheck < -25){continue;}
 	}
 
 	//after going through above filter the multiplicity looks much more uniform,
@@ -966,6 +980,7 @@ int main(int argc,char *argv[]){
 
 	for(auto & SSDEvent : SSDEvents.getEvents()){
 	  Histo->rawSSDhiGain->Fill(SSDEvent.signal);
+	  Histo->calibratedSSDhiGain->Fill(SSDEvent.energy);
 	}
 	
 	break;
@@ -1005,14 +1020,15 @@ int main(int argc,char *argv[]){
 
   Histo->write(); // this forces the histrograms to be read out to file
 
-  cerr << "Total number of Ions of Interest found: " << counterList.returnValue("foundIon") << endl;
-  cerr << "Total number of decays found: " << counterList.returnValue("decays") << endl;
-  cerr << "Total number of Ions lost in implantation: " << counterList.returnValue("lostIonNoImplantation") << endl;
-  cerr << "Total number of Ions lost in decay: " << counterList.returnValue("foundIon") - counterList.returnValue("decays") - counterList.returnValue("lostIonNoImplantation") << endl;
-  cerr << "Decays lost to second Implantation: " << counterList.returnValue("lostIonSecondImplant") << endl;
-  //cerr << "Total triggers: " << counterList.returnValue("foundIon") + counterList.returnValue("lostIonSecondImplant") << endl;
-  cerr << "Implants Found in Wait Window: " << counterList.returnValue("ImplantWaitWindow") << endl;
-  cerr << endl;
+  cout << "Total number of Ions of Interest found: " << counterList.returnValue("foundIon") << endl;
+  cout << "Total number of decays found: " << counterList.returnValue("decays") << endl;
+  cout << "Total number of Ions lost in implantation (no strips): " << counterList.returnValue("lostIonNoImplantation") << endl;
+  cout << "Total number of Ions with one strip in implantation: " << counterList.returnValue("lostIonOneStripImplantation") << endl;
+  cout << "Total number of Ions lost in decay: " << counterList.returnValue("foundIon") - counterList.returnValue("decays") - counterList.returnValue("lostIonNoImplantation")-counterList.returnValue("lostIonOneStripImplantation") << endl;
+  cout << "Decays lost to second Implantation: " << counterList.returnValue("lostIonSecondImplant") << endl;
+  //cout << "Total triggers: " << counterList.returnValue("foundIon") + counterList.returnValue("lostIonSecondImplant") << endl;
+  cout << "Implants Found in Wait Window: " << counterList.returnValue("ImplantWaitWindow") << endl;
+  cout << endl;
 
   return 1; //cuz I'm old school
 }

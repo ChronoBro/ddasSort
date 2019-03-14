@@ -86,6 +86,7 @@ class histo
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
   TH1I  *rawSSDhiGain;
+  TH1D  *calibratedSSDhiGain;
   TH1I  *rawScint;
 
   std::string name;
