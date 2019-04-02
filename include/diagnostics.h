@@ -19,6 +19,7 @@ class diagnostics{
   void add(std::string counterName);
   void count(std::string counterName);
   int returnValue(std::string counterName);
+  void reset(std::string counterName);
 
  private:
   std::vector<namedCounter> list;

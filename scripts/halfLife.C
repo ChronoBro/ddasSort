@@ -3,22 +3,33 @@ TCanvas CdecayTime("CdecayTime","CdecayTime",800,600);
 TCanvas CdecayEnergy("CdecayEnergy","CdecayEnergy", 800,600);
 
 void halfLife(){
-  gStyle->SetOptStat(0); //turn off stat box on histogram
+  gStyle->SetOptStat(1); //turn off stat box on histogram
   //gStyle->SetOptFit(1111);
   
   ostringstream dataName;
   ostringstream directory;
   directory << "../root-files/";
-  dataName << directory.str() << "sort3all73Sr_honingIn8.root";
+  //dataName << directory.str() << "sort3all73Sr_honingIn20.root";
+  //dataName << directory.str() << "sort3all73Sr_noGatesWFilter.root";
+  //dataName << directory.str() << "sort3all73Sr_noGatesWFilter4.root";
+  //dataName << directory.str() << "sort3all73Sr_noGatesWFilter5.root";
+  //dataName << directory.str() << "sort3all73Sr_pixelGate_AllCorrelationEvents.root";
+  dataName << directory.str() << "sort3all73Sr_1pixelGate_AllCorrelationEvents.root";
+  //dataName << directory.str() << "test71Kr.root";
   //dataName << directory.str() << "test101.root";
   //dataName << directory.str() << "test222.root";
 
   double fitRange = 3E8;
   //fitRange = 6E8; // 1E9=1s
-  fitRange = 1E9;
+  fitRange = 2E9;
 
   TFile * data = new TFile(dataName.str().c_str());
-  
+  dataName.str("");
+  dataName.clear();
+  dataName << directory.str() << "sort3all71Kr_2.root";
+  TFile* data2 = new TFile(dataName.str().c_str());
+
+
   CdecayTime.cd();
   CdecayTime.SetLogy();
   TH1D * decayTime = (TH1D*)data->Get("Histos/hDecayTime")->Clone("Decay Time");
@@ -26,7 +37,7 @@ void halfLife(){
   decayTime->GetYaxis()->SetTitle("Counts");
   decayTime->GetXaxis()->SetTitle("ms");
 
-  decayTime->Rebin(1);
+  decayTime->Rebin(10);
   decayTime->Sumw2();
 
   decayTime->GetXaxis()->SetRangeUser(0,fitRange);
@@ -78,8 +89,10 @@ void halfLife(){
 
   CdecayEnergy.cd();
   TH1D * decayEnergy = (TH1D*)data->Get("Histos/hDecayEnergyTot_TGate")->Clone("Decay Energy");
+  TH1D * decayEnergyBackground = (TH1D*)data->Get("Histos/hDecayEnergyTotBackground")->Clone("Background");
 
-
+  TH1D* decayEnergy71Kr = (TH1D*)data2->Get("Histos/hDecayEnergyTot_TGate")->Clone("Decay 71Kr");
+  
 
   int binLo=0;
   int binHi=0;
@@ -108,9 +121,19 @@ void halfLife(){
   decayEnergy->GetYaxis()->SetTitle("Counts");
   decayEnergy->GetXaxis()->SetTitle("keV");
 
-  decayEnergy->Rebin(10);
+  int rebinFactor = 50;
+
+  decayEnergy->Rebin(rebinFactor);
+  decayEnergyBackground->Rebin(rebinFactor);
+  decayEnergy71Kr->Rebin(rebinFactor);
+
+  decayEnergy71Kr->Scale(0.005);
+
+  decayEnergy->Add(decayEnergyBackground,-0.2); //The TGate is 200 ms, background is 1 ms so amount of background should be 1/5 of measured amount
   //decayEnergy->Sumw2();
+  //decayEnergy->Add(decayEnergy71Kr,-1);
   decayEnergy->Draw();
+  //decayEnergy71Kr->Draw("same");
 
 
 

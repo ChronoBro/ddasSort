@@ -40,6 +40,18 @@ void diagnostics::count(std::string counterName){
 
 }
 
+void diagnostics::reset(std::string counterName){
+
+  for(auto & nCounter : list){
+    if( !nCounter.name.compare(counterName) ){ //returns 0 if true, so I want NOT of returned value
+	nCounter.n = 0.;
+      }	
+  }
+  
+  //std::cout<< std::endl << "No matching counter found for " << counterName << std::endl;
+
+}
+
 int diagnostics::returnValue(std::string counterName){
 
 

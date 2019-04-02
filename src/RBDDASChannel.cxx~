@@ -1,0 +1,13 @@
+#include <iostream>
+#include <fstream>
+#include <iomanip>
+#include <string>
+
+#include "RBDDChannel.h"
+
+using namespace std;
+
+
+RBDDASChannel::RBDDASChannel(){
+
+}

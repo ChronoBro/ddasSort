@@ -114,7 +114,7 @@ void waveformAnalysis(){
   }
 
   ostringstream infile;
-  int run = 69;//315;//35;//36;//315;//315;//47;//306; //run 306 = 148Gd source test behind DSSD
+  int run = 62;//69;//315;//35;//36;//315;//315;//47;//306; //run 306 = 148Gd source test behind DSSD
                //315 -> mixed 125Sb source
                //52 ->60Co source
                //34 & 35 152Eu source

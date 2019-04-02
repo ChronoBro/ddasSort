@@ -1,0 +1,54 @@
+
+//
+//  RBDDChannel.h
+//
+
+#ifndef ____RBDDChannel__
+#define ____RBDDChannel__
+
+//#include <cmath>
+//#include <stdio.h>
+//#include <vector>
+//
+//#include <TBits.h>
+//#include <TCanvas.h>
+//#include <TFile.h>
+//#include <TGraph.h>
+//#include <TH1I.h>
+#include <TObject.h>
+#include <TNamed.h>
+//#include <TTree.h>
+//#include <TList.h>
+
+
+class RBDDChannel : public RBDDChanell
+{
+protected:
+  Int_t     fChanNo;           //! Channel number
+  Int_t     fMSPS;             //  ADC sampling frequency (MSPS)
+  Int_t     fClockFreq;        //
+  Int_t     fTimestampLSB;     //
+  ULong64_t signal;
+  bool isCalibrated;
+  double calibrate(ULong64_t signal);
+  std::vector<double> params;
+  
+
+public:
+  RBDDChannel(){}
+  ~RBDDChannel(){}
+  
+  virtual  Int_t                 GetChanNo()    = 0;
+  virtual  ULong64_t             GetTimestamp() = 0; // Value of time counter
+  virtual  ULong64_t             GetSignal()    = 0;
+  virtual  std::vector<UShort_t> GetTrace()     = 0; // Assumes 16-bit or less resolution
+  
+  Int_t GetClockFreq()   {return fClockFreq;}
+  Int_t GetTimestampLSB(){return fTimestampLSB;}
+  double GetCalibratedSignal();
+  bool setCalibration(std::vector<double> params);
+  
+  ClassDef(RBDDChannel,1);
+};
+
+#endif /* defined(____RBDDChannel__) */

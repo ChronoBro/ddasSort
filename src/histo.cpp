@@ -72,6 +72,8 @@ void histo::histos(){
   h_mult   = new TH1I("h_mult",  "DSSD Multiplicity",      40,0,40);
   h_mult_F = new TH1I("h_mult_F","DSSD Front Multiplicity",40,0,40);
   h_mult_B = new TH1I("h_mult_B","DSSD Back Multiplicity", 40,0,40);
+  h_mult_F_implant = new TH1I("h_mult_F_implant","DSSD front implant multiplicity",100,-0.5,99.5);
+  h_mult_B_implant = new TH1I("h_mult_B_implant","DSSD back implant multiplicity",100,-0.5,99.5);
   h_raw_DSSD_hits    = new TH2I("h_raw_DSSD_hits",   "DSSD hit pattern (strips)",       40,0,40,40,0,40);
   h_raw_DSSD_hitsMap = new TH2I("h_raw_DSSD_hitsMap","DSSD hit pattern (strips mapped)",40,0,40,40,0,40);
   h_raw_DSSD_hitsXY  = new TH2I("h_raw_DSSD_hitsXY", "DSSD hit pattern (xy position)",  40,-20,20,40,-20,20);
@@ -88,6 +90,9 @@ void histo::histos(){
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
+  hDecayEnergyBackground = new TH1D("hDecayEnergyBackground","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergyTotBackground = new TH1D("hDecayEnergyTotBackground","Decay energy (DSSD)",10000,0,10000);
+
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
   hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);
   hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
