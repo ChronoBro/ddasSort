@@ -14,10 +14,18 @@
 using namespace std;
 
 
-RBDDTrace::RBDDTrace(vector<Double_t> trace){
-  fBaseSampleFraction = 20.;
-  fTrace = trace;
+RBDDTrace::RBDDTrace(vector<unsigned short> trace, double sampleFraction){
+  fBaseSampleFraction = sampleFraction;
+  for(unsigned int iBin=0;iBin<trace.size();iBin++){
+    fTrace.push_back((double)trace[iBin]);
+  }
 }
+
+// RBDDTrace::RBDDTrace(vector<Double_t> trace){
+//   fBaseSampleFraction = 20.;
+//   fTrace = trace;
+// }
+
 
 RBDDTrace::RBDDTrace(vector<Double_t> trace, double sampleFraction){
   fBaseSampleFraction = sampleFraction;
@@ -85,30 +93,24 @@ Double_t RBDDTrace::FindPeak()
 //______________________________________________________________________________
 Double_t RBDDTrace::GetMaximum()
 {
-  //
-  double base = GetBaseline();
-  double qdc0 = 0;
-  double max = 0;
-
-  for(unsigned int iBin=0; iBin<fTrace.size(); iBin++) {
-    double charge = (double)decayEventFront.trace[iBin] - base;
-    qdc0 += charge;// - base;//ch->trace[iQDC] - base;
-    if(iBin>0 && iBin<(decayEventFront.trace.size()-1)){
-      derivative = ( (double)decayEventFront.trace[iBin+1]-(double)decayEventFront.trace[iBin-1] )/2.; //2 point stencil for approximating first derivative
-    }
-    
-    if(abs(derivative) < abs(derivativeOld) ){
-      if(max<charge && qdc0>0) max = charge;// - base; //checking if pulse is inverted, if it is then take local minimum
-      else if(max>charge && qdc0<0) max=charge;
-    }
-    derivativeOld = derivative;
+  if(!isAnalyzed){
+    analyze();
   }
 
-  fA = max;
-  fQDC = qdc0;
-
+  //
   return fA;
 }
+
+Double_t RBDDTrace::GetQDC()
+{
+  if(!isAnalyzed){
+    analyze();
+  }
+
+  //
+  return fQDC;
+}
+
 
 //______________________________________________________________________________
 Double_t RBDDTrace::GetBaseline()
@@ -139,14 +141,14 @@ Double_t RBDDTrace::GetSum(Int_t sumWinID)
   Double_t sum = 0;
   
   // Calculate QDCs
-  fQDC0 = 0;
-  fQDC1 = 0;
-  fQDCT = 0;
-  for(Int_t iQ0=0; iQ0<fL0; iQ0++){
-    Int_t index = fS0 + iQ0;
-    if(index>0 && index<(Int_t)curTrace.size()) fQDC0 += curTrace[index];
-    else cout << "index error QDC0 " << index <<  endl;
-  }
+  // fQDC0 = 0;
+  // fQDC1 = 0;
+  // fQDCT = 0;
+  // for(Int_t iQ0=0; iQ0<fL0; iQ0++){
+  //   Int_t index = fS0 + iQ0;
+  //   if(index>0 && index<(Int_t)curTrace.size()) fQDC0 += curTrace[index];
+  //   else cout << "index error QDC0 " << index <<  endl;
+  // }
   
   
   return sum;
@@ -168,7 +170,7 @@ Int_t    RBDDTrace::GetSumAndStore(Double_t winBegin, Double_t winEnd)
 }
 
 //______________________________________________________________________________
-Double_t RBDDTrace::GetCFDTime(Double_t fraction = 0.5)
+Double_t RBDDTrace::GetCFDTime(Double_t fraction)
 {
   
 }
@@ -178,7 +180,7 @@ Double_t RBDDTrace::GetCFDTime(Double_t fraction = 0.5)
 TH1D* RBDDTrace::GetTraceHisto(){
   if(fTrace.size()>0){
     fTraceHisto = new TH1D("trace","trace",fTrace.size(),fTrace[0],fTrace[fTrace.size()-1]);
-    for(int iBin=0;iBin<fTrace.size();iBin++){
+    for(unsigned int iBin=0;iBin<fTrace.size();iBin++){
       fTraceHisto->SetBinContent(iBin,fTrace[iBin]);
     }
 
@@ -200,5 +202,34 @@ bool RBDDTrace::filter(){
   if(fQDC<0 || fQDC >1E5 || fA < 0 || triggerCheck < -25){return true;}
   
   return false;
+
+}
+
+void RBDDTrace::analyze(){
+
+  double derivative = 200;
+  double derivativeOld = 100;
+  double base = GetBaseline();
+  double qdc0 = 0;
+  double max = 0;
+
+  for(unsigned int iBin=0; iBin<fTrace.size(); iBin++) {
+    double charge = (double)fTrace[iBin] - base;
+    qdc0 += charge;// - base;//ch->trace[iQDC] - base;
+    if(iBin>0 && iBin<(fTrace.size()-1)){
+      derivative = ( (double)fTrace[iBin+1]-(double)fTrace[iBin-1] )/2.; //2 point stencil for approximating first derivative
+    }
+    
+    if(abs(derivative) < abs(derivativeOld) ){
+      if(max<charge && qdc0>0) max = charge;// - base; //checking if pulse is inverted, if it is then take local minimum
+      else if(max>charge && qdc0<0) max=charge;
+    }
+    derivativeOld = derivative;
+  }
+
+  fA = max;
+  fQDC = qdc0;
+
+  isAnalyzed = true;
 
 }

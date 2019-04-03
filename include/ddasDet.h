@@ -17,8 +17,8 @@ struct Event{
 class ddasDet{
  public:
   ddasDet(){assignedChannel = -1;isCalibrated=false;}
-  ddasDet(int givenChannel){assignedChannel = givenChannel;isCalibrated=false;}
   ~ddasDet(){events.clear();}
+  ddasDet(int givenChannel){assignedChannel=givenChannel;isCalibrated=false;}
   bool fillEvent(ddaschannel* , DDASEvent* );//true if filled event, false if not
   std::vector<Event> getEvents(){return events;}
   int getChannelNumber(ddaschannel *dchan, int firstSlot) {return dchan->GetCrateID()*64+(dchan->GetSlotID()-firstSlot)*16+dchan->GetChannelID();}

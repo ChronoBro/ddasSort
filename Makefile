@@ -4,7 +4,7 @@ OBJDIR = objs/
 
 
 #OBJECTS = objs/det.o objs/detector.o objs/histo.o objs/caen.o  objs/elist.o  objs/solution.o objs/einstein.o objs/newton.o objs/correl.o
-OBJECTS = objs/histo.o objs/ddasDet.o objs/ddasArray.o objs/ddasDSSD.o objs/diagnostics.o
+OBJECTS = objs/histo.o objs/ddasDet.o objs/ddasArray.o objs/ddasDSSD.o objs/diagnostics.o objs/RBDDTrace.o objs/RBDDASChannel.o objs/RBDDChannel.o
 #ALLOBJECTS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 ALLOBJECTS := $(patsubst $(SRCDIR)%.cpp,$(OBJDIR)%.o,$(wildcard $(SRCDIR)*.cpp))
 
@@ -12,7 +12,7 @@ CFLAGS= -c -O2 -std=c++11 -W -I$(shell root-config --incdir) -g -I$(INCDIR)
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib -lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 
-all: sort sort2 sort3 #sortDev 
+all: sort3 sort3_v2 #sortDev sort sort2 
 
 sort: objs/sort.o $(OBJECTS)
 	$(COMPILER) -o sort objs/sort.o $(OBJECTS) $(LINKOPTION)
@@ -25,6 +25,9 @@ sort2: objs/sort2.o $(OBJECTS)
 
 sort3: objs/sort3.o $(OBJECTS)
 	$(COMPILER) -o sort3 objs/sort3.o $(OBJECTS) $(LINKOPTION)
+
+sort3_v2: objs/sort3_v2.o $(OBJECTS)
+	$(COMPILER) -o sort3_v2 objs/sort3_v2.o $(OBJECTS) $(LINKOPTION)
 
 andyBuild: objs/andyBuild.o $(OBJECTS)
 	$(COMPILER) -o andyBuild objs/andyBuild.o $(OBJECTS) $(LINKOPTION)

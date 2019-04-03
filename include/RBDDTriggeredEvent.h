@@ -18,7 +18,8 @@
 #include <TNamed.h>
 #include <TObject.h>
 #include <vector>
-//#include <TTree.h>
+#include <TTree.h>
+#include <TChain.h>
 //#include <TList.h>
 
 #include "RBDDChannel.h"
@@ -36,13 +37,17 @@ class RBDDTriggeredEvent : public TNamed
   Double_t  fWindowFirstTime;       // Event time of window start (ns)
   Double_t  fWindowLastTime;        // Event time of window end (ns)
   Int_t triggerChannel;
+  RBDDChannel * fillerChannel;     //channel to check
 
-  RBDDChannel *fTriggerChannel;      // The 
+  //RBDDChannel *fTriggerChannel;      // Channel to check
   TList       *fChannels;           // Time-ordered list of all channel objects in window.
 //  TList    *fChannels;              // List of select correlated channel objects (Maybe we don't need this)
   std::vector<RBDDChannel> triggeredChannels; //A vector of channels that are in coincidence with the trigger
-  
-  
+  std::vector<RBDDChannel> buffer; //A buffer, to try and perform the same operations I was doing before
+  void      setWindowWidth(Double_t windowWidth){fWindowWidth = windowWidth;}
+
+
+
  public:
   RBDDTriggeredEvent(){}
   ~RBDDTriggeredEvent(){}
@@ -50,11 +55,14 @@ class RBDDTriggeredEvent : public TNamed
   RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel *ch,Double_t windowBegin,Double_t windowEnd);
   RBDDTriggeredEvent(const char *name,const char *title,RBDDTriggeredEvent *ev,Double_t windowWidth);
   RBDDTriggeredEvent(const char *name,const char *title,RBDDTriggeredEvent *ev,Double_t windowBegin,Double_t windowEnd);
+  RBDDTriggeredEvent(const char *name,const char *title,TTree * dataTree,RBDDChannel *ch,Double_t windowWidth);
+  RBDDTriggeredEvent(const char *name,const char *title,TChain * dataChain,RBDDChannel *ch,Double_t windowWidth);
+  
   
   void SetTriggerEvent(RBDDChannel *ch, Long64_t entry);
   void ResetTrigger();
   void triggerSearch(); //possible recursive function to get rid of for-loop over entries
-
+                        //Will implement this once original conception is working (basic loop over entries)
 
 //  void Copy(TObject &obj) const;
   void Print(Option_t* option = "") const;
@@ -72,7 +80,7 @@ class RBDDTriggeredEvent : public TNamed
 
   Bool_t IsTriggerCh(Int_t ch){if(fTriggerCh==ch) return kTRUE; else return kFALSE;}
   
-  ClassDef(RBDDTriggeredEvent,1);
+  //ClassDef(RBDDTriggeredEvent,1);
 };
 
 #endif /* defined(____RBDDTriggeredEvent__) */

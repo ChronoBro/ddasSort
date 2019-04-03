@@ -106,6 +106,8 @@ TList* RBDDTriggeredEvent::GetEvents(RBDDChannel *ch, TBranch *br)
 {
   // --
   //
+
+  //It appears andy was going to do unpacking here, but if we want to make this a general class then that shouldn't be done here
   
   // Check that tigger event is set.
   if(!IsTriggered()) {cerr << "---> Trigger was not set!" << endl; return 0;}
@@ -142,7 +144,7 @@ TList* RBDDTriggeredEvent::GetEvents(RBDDChannel *ch, TBranch *br)
   fPSDValTrig     = 0;
   fCFDValTrig     = 0;
   while(fSearchEntry+1<fNEntries){
-    b_fGlobalCh ->GetEntry(fSearchEntry);
+    b_fGlobalCh ->GetEntry(fSearchEntry); 
     b_fData     ->GetEntry(fSearchEntry);
     nextTDiff   = (Long64_t)(fData->fChData.fTimestamp - curTimestamp);
     CFDTimeDiff = fData->fChData.GetCFDAbs(0) - curCFDAbsTime;
