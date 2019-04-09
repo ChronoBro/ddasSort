@@ -20,37 +20,50 @@
 //#include <TTree.h>
 //#include <TList.h>
 
+/* struct Event{ */
+/*   double energy = -1;  //calibrated energy */
+/*   unsigned int signal = -1; //Raw signal */
+/*   int channel = -1; */
+/*   double time = 0; */
+/*   long long int entry = -1; */
+/*   std::vector<unsigned short> trace; */
+/* }; */
+
 
 class RBDDChannel : public TNamed
 {
 protected:
-  Int_t     fChanNo;           //! Channel number
-  Int_t     fMSPS;             //  ADC sampling frequency (MSPS)
-  Int_t     fClockFreq;        //
-  Int_t     fTimestampLSB;     //
-  ULong64_t fSignal;
-  double    fEnergy;
+  Int_t     fChanNo=0;           //! Channel number
+  Int_t     fMSPS=0;             //  ADC sampling frequency (MSPS)
+  Int_t     fClockFreq=0;        //
+  Int_t     fTimestampLSB=0;     //
+  double    fTimestamp = 0;
+  ULong64_t fSignal=0;
+  double    fEnergy=0;
   std::vector<UShort_t> fTrace;
-  int assignedChannel = -1;
-  bool isCalibrated = false;
-  double calibrate(ULong64_t energyR);
-  std::vector<double> params;
-  void setCalibration(std::vector<double> par); //ordered list of polynomial parameters p0,p1,p2,...
 
 public:
 
   ~RBDDChannel(){;}
-  RBDDChannel(){assignedChannel = -1;isCalibrated=false;}
-  RBDDChannel(int givenChannel){setAssignedChannel(givenChannel);}
+  RBDDChannel(){;}
 
   virtual  Int_t                 GetChanNo()    = 0;
   virtual  ULong64_t             GetTimestamp() = 0; // Value of time counter
   virtual  ULong64_t             GetSignal()    = 0;
   virtual  std::vector<UShort_t> GetTrace()     = 0; // Assumes 16-bit or less resolution
+  virtual  double                GetEnergy()    = 0;
   virtual  void                  unpack()       = 0;
+
+  /* RBDDChannel& operator=(RBDDChannel const &rhs) { */
+  /*   if (this != &rhs) { */
+  /*     delete m_ptr; // free resource; */
+  /*     m_ptr = 0; */
+  /*     m_ptr = rhs.m_ptr; */
+  /*   } */
+  /*   return *this; */
+  /* }; */
+
   /*
-
-
 
   // What's the purpose of having the above virtual? I think it depends on where the unpacking is done, but is we're
   // using a derived class for unpacking then it makes sense to have the below defined here than overwriting it in
@@ -63,11 +76,9 @@ public:
 
   */
 
-  bool  isTriggered()    {return GetChanNo() == assignedChannel;}
   Int_t GetClockFreq()   {return fClockFreq;}
   Int_t GetTimestampLSB(){return fTimestampLSB;}
-  void setAssignedChannel(int givenChannel){assignedChannel = givenChannel;}
-  
+
   //ClassDef(RBDDChannel,1);
 };
 

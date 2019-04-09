@@ -116,19 +116,20 @@ Double_t RBDDTrace::GetQDC()
 Double_t RBDDTrace::GetBaseline()
 {
   //
-  
-  double base = 0;
-  int sampleSize = int((double)fTrace.size()/fBaseSampleFraction);
-  for(int iBin=0; iBin<sampleSize; iBin++){ base += fTrace[iBin];}
-  base = base/((double)sampleSize);
 
-
+  if(fB==0){
+    double base = 0;
+    int sampleSize = int((double)fTrace.size()/fBaseSampleFraction);
+    for(int iBin=0; iBin<sampleSize; iBin++){ base += fTrace[iBin];}
+    base = base/((double)sampleSize);
+    
   // Find the baseline
   // fB = 0;
   // for(Int_t iBase=fBaseBegin; iBase<(fBaseBegin+fBaseSamples); iBase++) fB += curTrace[iBase];
   // fB = fB/(fBaseSamples);
   
-  fB = base;
+    fB = base;
+  }
 
   return fB;
 }
@@ -178,17 +179,27 @@ Double_t RBDDTrace::GetCFDTime(Double_t fraction)
 
 
 TH1D* RBDDTrace::GetTraceHisto(){
-  if(fTrace.size()>0){
-    fTraceHisto = new TH1D("trace","trace",fTrace.size(),fTrace[0],fTrace[fTrace.size()-1]);
-    for(unsigned int iBin=0;iBin<fTrace.size();iBin++){
-      fTraceHisto->SetBinContent(iBin,fTrace[iBin]);
+  if(!isHistCreated){
+
+    double timeUnit = 1./fMSPS; //timeunit will be in us if in MEGA samples/second
+
+    if(fTrace.size()>0){
+      fTraceHisto = new TH1D("trace","trace",fTrace.size(),0,(double)fTrace.size()*timeUnit);
+      fTraceHisto->GetXaxis()->SetTitle("time (us)");
+      for(unsigned int iBin=0;iBin<fTrace.size();iBin++){
+	fTraceHisto->SetBinContent(iBin,fTrace[iBin]-fB); //I like to remove baseline for plotting
+      }
+      isHistCreated = true;
+      return fTraceHisto;
+    }
+    else{
+      cerr << "no trace to output stored in RBDDTrace Object" << endl;
+      return 0;
     }
 
-    return fTraceHisto;
   }
   else{
-    cerr << "no trace to output stored in RBDDTrace Object" << endl;
-    return 0;
+    return fTraceHisto;
   }
 
  }

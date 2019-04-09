@@ -24,16 +24,19 @@ class RBDDASChannel : public RBDDChannel
  public:
   RBDDASChannel();
   RBDDASChannel(ddaschannel*, DDASEvent*);
+  RBDDASChannel(DDASEvent*);
   RBDDASChannel(int){;}
   ~RBDDASChannel();
   void unpack();
   void setEventPointer(ddaschannel*, DDASEvent*);
+  void setEventPointer(DDASEvent*);
 
 
   Int_t                 GetChanNo(){return fChanNo;}
-  ULong64_t             GetTimestamp(){return fTimestampLSB;} // Value of time counter
+  ULong64_t             GetTimestamp(){return fTimestamp;} // Value of time counter
   ULong64_t             GetSignal(){return fSignal;}
   std::vector<UShort_t> GetTrace(){return fTrace;} // Assumes 16-bit or less resolution
+  double                GetEnergy(){return fEnergy;}
 
   //ClassDef(RBDDASChannel,1);
 };

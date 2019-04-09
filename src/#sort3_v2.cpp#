@@ -442,7 +442,7 @@ int main(int argc,char *argv[]){
     if(buffer.getFillerEvent().channel != testChannel.GetChanNo()){cout << "seems to an error in RBDDASChannel unpacking" << endl;}
 
     // cout << endl;
-    // cout << buffer.getFillerEvent().channel << endl;
+    //cout << buffer.getFillerEvent().channel << endl;
     // cout << testChannel.GetChanNo() << endl;
 
 
@@ -454,7 +454,7 @@ int main(int argc,char *argv[]){
 	else{buffer.pop();};
       }
     }
-
+ 
     //if trigger isn't found continue;
     if(!foundTrigger){continue;}
 

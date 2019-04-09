@@ -21,9 +21,21 @@ RBDDASChannel::RBDDASChannel(ddaschannel* channel, DDASEvent* event){
   setEventPointer(channel,event);
 }
 
+RBDDASChannel::RBDDASChannel(DDASEvent* event){
+  
+  setEventPointer(event);
+}
+
 void RBDDASChannel::setEventPointer(ddaschannel* channel, DDASEvent* event){
 
   curChannel = channel;
+  curEvent = event;
+  isPointerSet=true;
+ 
+}
+
+void RBDDASChannel::setEventPointer(DDASEvent* event){
+
   curEvent = event;
   isPointerSet=true;
  
@@ -40,15 +52,18 @@ void RBDDASChannel::unpack(){
     
     fChanNo = curChannel->GetCrateID()*64+(curChannel->GetSlotID()-2)*16+curChannel->GetChannelID(); //right now this is specific to experiment, we should come up with more generalized way to handle channel numbers
     //should probably just choose ONE convention and use that from now on, but I'll worry about that later
-    if(fChanNo == assignedChannel || assignedChannel == -1){
+    
       fSignal = curChannel->GetEnergy();
       fMSPS = curChannel->GetModMSPS();
-      fTimestampLSB = curChannel->GetCoarseTime();
+      fTimestampLSB = curChannel->GetCoarseTime(); //->GetCoarseTime() returns type Double_t
+      fTimestamp = curChannel->GetCoarseTime();
+      //cout << "unpacker time = " << fTimestamp << endl;
       fTrace = curChannel->GetTrace();
 
-      if(isCalibrated){fEnergy = calibrate(fSignal);}
+      //if(isCalibrated){fEnergy = calibrate(fSignal);}
 
-    }
+      //cout << "am I not making it here?" << endl;
+      //}
 
   }
   else{

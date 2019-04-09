@@ -21,8 +21,8 @@
 #include <TTree.h>
 #include <TChain.h>
 //#include <TList.h>
-
 #include "RBDDChannel.h"
+#include "RBDDarray.h"
 
 class RBDDTriggeredEvent : public TNamed
 {
@@ -36,29 +36,46 @@ class RBDDTriggeredEvent : public TNamed
   ULong64_t fWindowLastTimestamp;   // Timestamp of window end
   Double_t  fWindowFirstTime;       // Event time of window start (ns)
   Double_t  fWindowLastTime;        // Event time of window end (ns)
-  Int_t triggerChannel;
-  RBDDChannel * fillerChannel;     //channel to check
+  Int_t triggerChanNo;
+                                  //note: instantiated RBDDChannel needs to be a pointer since this is an abstract class
 
-  //RBDDChannel *fTriggerChannel;      // Channel to check
+  long long int lastEntry=0;        //lastEntry accessed in TTree/TChain
+
   TList       *fChannels;           // Time-ordered list of all channel objects in window.
 //  TList    *fChannels;              // List of select correlated channel objects (Maybe we don't need this)
-  std::vector<RBDDChannel> triggeredChannels; //A vector of channels that are in coincidence with the trigger
-  std::vector<RBDDChannel> buffer; //A buffer, to try and perform the same operations I was doing before
+  //std::vector<RBDDChannel*> buffer; //A buffer, to try and perform the same operations I was doing before
+  //issue with above is that I have to allocate memory for each channel, however, since I'm using a derived class of RBDDChannel I'm not sure
+  //how to allocate the memory properly (my previous list was just the same address in memory over and over again)
+  //above issue may have been because of bugs with timestamp, should try with array of RBDDChannel* again and see if it works
+  //it does seem to work but its running really slow and has a memory leak, I could try to fix that or go back to original method which works fine
+  std::vector<Event> buffer;
+  std::vector<RBDDChannel*> bufferTest;
   void      setWindowWidth(Double_t windowWidth){fWindowWidth = windowWidth;}
 
-
+  Event fillEvent(RBDDChannel*); 
+  void loadBar(double progress);
 
  public:
   RBDDTriggeredEvent(){}
   ~RBDDTriggeredEvent(){}
-  RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel *ch,Double_t windowWidth);
-  RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel *ch,Double_t windowBegin,Double_t windowEnd);
+  RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel &ch,Double_t windowWidth);
+  RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel &ch,Double_t windowBegin,Double_t windowEnd);
+
+  RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel* ch,Double_t windowWidth);
+  RBDDTriggeredEvent(const char *name,const char *title,RBDDChannel* ch,Double_t windowBegin,Double_t windowEnd);
+
+
   RBDDTriggeredEvent(const char *name,const char *title,RBDDTriggeredEvent *ev,Double_t windowWidth);
   RBDDTriggeredEvent(const char *name,const char *title,RBDDTriggeredEvent *ev,Double_t windowBegin,Double_t windowEnd);
-  RBDDTriggeredEvent(const char *name,const char *title,TTree * dataTree,RBDDChannel *ch,Double_t windowWidth);
-  RBDDTriggeredEvent(const char *name,const char *title,TChain * dataChain,RBDDChannel *ch,Double_t windowWidth);
-  
-  
+  RBDDTriggeredEvent(const char *name,const char *title,TTree dataTree,RBDDChannel &ch,Double_t windowWidth);
+  RBDDTriggeredEvent(const char *name,const char *title,TChain dataChain,RBDDChannel &ch,Double_t windowWidth);
+  //I want to modify the variables directly, thus if not a pointer I need to pass by reference
+  //I should overload all of these constructors to give the option to pass pointers, which are default passed by "reference"
+
+
+  RBDDChannel * triggerChannel;      // store information on triggered channel  
+  RBDDChannel* fillerChannel;     //channel to check
+
   void SetTriggerEvent(RBDDChannel *ch, Long64_t entry);
   void ResetTrigger();
   void triggerSearch(); //possible recursive function to get rid of for-loop over entries
@@ -73,13 +90,32 @@ class RBDDTriggeredEvent : public TNamed
   ULong64_t GetWindowLastTimestamp()  {return fWindowLastTimestamp;}
   Double_t  GetWindowFirstTime()      {return fWindowFirstTime;}
   Double_t  GetWindowLastTime()       {return fWindowLastTime;}
-  
+  std::vector<RBDDChannel*> GetBufferTest(){return bufferTest;}
+  std::vector<Event> GetBuffer(){return buffer;}
+
+
   TList*    GetEvents(RBDDChannel *ch, TBranch *br);
   TList*    GetEvents()               {return fChannels;}
 
 
-  Bool_t IsTriggerCh(Int_t ch){if(fTriggerCh==ch) return kTRUE; else return kFALSE;}
-  
+  bool IsTriggerCh(Int_t ch){return triggerChanNo == ch;}
+  void setTriggerCh(int ch){triggerChanNo=ch;}
+  bool isTriggered(){return fillerChannel->GetChanNo() == triggerChanNo;}
+  long long int FillBuffer(TChain &dataChain, long long int &iEntry);
+
+  //again should overload functions to accept pointers as well
+  long long int GetCoinEvents(TChain &dataChain);
+  long long int GetCorrEvents(TChain &dataChain);
+
+  double triggerSignal;
+  double triggerTime;
+
+  //should overload this with pointer support
+  bool dumpBuffer(RBDDdet &det);
+  bool dumpBuffer(RBDDarray &array);
+
+  //at some point I want to pass a bool function into the trigger condition
+
   //ClassDef(RBDDTriggeredEvent,1);
 };
 

@@ -121,6 +121,11 @@ void histo::write()
     trace->Write();
   }
 
+  for(auto & trace : traceHistos){
+    trace->Write();
+  }
+
+
   file->Write();
   std::cerr << " DONE! --->histos written to file root-files/" << name << "                                           " << std::endl << std::endl;
   //file->Close();

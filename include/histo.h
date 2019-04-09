@@ -39,6 +39,7 @@ class histo
   //TGraph * traces[50]; //bad idea to hard code this... should come up with better method to fill traces
 
   std::vector<TGraph*> graphTraces;
+  std::vector<TH1D*> traceHistos;
 
   TH1I * energyCheck;
   TH2I * h_raw_summary;

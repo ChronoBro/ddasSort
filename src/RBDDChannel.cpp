@@ -54,24 +54,3 @@ using namespace std;
   
 // }
 
-void RBDDChannel::setCalibration(std::vector<double> par){
-
-  params = par;
-  isCalibrated = true;
-
-}
-
-
-double RBDDChannel::calibrate(ULong64_t energyR){
-
-  double value = 0;
-  double castER = (double)energyR;
-  double power = 0;
-  for(auto p: params){
-    value += p*pow(castER,power);
-    power++;
-  }
-
-  return value;
-
-}

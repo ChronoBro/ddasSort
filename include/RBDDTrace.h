@@ -29,14 +29,18 @@ protected:
   Double_t         fBaseSampleFraction;//
   Double_t         fBaseBegin;    //
   Double_t         fBaseEnd;      //
-  Double_t         fB;            //  Baseline value.
-  Double_t         fA;            //  Maximum value.
-  Double_t         fQDC;
+  Double_t         fB = 0;            //  Baseline value.
+  Double_t         fA = 0;            //  Maximum value.
+  Double_t         fQDC = 0;
+  double           fMSPS = 1;
   std::vector<Double_t> fSum;          //!
   
   TH1D            *fTraceHisto;   //!
   void             analyze();
   bool isAnalyzed = false;
+  bool isHistCreated = false;
+  
+
 
 public:
   RBDDTrace(){}
@@ -62,9 +66,11 @@ public:
   Int_t             GetSumAndStore(Double_t winBegin, Double_t winEnd);
   Double_t          GetCFDTime(Double_t fraction = 0.5);
   bool              filter(); //returns true if trace should be filtered out
-  
+
   void  SetBaseSampleFraction(double fraction){fBaseSampleFraction = fraction;}
   void  SetBaseSamples(Int_t nSamples){fBaseSamples = nSamples;}
+  void  SetMSPS(double MSPS){fMSPS=MSPS;}
+  
 
   //ClassDef(RBDDTrace,1); //comment this if I want to compile normally, otherwise I have to do some root trickery in the compilation
 };

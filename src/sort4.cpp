@@ -13,6 +13,8 @@
 #include "diagnostics.h"
 #include "RBDDTriggeredEvent.h"
 #include "RBDDASChannel.h"
+#include "RBDDarray.h"
+#include "RBDDTrace.h"
 
 using namespace std;
 
@@ -24,8 +26,9 @@ inline bool exists_test (const std::string& name) {
 
 int main(int argc,char *argv[]){
 
-  cerr << endl << "NSCL DDAS sorting for unbuilt Events" << endl << endl;
-
+  cerr << endl << "------------------------------------";
+  cerr << endl << "NSCL DDAS sorting for unbuilt Events" << endl;
+  cerr << "------------------------------------" << endl << endl;
 
   /*****************************************
    
@@ -114,6 +117,15 @@ int main(int argc,char *argv[]){
 
    ****************************************/
 
+  RBDDarray SSD;
+
+  RBDDarray DSSDloGainFront;
+  RBDDarray DSSDloGainBack;
+  
+  RBDDarray DSSDhiGainFront;
+  RBDDarray DSSDhiGainBack;
+
+  RBDDarray SeGA;
 
   TFile          *fSeGACalFile; //!
   TList *fSeGACalibFunc; //! List of calibration functions.
@@ -122,52 +134,74 @@ int main(int argc,char *argv[]){
   ifstream alphaCalib("Calibrations/alphaCalib.dat");
   ifstream alphaCalibSSD("Calibrations/alphaCalibrationSSD.dat");
 
+
+
   for(int i=32;i<48;i++){
     int chan = 0.;
     double slope;
     double offset;
     alphaCalibSSD >> chan >> offset >> slope; 
+
     vector<double> params;
     params.push_back(offset);
     params.push_back(slope);
-  }
 
+    
+    //RBDDASChannel* strip = new RBDDASChannel(i);
+    //strip->setCalibration(params);
+    //SSD.push_back(strip); 
+    RBDDdet strip(i);
+    strip.setCalibration(params);
+    SSD.addDet(strip);
+
+  }
   alphaCalibSSD.close();
 
+  //load DSSD calibrations
   for(Int_t i=0; i<80; i++){
     int chan=0.;
     double slope;
     double offset;
     alphaCalib >> chan >> offset >> slope; 
 
+    vector<double> params;
+    params.push_back(offset);
+    params.push_back(slope);
+
+    RBDDdet strip(chan);
+    RBDDdet strip2(chan+40);
+    strip.setCalibration(params);
+    
+    if(i<40){
+      DSSDhiGainFront.addDet(strip);
+      DSSDloGainFront.addDet(strip2);
+    }
+    else{
+      DSSDhiGainBack.addDet(strip);
+      DSSDloGainBack.addDet(strip2);
+    }
+
   }
   alphaCalib.close();
 
 
   // Load SeGA Calibrartions
+  char name[500];
   int SeGAchannel = 16;
   fSeGACalFile = new TFile("Calibrations/SeGACalibrations.root","READ");
   for(Int_t i=0; i<16; i++){
     sprintf(name,"f_cal_SeGA_%02i",i);
     TF1 *funG= (TF1*)fSeGACalFile->FindObjectAny(name);
-
-    SEGAchannels.push_back(SeGAchannel);
-    
-    ddasDet fillerDet(SeGAchannel);
     
     vector<double> params;
     params.push_back(funG->GetParameter(0));
     params.push_back(funG->GetParameter(1));
-    SEGAparamList.push_back(params);
-    fillerDet.setCalibration(params);
-
-    SEGA.push_back(fillerDet);
+    
+    RBDDdet ge(SeGAchannel);
+    ge.setCalibration(params);
+    SeGA.addDet(ge);
 
     SeGAchannel++;
-
-    fCalG->SetParameter(0, funG->GetParameter(0));
-    fCalG->SetParameter(1, funG->GetParameter(1));
-    fSeGACalibFunc->Add(fCalG);
 
     delete funG;
   }
@@ -176,8 +210,9 @@ int main(int argc,char *argv[]){
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates2.root","READ");
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  TCutG *fGate;          //! PID Gate
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -215,27 +250,126 @@ int main(int argc,char *argv[]){
   dataChain.SetBranchAddress("ddasevent", &pDDASEvent);
   long long int lastEntry = 0;  //keep track of the last entry accessed in the branch
 
-  RBDDASChannel* triggerChannel = new RBDDASChannel;
-  triggerChannel->SetAssignedChannel(1);
+
+  RBDDdet PIN1(0);
+  RBDDdet TOF(5);
 
 
-  RBDDTriggeredEvent* ev1 = new RBDDTriggeredEvent("Prompt Trigger". triggerChannel, windowWidth);
+  RBDDASChannel * bufferEvent = new RBDDASChannel;
+  bufferEvent->setEventPointer(pDDASEvent);
+
+  //clock ticks are in ns for DDAS
+  double coinWindow = 5000; //5 us
+  double corrWindow = 2E9;  //2 s
+
+  RBDDTriggeredEvent* ev1 = new RBDDTriggeredEvent("Prompt Trigger", "title", bufferEvent, coinWindow);
+  ev1->setTriggerCh(0);
+  RBDDTriggeredEvent* ev2 = new RBDDTriggeredEvent("Correlated Events", "title", bufferEvent, corrWindow);
+  
 
   for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
-
-    dataChain.GetEntry(iEntry);
-    
-    if(pDDASEvent->GetNEvents()>1) {cerr << "-->ERROR: Must be run on non-built event data." << endl; exit(0);} //each DDASEvent has 1 ddaschannel
   
-    RBDDASChannel  fillerChannel(curCahnnel,pDDASEvent);
+    lastEntry = ev1->FillBuffer(dataChain, iEntry);
+    //cout << ev1->fillerChannel->GetChanNo() << endl;
 
-    if(ev1->IsTriggerCh(fillerChannel.fChanNo)){
-      ev1->SetTriggerEvent(fillerChannel,iEntry);
-    
+    //it appears the buffer is just being filled indefinitely after being triggered... curious
+    //fixed issue, there was an issue with assigning timestamps in RBDDChannel after unpacking (conversion between int and double) that was reporting the same time for each event, thus my buffer checks weren't working and it was being filled indefinitely
+    if(ev1->isTriggered()){
+   
+
+      bool foundTOF = false;
+      bool foundIonOfInterest = false;
+      double curTOF = 0;
+      double implantTime;
+      int fImplantEFMaxStrip = -100;
+      int fImplantEBMaxStrip = -100;
+
+      lastEntry = ev1->GetCoinEvents(dataChain); //ev1 buffer will be filled with a list of coincidence Events
+      double PIN1energy = ev1->triggerSignal;
+      
+      foundTOF = ev1->dumpBuffer(TOF);
+      if(foundTOF){
+	curTOF = TOF.getFillerEvent().signal;
+	Histo->h_PID->Fill(curTOF, PIN1energy);
+      }
+
+      //clear detectors after their data has been used
+      TOF.clear();
+
+      foundIonOfInterest = fGate->IsInside(curTOF,PIN1energy);
+      if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
+      counterList.count("foundIon");
+
+      //will now need to check if event is in PID gate before calling correlated events
+
+      //dumpBuffer() isn't the most efficient since it loops through coincident events each time (not the worst, but could be better)
+      ev1->dumpBuffer(SeGA);
+      ev1->dumpBuffer(DSSDloGainFront);
+      ev1->dumpBuffer(DSSDloGainBack);
+
+      for( auto &SeGAEvent: SeGA.getEventList() ){
+	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
+      }
+
+      double Emax = 0;
+      Event frontImplant;
+      for(auto frontEvent : DSSDloGainFront.getEventList()){
+	if(foundIonOfInterest){counterList.count("frontImplantMult");}
 
 
-    }
+	RBDDTrace trace(frontEvent.trace);
+	double max = trace.GetMaximum();
+	double QDC = trace.GetQDC();
 
+	//if(frontEvent.signal > Emax){
+	if(QDC > Emax){
+	  //Emax = frontEvent.signal;
+	  Emax = QDC;
+	  fImplantEFMaxStrip =  40 - (frontEvent.channel - 104);
+	  implantTime = frontEvent.time;
+	  
+	  frontImplant = frontEvent;
+	  
+	}
+
+      }
+
+      // if(frontImplant.signal!=0){ //need to make sure that there is a frontImplant!
+      // 	RBDDTrace trace(frontImplant.trace);
+      // 	trace.GetBaseline(); //calling GetBaseline() will set base value so that histograms are corrected for baseline
+      // 	trace.SetMSPS(100);
+      // 	ostringstream histoName;
+      // 	histoName << "traceFrontImplant_" << counterList.returnValue("foundIon") << "_strip=" << fImplantEFMaxStrip <<"_Tree=" << dataChain.GetTreeNumber() << endl;
+      // 	trace.GetTraceHisto()->SetName(histoName.str().c_str());
+      // 	Histo->traceHistos.push_back(trace.GetTraceHisto());
+      // }
+
+      Emax=0;
+      for(auto& backEvent : DSSDloGainBack.getEventList()){
+	if(foundIonOfInterest){counterList.count("backImplantMult");}
+
+	RBDDTrace trace(backEvent.trace);
+	double max = trace.GetMaximum();
+	double QDC = trace.GetQDC();
+
+	//if(backEvent.signal > Emax){
+	if(QDC > Emax){
+	  //Emax = backEvent.signal;
+	  Emax = QDC;
+	  fImplantEBMaxStrip = 40 - (backEvent.channel - 184);	  
+	}
+
+      }	
+
+      // cout << "Implant Front Strip = " << fImplantEFMaxStrip << endl;
+      // cout << "Implant Back Strip = " << fImplantEBMaxStrip << endl;
+
+      //clear detectors defined outside of event loop that had they're data operated on already
+      SeGA.clear();
+      DSSDloGainBack.clear();
+      DSSDloGainFront.clear();
+      
+    } //end of original trigger
 
   } //end of loop over entries
 
