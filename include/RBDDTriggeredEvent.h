@@ -73,8 +73,8 @@ class RBDDTriggeredEvent : public TNamed
   //I should overload all of these constructors to give the option to pass pointers, which are default passed by "reference"
 
 
-  RBDDChannel * triggerChannel;      // store information on triggered channel  
-  RBDDChannel* fillerChannel;     //channel to check
+  /* RBDDChannel * triggerChannel;      // store information on triggered channel   */
+  RBDDChannel* fillerChannel;     //channel to check 
 
   void SetTriggerEvent(RBDDChannel *ch, Long64_t entry);
   void ResetTrigger();

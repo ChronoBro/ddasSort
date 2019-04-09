@@ -337,7 +337,7 @@ int main(int argc,char *argv[]){
       // if(frontImplant.signal!=0){ //need to make sure that there is a frontImplant!
       // 	RBDDTrace trace(frontImplant.trace);
       // 	trace.GetBaseline(); //calling GetBaseline() will set base value so that histograms are corrected for baseline
-      // 	trace.SetMSPS(100);
+      // 	trace.SetMSPS(250);
       // 	ostringstream histoName;
       // 	histoName << "traceFrontImplant_" << counterList.returnValue("foundIon") << "_strip=" << fImplantEFMaxStrip <<"_Tree=" << dataChain.GetTreeNumber() << endl;
       // 	trace.GetTraceHisto()->SetName(histoName.str().c_str());

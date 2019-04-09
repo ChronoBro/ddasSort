@@ -276,18 +276,22 @@ long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int &i
 
   dataChain.GetEntry(iEntry);
   fillerChannel->unpack();
-  bufferTest.push_back(fillerChannel);
+  //bufferTest.push_back(fillerChannel); //is this the memory leak? commented this one line and it largely went away so this contributed.
   // cout << "fillerChannel time = " <<fillerChannel->GetTimestamp() << endl;
   // cout << "fillerChannel chan = " <<fillerChannel->GetChanNo() << endl;
   buffer.push_back(fillEvent(fillerChannel));
 
   lastEntry = iEntry;
 
+  //memory leak was occuring in the program where buffer was being filled indefinitely
+  //I believe this is an issue where events aren't being erased from the buffer
+  //throwing in abs() in time check made this problem go away as far as I can tell
+
   //should also pop events off the front if they aren't in coincidence with latest event
    if(buffer.size() > 1){
      for(auto & bufferEvent : buffer ){
 
-       if(fillerChannel->GetTimestamp() - bufferEvent.time < fWindowWidth){break;}
+       if(abs(fillerChannel->GetTimestamp() - bufferEvent.time) < fWindowWidth){break;} 
        //if(fillerChannel->GetTimestamp() - bufferEvent->GetTimestamp() < fWindowWidth){break;}
        //else{delete bufferTest.front();buffer.erase( buffer.begin() );}
        else{buffer.erase( buffer.begin() );};
