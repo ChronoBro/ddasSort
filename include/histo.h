@@ -88,6 +88,7 @@ class histo
   TH2D  *hGammaVsDecay;
   TH2D  *hGammaVsDecayEtot;
   TH2D  *hGammaVsDecayAll;
+  TH2D  *gg_prompt;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
   TH1I  *rawSSDhiGain;

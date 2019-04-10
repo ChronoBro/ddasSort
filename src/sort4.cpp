@@ -309,6 +309,15 @@ int main(int argc,char *argv[]){
 
       for( auto &SeGAEvent: SeGA.getEventList() ){
 	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
+	//cout << "SeGA multiplicity = " << SeGA.getEventList().size() << endl;
+	//cout << "SeGA channel = " << SeGAEvent.channel << endl;
+
+	// for(auto & SeGAEvent2: SeGA.getEventList() ){
+	//   if(SeGAEvent.energy!=SeGAEvent2.energy){
+	//     Histo->gg_prompt->Fill(SeGAEvent.energy,SeGAEvent2.energy);
+	//   }
+	// }
+
       }
 
       double Emax = 0;
@@ -368,7 +377,7 @@ int main(int argc,char *argv[]){
       SeGA.clear();
       DSSDloGainBack.clear();
       DSSDloGainFront.clear();
-      
+
     } //end of original trigger
 
   } //end of loop over entries

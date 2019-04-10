@@ -100,6 +100,10 @@ void histo::histos(){
   hGammaVsDecayTGated = new TH2D("hGammaVsDecayTGated","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayAll = new TH2D("hGammaVsDecayAll","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
+  
+  //Is this matrix that much of a memory hog? memory usage more than doubles with this histogram, weird
+  //gg_prompt = new TH2D("gamma-gamma prompt","gamma-gamma prompt",10000,0,10000,10000,0,10000);
+
   hSeGAEnergy  = new TH2D("hSeGAEnergy","SeGA gamma energies",16,0,16,5000,0,10000);
   hImplantXY   = new TH2I("hImplantXY", "DSSD hit pattern (xy position)",  40,-20,20,40,-20,20);
   hImplantXY->GetXaxis()->SetTitle("x (mm)");
