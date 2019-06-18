@@ -8,20 +8,21 @@ bool RBDDdet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
     //Event fillerEvent;
     foundChannel = eventPointer->GetData()[0]; //taking only the first event, thus this method will only work on unbuilt events
     //will have to make another method for handling fully built events
-    
-    fillerEvent.channel = getChannelNumber(foundChannel,2);
-    //std::cout << fillerEvent.channel << std::endl;
-    fillerEvent.signal = foundChannel->GetEnergy();
-    fillerEvent.time = foundChannel->GetCoarseTime();
-    //std::vector<double> fill(foundChannel->GetTrace().begin(),foundChannel->GetTrace().end(), fillerEvent.trace.get_allocator());
-    fillerEvent.trace = foundChannel->GetTrace();
+    double channelFound = getChannelNumber(foundChannel,2);
+    if(channelFound == assignedChannel){
+      fillerEvent.channel = channelFound;;
+      //std::cout << fillerEvent.channel << std::endl;
+      fillerEvent.signal = foundChannel->GetEnergy();
+      fillerEvent.time = foundChannel->GetCoarseTime();
+      //std::vector<double> fill(foundChannel->GetTrace().begin(),foundChannel->GetTrace().end(), fillerEvent.trace.get_allocator());
+      fillerEvent.trace = foundChannel->GetTrace();
+      
+      if(isCalibrated){
+	fillerEvent.energy = calibrate(fillerEvent.signal);
+      }
+      
+      
 
-    if(isCalibrated){
-      fillerEvent.energy = calibrate(fillerEvent.signal);
-    }
-
-    
-    if(fillerEvent.channel == assignedChannel){
       //std::cout << "Filled Event" << std::endl;
       events.push_back(fillerEvent);
       return true;
@@ -56,20 +57,23 @@ bool RBDDdet::fillEvent(Event fillerEvent0){
   if(assignedChannel >= 0){
 
     
-    fillerEvent.channel = fillerEvent0.channel;
-    //std::cout << fillerEvent.channel << std::endl;
-    fillerEvent.signal = fillerEvent0.signal;
-    fillerEvent.time = fillerEvent0.time;
-    fillerEvent.trace = fillerEvent0.trace;
-    
-    fillerEvent = fillerEvent0;
-    //fillerEvent.trace = fillerEvent0.trace;
-
-    if(isCalibrated){
-      fillerEvent.energy = calibrate(fillerEvent0.signal);
-    }
 
     if(fillerEvent0.channel == assignedChannel){
+
+      fillerEvent.channel = fillerEvent0.channel;
+      //std::cout << fillerEvent.channel << std::endl;
+      fillerEvent.signal = fillerEvent0.signal;
+      fillerEvent.time = fillerEvent0.time;
+      fillerEvent.trace = fillerEvent0.trace;
+      
+      //fillerEvent = fillerEvent0;
+      //fillerEvent.trace = fillerEvent0.trace;
+      
+      if(isCalibrated){
+	fillerEvent.energy = calibrate(fillerEvent0.signal);
+      }
+      
+
       //std::cout << "Filled Event" << std::endl;
       events.push_back(fillerEvent);
       return true;

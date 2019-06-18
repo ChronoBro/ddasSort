@@ -413,7 +413,7 @@ int main(int argc,char *argv[]){
     double coinWindow     =  5000;//2000;        // Time (ns)
     double promptWindow   =  1000;
     double coinGammaWindow=  1000;        // Time (ns)
-    double corrWindow     =  2E9;//1E9;        // Time (ns)  now 1000ms (1s)
+    double corrWindow     =  5E9;//10E9;//1E9;        // Time (ns)  now 1000ms (1s)
     double waitWindow     =  5E4;//1E5 =  0.1 ms
 
     bool foundIonOfInterest = false;
@@ -568,13 +568,22 @@ int main(int argc,char *argv[]){
 	if(QDC > Emax){
 	  //Emax = frontEvent.signal;
 	  Emax = QDC;
-	  fImplantEFMaxStrip =  40 - (frontEvent.channel - 104);
+	  fImplantEFMaxStrip =  40 - (frontEvent.channel - 103); //5/7/2019 WOW DAN! YOUR STRIPS WERE OFF BECAUSE YOU CANT ADD (changed 104->103)
 	  implantTime = frontEvent.time;
 	}
 
       }
     }
     
+    //removing bad strips
+    if(fImplantEFMaxStrip == 3 || fImplantEFMaxStrip == 14 || fImplantEFMaxStrip == 15 || fImplantEFMaxStrip == 0 || fImplantEFMaxStrip == 39 ){ //these strips have bad hi gain calibrations, I shoudl hvae thrown                  
+                                                             //them out earlier 5-7-2019
+                                                             //appears to be working now with buffer clear 5-8-2019
+      buffer.clear();
+      continue;
+
+    }
+
     Emax=0;
     for(auto & backs : DSSDbackLoGain){	  
       for(auto& backEvent : backs.getEvents()){
@@ -588,16 +597,16 @@ int main(int argc,char *argv[]){
 	if(QDC > Emax){
 	  //Emax = backEvent.signal;
 	  Emax = QDC;
-	  fImplantEBMaxStrip = 40 - (backEvent.channel - 184);	  
+	  fImplantEBMaxStrip = 40 - (backEvent.channel - 183); //5/7/2019 WOW DAN! YOUR STRIPS WERE OFF BECAUSE YOU CANT ADD (changed 184->183)	 
 	}
 
       }	
     }
 
-    //readout implantation traces from HighGain for highest energy signal
+    //readout implantation traces from LoGain for highest energy signal
     //so much energy is deposited it appears that the High gains fire multiple times in coincidence window
-    for(auto & fronts : DSSDfrontHighGain){
-      int frontStrip = 	fronts.getAssignedChannel() - 64;
+    for(auto & fronts : DSSDfrontLoGain){
+      int frontStrip =  40 - (fronts.getAssignedChannel() - 103);
       if(frontStrip == fImplantEFMaxStrip && foundIonOfInterest){
 	//cout << frontStrip << endl;
 	int frontEventPlace = 0;
@@ -666,7 +675,9 @@ int main(int argc,char *argv[]){
     //check multiplicity of implant events when Ion of interest is found
     Histo->h_mult_F_implant->Fill(counterList.returnValue("frontImplantMult"));
     Histo->h_mult_B_implant->Fill(counterList.returnValue("backImplantMult"));
-
+    
+    
+    
     //cout << "frontImplantMult = " << counterList.returnValue("frontImplantMult") << endl;
     //cout << "backImplantMult = " << counterList.returnValue("backImplantMult") << endl;
 
@@ -702,7 +713,7 @@ int main(int argc,char *argv[]){
     //clear buffer to trigger on DSSD events
     buffer.clear();
 
-
+    bool firstDecay = true;
 
     //now look for correlations
     do{
@@ -773,8 +784,8 @@ int main(int argc,char *argv[]){
    
       }
 
-
-      if(secondImplant){counterList.count("lostIonSecondImplant");break;}
+      //I'll try this condition to see if I pick more events
+      if(secondImplant && (buffer.getFillerEvent().time-triggerTime) < 3E8 ){counterList.count("lostIonSecondImplant");break;}
 
       //cout << "found DSSD" << endl;
       //cout << buffer.getEvents().size() << endl;
@@ -819,8 +830,10 @@ int main(int argc,char *argv[]){
 
       }
 
-      //cout << decayEventsFront.getEvents().size() << endl;
-      //cout << decayEventsBack.getEvents().size() << endl;
+      // cout << endl;
+      // cout << decayEventsFront.getEvents().size() << endl;
+      // cout << decayEventsBack.getEvents().size() << endl;
+      // cout << endl;
 
       //make plots for each series of gates
       //make low statistic argument for 710 keV gamma peak
@@ -832,7 +845,7 @@ int main(int argc,char *argv[]){
       //criterion for tagging as decay
       double EdiffThreshold = 5000;//300; //keV <---perhaps using a ratio of Ediff to total E is a better criterion, essentially %err of the measurement
 
-      double EdiffPercentThreshold = 100;//0.3; //<--- This cut out almost ALL of the low energy 'beta' events
+      double EdiffPercentThreshold = 100;//0.5;//100;//0.3; //<--- This cut out almost ALL of the low energy 'beta' events
                                           // creating a 0.1 ms wait window did not cut out more events, so I believe this has more of an effect
                                           // on spurious events
                                           // Long wait window (0.1ms) and removal of this added a lot more low energy events
@@ -840,7 +853,7 @@ int main(int argc,char *argv[]){
       double Ethreshold = 100; //keV <--- setting threshold has a large impact on decays seen, likely from large number of background betas
                                // 100 keV cuts out very low energy noise ~98 keV
 
-      int stripTolerance = 1;//2; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
+      int stripTolerance = 2;3;//2; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
                               //The range of a 5 MeV proton in Si is 200 um, each strip is 1 mm so if implantation pixel is accurate then 
                               //then only a few pixels around implantation pixel needs to be considered
 
@@ -991,7 +1004,13 @@ int main(int argc,char *argv[]){
 	//if(decayChannel == 67 || decayChannel == 78 || decayChannel == 79){break;} //exclude bad channels
 	                                                                             //shouldn't need to exclude channels with %E_error check
 
-	if(decayTime < 2E8){Histo->hDecayEnergyTGate->Fill(reportedE);} //events found in first 200 ms
+	double TGate = 3E8;//300 ms
+	TGate = 2E8;//200 ms, will keep this if 300 ms sort doesn't look any better 5-9-2019
+	            //300 ms just let in more noise into 73Sr
+
+	TGate = 1E8;
+
+	if(decayTime < TGate){Histo->hDecayEnergyTGate->Fill(reportedE);} //events found in first 200 ms
 	if(decayTime > 1E9){Histo->hDecayEnergyBackground->Fill(reportedE);}
 
 	double Etot = 0;
@@ -1011,8 +1030,9 @@ int main(int argc,char *argv[]){
 	    int size = decayEvent.trace.size();
 	    double x[size];
 	    double y[size];
+	    int frontStrip =  decayEvent.channel - 64;
 	    ostringstream title;
-	    title << "Trace_E-" << decayEvent.energy << "_Event-" << counterList.returnValue("decays") << "_Tree-" << dataChain.GetTreeNumber();
+	    title << "Trace_E-" << decayEvent.energy << "_Event-" << counterList.returnValue("decays") << "_strip-" << frontStrip << "_Tree-" << dataChain.GetTreeNumber();
 
 	    int sampleSize = int((double)size/20.);
 	    for(int iBin=0; iBin<sampleSize; iBin++){ base += (double)decayEvent.trace[iBin];}
@@ -1037,14 +1057,15 @@ int main(int argc,char *argv[]){
 	  
 	}
 	
-	if(decayTime < 2E8){Histo->hDecayEnergyTot_TGate->Fill(Etot);} //events found in first 200 ms
+	if(decayTime < TGate){Histo->hDecayEnergyTot_TGate->Fill(Etot);} //events found in first 200 ms
 	if(decayTime > 1E9){Histo->hDecayEnergyTotBackground->Fill(Etot);}
 
 	for(auto & segaEvent : segaEvents.getEvents()){
 	  Histo->hGammaEnergy->Fill(segaEvent.energy);
 	  Histo->hGammaVsDecay->Fill(reportedE,segaEvent.energy);
 	  Histo->hGammaVsDecayEtot->Fill(Etot,segaEvent.energy);
-	  if( abs(segaEvent.time - DSSDtime) < promptWindow/2. ){Histo->hGammaVsDecayTGated->Fill(reportedE,segaEvent.energy);}
+	  //if( abs(segaEvent.time - DSSDtime) < promptWindow/2. ){Histo->hGammaVsDecayTGated->Fill(reportedE,segaEvent.energy);}
+	  if(decayTime < TGate){Histo->hGammaVsDecayTGated->Fill(Etot,segaEvent.energy);}
 	  if(segaEvent.energy > 708 && segaEvent.energy < 712){cout << endl << "710 gamma ray event in det# " << segaEvent.channel-16 << endl;}
 	}
 	//check calibrations to investigate large energy values
@@ -1052,6 +1073,14 @@ int main(int argc,char *argv[]){
 	Histo->hDecayEnergy->Fill(reportedE);
 	Histo->hDecayEnergyTot->Fill(Etot);
 	Histo->hDecayTime->Fill(reportedTime);
+	
+	//this has to be for first decay event, I think?
+	if(firstDecay){
+	Histo->hDecayTimeLog->Fill(reportedTime);
+	Histo->hDecayTimeLogVsDecayEtot->Fill(Etot,reportedTime);
+	Histo->hDecayEnergyTot_firstEvent->Fill(Etot);
+	firstDecay = false;
+	}
 
 	if(reportedE < 700){Histo->hDecayTimeEgate->Fill(reportedTime);}
 

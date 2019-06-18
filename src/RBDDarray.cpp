@@ -14,12 +14,33 @@ bool RBDDarray::fillArray(Event event){
 
   bool triggered = false;
 
+  //std::cout << detectors.size() << std::endl;
+
+  //std::cout << std::endl;
+
   for(auto & det: detectors){
     bool detFilled = det.fillEvent(event);
+
     triggered = triggered || detFilled;
 
-    if(detFilled){eventList.push_back(det.getFillerEvent());} //I calibrate when detector is filled so I need to grab event object from det
+
+    // if(event.channel == det.getAssignedChannel()){
+    //   std::cout << std::endl;
+    //   std::cout << detFilled << std::endl;
+    //   std::cout << event.channel << std::endl;
+    //   std::cout << det.getAssignedChannel() << std::endl;
+    //   std::cout << std::endl;
+    // }
+
+    if(detFilled){
+      eventList.push_back(det.getFillerEvent());
+      //std::cout << "made it here" << std::endl;
+
+    } //I calibrate when detector is filled so I need to grab event object from det
+
   }
+
+  //std::cout << std::endl;
 
   return triggered;
 

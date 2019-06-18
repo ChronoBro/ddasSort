@@ -114,7 +114,7 @@ void waveformAnalysis(){
   }
 
   ostringstream infile;
-  int run = 62;//69;//315;//35;//36;//315;//315;//47;//306; //run 306 = 148Gd source test behind DSSD
+  int run = 38;//201;//62;//69;//315;//35;//36;//315;//315;//47;//306; //run 306 = 148Gd source test behind DSSD
                //315 -> mixed 125Sb source
                //52 ->60Co source
                //34 & 35 152Eu source
@@ -177,6 +177,10 @@ void waveformAnalysis(){
     for(auto ch: channel_data){
       double reportedE = ch->GetEnergy();
       int chan = ch->GetCrateID()*64+(ch->GetSlotID()-2)*16+ch->GetChannelID();
+      if(chan==0){
+	raw_channelCheck->Fill(reportedE);
+	break;
+      }
       raw_summary->Fill(chan,ch->GetEnergy());
       raw_channel[chan]->Fill(ch->GetEnergy());
       //cout << chan << endl;

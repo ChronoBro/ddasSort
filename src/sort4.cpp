@@ -24,6 +24,15 @@ inline bool exists_test (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
+bool triggerCondition(int Chan){
+
+  if(Chan >= 64 && Chan < 184){
+    return true;
+  }
+
+  return false;
+}
+
 int main(int argc,char *argv[]){
 
   cerr << endl << "------------------------------------";
@@ -171,6 +180,9 @@ int main(int argc,char *argv[]){
     RBDDdet strip(chan);
     RBDDdet strip2(chan+40);
     strip.setCalibration(params);
+
+    // cout << chan << endl;
+    // cout << chan+40 << endl;
     
     if(i<40){
       DSSDhiGainFront.addDet(strip);
@@ -211,13 +223,16 @@ int main(int argc,char *argv[]){
 
   TFile *fGateFile = new TFile("PIDGates2.root","READ");
   TCutG *fGate;          //! PID Gate
+  TCutG *fGate72Rb;
+  TCutG *fGate70Kr;
+  TCutG *fGate74Sr;
   fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
+  fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
+  fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Kr")); 
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr")); 
+  fGate70Kr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr")); 
 
   cout << "--> Loaded Gate: " << fGate->GetName() << endl << endl;
   fGateFile->Close();
@@ -234,7 +249,9 @@ int main(int argc,char *argv[]){
   counterList.add("ImplantWaitWindow");
   counterList.add("frontImplantMult");
   counterList.add("backImplantMult");
-
+  counterList.add("found74Sr");
+  counterList.add("found72Rb");
+  counterList.add("found70Kr");
 
   /*****************************************
    
@@ -260,20 +277,29 @@ int main(int argc,char *argv[]){
 
   //clock ticks are in ns for DDAS
   double coinWindow = 5000; //5 us
+  double coinWindow2 = 10000;
   double corrWindow = 2E9;  //2 s
 
   RBDDTriggeredEvent* ev1 = new RBDDTriggeredEvent("Prompt Trigger", "title", bufferEvent, coinWindow);
   ev1->setTriggerCh(0);
-  RBDDTriggeredEvent* ev2 = new RBDDTriggeredEvent("Correlated Events", "title", bufferEvent, corrWindow);
-  
+  RBDDTriggeredEvent* ev2 = new RBDDTriggeredEvent("Correlated Events", "title", bufferEvent, coinWindow);
+  ev2->setTriggerCh(0);
 
   for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
-  
+
+    /*************************
+    need to figure out my buffering issues... 5/2/2019
+    i.e. ->not grouping together events perfectly, so I'm throwing away events
+    *************************/
+    
     lastEntry = ev1->FillBuffer(dataChain, iEntry);
     //cout << ev1->fillerChannel->GetChanNo() << endl;
 
     //it appears the buffer is just being filled indefinitely after being triggered... curious
     //fixed issue, there was an issue with assigning timestamps in RBDDChannel after unpacking (conversion between int and double) that was reporting the same time for each event, thus my buffer checks weren't working and it was being filled indefinitely
+    
+    // 5/1/2019 -> Buffer filling doesn't appear to be working properly which is then screwing up the rest of data
+    // 5/2/2019 -> Buffer appears to working now, even better than sort3_v2 in that sort4 is picking up more implantation events
     if(ev1->isTriggered()){
    
 
@@ -286,8 +312,16 @@ int main(int argc,char *argv[]){
 
       lastEntry = ev1->GetCoinEvents(dataChain); //ev1 buffer will be filled with a list of coincidence Events
       double PIN1energy = ev1->triggerSignal;
-      
+
+      cout << endl;
+      for(auto& event : ev1->GetBuffer()){
+      	cout << event.channel << endl;
+      }
+      cout << endl;
+
       foundTOF = ev1->dumpBuffer(TOF);
+      //cout << TOF.getEvents().size() << endl;
+
       if(foundTOF){
 	curTOF = TOF.getFillerEvent().signal;
 	Histo->h_PID->Fill(curTOF, PIN1energy);
@@ -297,15 +331,33 @@ int main(int argc,char *argv[]){
       TOF.clear();
 
       foundIonOfInterest = fGate->IsInside(curTOF,PIN1energy);
+      if(fGate74Sr->IsInside(curTOF,PIN1energy)){counterList.count("found74Sr");}
+      if(fGate72Rb->IsInside(curTOF,PIN1energy)){counterList.count("found72Rb");}
+      if(fGate70Kr->IsInside(curTOF,PIN1energy)){counterList.count("found70Kr");}
       if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
       counterList.count("foundIon");
 
       //will now need to check if event is in PID gate before calling correlated events
 
-      //dumpBuffer() isn't the most efficient since it loops through coincident events each time (not the worst, but could be better)
+      //dumpBuffer() isn't the most efficient since it loops through coincident events each time
+      //it seems that dumpBuffer is only ever putting one event into the array event list... need to figure out whats wrong
+      //above is DEFINITELY a problem, since the high gain channels fire like crazy and only one event is in the event list... WTF
+      //I don't think I changed anything but now it appears to working... wow
       ev1->dumpBuffer(SeGA);
       ev1->dumpBuffer(DSSDloGainFront);
       ev1->dumpBuffer(DSSDloGainBack);
+
+      // cout << endl;
+      // cout << SeGA.getEventList().size() << endl;
+      // cout << DSSDloGainFront.getEventList().size() << endl;
+      // cout << DSSDloGainBack.getEventList().size() << endl;
+      // cout << endl;
+
+      // cout << endl;
+      // for(auto & bufferEvent: ev1->GetBuffer()){
+      // 	cout << bufferEvent.channel << endl;
+      // }
+      // cout << endl;
 
       for( auto &SeGAEvent: SeGA.getEventList() ){
 	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
@@ -354,6 +406,7 @@ int main(int argc,char *argv[]){
       // }
 
       Emax=0;
+      Event backImplant;
       for(auto& backEvent : DSSDloGainBack.getEventList()){
 	if(foundIonOfInterest){counterList.count("backImplantMult");}
 
@@ -366,17 +419,31 @@ int main(int argc,char *argv[]){
 	  //Emax = backEvent.signal;
 	  Emax = QDC;
 	  fImplantEBMaxStrip = 40 - (backEvent.channel - 184);	  
+	  backImplant = backEvent;
 	}
 
       }	
 
+      if(fImplantEFMaxStrip == -100 && fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
+      else if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
+
+      // cout << endl;
       // cout << "Implant Front Strip = " << fImplantEFMaxStrip << endl;
       // cout << "Implant Back Strip = " << fImplantEBMaxStrip << endl;
+      // cout << endl;
 
       //clear detectors defined outside of event loop that had they're data operated on already
       SeGA.clear();
       DSSDloGainBack.clear();
       DSSDloGainFront.clear();
+      DSSDhiGainBack.clear();
+      DSSDhiGainFront.clear();
+      //ev1->GetBuffer().clear();
+
+      //need to make search for decay events here
+
+
+
 
     } //end of original trigger
 
@@ -392,6 +459,10 @@ int main(int argc,char *argv[]){
   cout << "Decays lost to second Implantation: " << counterList.returnValue("lostIonSecondImplant") << endl;
   //cout << "Total triggers: " << counterList.returnValue("foundIon") + counterList.returnValue("lostIonSecondImplant") << endl;
   cout << "Implants Found in Wait Window: " << counterList.returnValue("ImplantWaitWindow") << endl;
+  cout << "found74Sr: " << counterList.returnValue("found74Sr") << endl;
+  cout << "found72Rb: " << counterList.returnValue("found72Rb") << endl;
+  cout << "found70Kr: " << counterList.returnValue("found70Kr") << endl;
+
   cout << endl;
 
   return 1; //cuz I'm old school

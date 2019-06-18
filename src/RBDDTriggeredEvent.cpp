@@ -268,11 +268,14 @@ TList* RBDDTriggeredEvent::GetEvents(RBDDChannel *ch, TBranch *br)
   // return GetEvents();
 }
 
-long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int &iEntry){
+long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int iEntry){
 
   //put load bar in here
 
-
+  // if(lastEntry > dataChain.GetEntries()){
+  //   std::cout << "WTF" <<std::endl;
+  //   std::cout << "WTF" <<std::endl;
+  // }
 
   dataChain.GetEntry(iEntry);
   fillerChannel->unpack();
@@ -287,29 +290,40 @@ long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int &i
   //I believe this is an issue where events aren't being erased from the buffer
   //throwing in abs() in time check made this problem go away as far as I can tell
 
+  //I think something is wrong with how my buffer is being filled... 5/2/2019
+
   //should also pop events off the front if they aren't in coincidence with latest event
-   if(buffer.size() > 1){
-     for(auto & bufferEvent : buffer ){
 
-       if(abs(fillerChannel->GetTimestamp() - bufferEvent.time) < fWindowWidth){break;} 
-       //if(fillerChannel->GetTimestamp() - bufferEvent->GetTimestamp() < fWindowWidth){break;}
-       //else{delete bufferTest.front();buffer.erase( buffer.begin() );}
-       else{buffer.erase( buffer.begin() );};
+  for(auto & bufferEvent : buffer ){
+    double timeDiff = abs(fillerChannel->GetTimestamp()-bufferEvent.time);
+    if(timeDiff > fWindowWidth){buffer.erase( buffer.begin() );} 
+    else{break;}
+  }
 
-     }
+  //below seems to work better
+  //it does but now I'm losing the triggered events in the buffer... which means I'm losing ALL good events presumably,
+  //would explain why I'm not seeing any decays, but I do think the below code is more in line with my original goals.
+  //below code throws out almost half the events and I don't know why 5/2/2019
 
-   }
+  // for(std::vector<Event>::iterator it = buffer.begin(); it != buffer.end();) {
+  //   double timeDiff = abs(fillerChannel->GetTimestamp()-(*it).time); //need parentheses around iterator for this to work
+  //   if(timeDiff > fWindowWidth){it = buffer.erase(it);}
+  //   else{it++;}
+  // }
 
    double progress0 =  (double)lastEntry/(double)dataChain.GetEntries();
-    if(lastEntry % 10000 == 0){   
-      loadBar(progress0);    
-    }
- 
+   if(lastEntry % 10000 == 0){   
+     loadBar(progress0);    
+   }
+
+
    return lastEntry;
 
 }
 
 long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
+
+  //have to figure out a scheme to keep the original trigger event in the buffer...
 
 
   //triggerChannel = buffer.back(); //setting stuff equal to each other may be dangerous
@@ -374,7 +388,9 @@ bool RBDDTriggeredEvent::dumpBuffer(RBDDdet &det){
   bool foundDet = false;
 
   for(auto & bufferEvent : buffer){
-    foundDet = foundDet || det.fillEvent(bufferEvent);
+    bool test = det.fillEvent(bufferEvent);
+    foundDet = foundDet || test;
+    //foundDet = foundDet ||  det.fillEvent(bufferEvent);
   }
 
   return foundDet;
@@ -385,10 +401,23 @@ bool RBDDTriggeredEvent::dumpBuffer(RBDDarray &array){
 
   bool foundDet = false;
 
+  //cout << endl;
   for(auto & bufferEvent : buffer){
-    foundDet  = foundDet || array.fillArray(bufferEvent);
-  }
+    bool test = array.fillArray(bufferEvent);
+    foundDet  = foundDet || test;
+    // std::cout << std::endl;
+    // std::cout << bufferEvent.channel << std::endl;
+    // foundDet = foundDet || array.fillArray(bufferEvent);
+    // std::cout << test << std::endl << std::endl;
+    //cout << bufferEvent.channel << endl;
 
+  }
+  
+  // std::cout << "###############################" << std::endl;
+  // std::cout << array.getEventList().size() << std::endl;
+  // std::cout << "###############################" << std::endl;
+
+  //cout << endl;
   return foundDet;
   
 }

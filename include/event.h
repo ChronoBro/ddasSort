@@ -1,3 +1,7 @@
+#ifndef ____Event__
+#define ____Event__
+
+
 struct Event{
   double energy = -1;  //calibrated energy
   unsigned int signal = 0; //Raw signal
@@ -19,3 +23,5 @@ struct Event{
 
 
 };
+
+#endif

@@ -101,7 +101,8 @@ class RBDDTriggeredEvent : public TNamed
   bool IsTriggerCh(Int_t ch){return triggerChanNo == ch;}
   void setTriggerCh(int ch){triggerChanNo=ch;}
   bool isTriggered(){return fillerChannel->GetChanNo() == triggerChanNo;}
-  long long int FillBuffer(TChain &dataChain, long long int &iEntry);
+  bool isTriggered( bool (*f)(int) ){ return f(fillerChannel->GetChanNo());} //passing in function for trigger condition
+  long long int FillBuffer(TChain &dataChain, long long int iEntry);
 
   //again should overload functions to accept pointers as well
   long long int GetCoinEvents(TChain &dataChain);

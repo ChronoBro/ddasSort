@@ -1,4 +1,5 @@
 
+#include "math.h"
 #include "histo.h"
 
 
@@ -83,12 +84,37 @@ void histo::histos(){
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
   hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",2000,0,2E9); // ms
+
+  int Nbins = 500;
+  double maxT = 100E9; //2 seconds
+  double minT = 4;//ns, smallest adc channel
+  double dx = log(maxT/minT)/double(Nbins);
+  Double_t edges[Nbins+1];
+  edges[0] = 0;
+  //edges[Nbins+1] = maxT;
+
+  //double dx = maxT/((double)Nbins+1.);
+
+  for(int i=0;i<Nbins+1;i++){
+    //edges[i] = log(((double)i+1.)*maxT/((double)Nbins+1.));
+    //std::cout << edges[Nbins+2-i] << std::endl;
+    //edges[Nbins+1-i] = edges[Nbins+2-i]/pow(minT,i);
+    edges[i+1] = exp(log(minT)+(double)i*dx);
+    //std::cout << edges[i+1] << std::endl;
+    //std::cout << (edges[i+1] - edges[i])/edges[i+1] << std::endl;
+  }
+  //edges[0]=0;
+
+  hDecayTimeLog   = new TH1D("hDecayTimeLog","Implant-decay correlation time log bins",Nbins,edges); // ms
+  hDecayTimeLogVsDecayEtot = new TH2D("hDecayTimeLogVsDecayEtot","time correlations with decay energy",10000,0,10000,Nbins,edges);
+
   hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",2000,0,2E9); // ms
   hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
+  hDecayEnergyTot_firstEvent = new TH1D("hDecayEnergyTot_firstEvent","Decay energy (DSSD) first Event",10000,0,10000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hDecayEnergyBackground = new TH1D("hDecayEnergyBackground","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTotBackground = new TH1D("hDecayEnergyTotBackground","Decay energy (DSSD)",10000,0,10000);
