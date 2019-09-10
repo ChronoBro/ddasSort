@@ -576,7 +576,7 @@ int main(int argc,char *argv[]){
     }
     
     //removing bad strips
-    if(fImplantEFMaxStrip == 3 || fImplantEFMaxStrip == 14 || fImplantEFMaxStrip == 15 || fImplantEFMaxStrip == 0 || fImplantEFMaxStrip == 39 ){ //these strips have bad hi gain calibrations, I shoudl hvae thrown                  
+    if(fImplantEFMaxStrip == 3 || fImplantEFMaxStrip == 14 || fImplantEFMaxStrip == 15){// || fImplantEFMaxStrip == 0 || fImplantEFMaxStrip == 39 ){ //these strips have bad hi gain calibrations, I shoudl hvae thrown                  
                                                              //them out earlier 5-7-2019
                                                              //appears to be working now with buffer clear 5-8-2019
       buffer.clear();
@@ -853,7 +853,7 @@ int main(int argc,char *argv[]){
       double Ethreshold = 100; //keV <--- setting threshold has a large impact on decays seen, likely from large number of background betas
                                // 100 keV cuts out very low energy noise ~98 keV
 
-      int stripTolerance = 2;3;//2; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
+      int stripTolerance = 3;//2; //number of pixels considered around "implant" pixel = (2*stripTolerance - 1)^2
                               //The range of a 5 MeV proton in Si is 200 um, each strip is 1 mm so if implantation pixel is accurate then 
                               //then only a few pixels around implantation pixel needs to be considered
 
@@ -1008,7 +1008,7 @@ int main(int argc,char *argv[]){
 	TGate = 2E8;//200 ms, will keep this if 300 ms sort doesn't look any better 5-9-2019
 	            //300 ms just let in more noise into 73Sr
 
-	TGate = 1E8;
+	//TGate = 1E8;
 
 	if(decayTime < TGate){Histo->hDecayEnergyTGate->Fill(reportedE);} //events found in first 200 ms
 	if(decayTime > 1E9){Histo->hDecayEnergyBackground->Fill(reportedE);}
