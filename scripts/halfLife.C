@@ -42,7 +42,8 @@ void halfLife(){
   //dataName << directory.str() << "sort3all73Sr_3stripTolerance_badStripRemoval_5sCorrWindow.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow_firstEventPlot.root";
   //dataName << directory.str() << "sort3all73Sr_3stripTolerance_allBadStripRemoval_5sCorrWindow_EdiffThreshold.root";
-  dataName << directory.str() << "sort3all73Sr_2stripTolerance_bad+edgeStripRemoval_TGate100_5scorrWindow.root";
+  //dataName << directory.str() << "sort3all73Sr_2stripTolerance_bad+edgeStripRemoval_TGate100_5scorrWindow.root";
+  dataName << directory.str() << "secondImplantTest.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow.root";
   //dataName << directory.str() << "test71Kr.root";
   //dataName << directory.str() << "test101.root";
@@ -173,10 +174,10 @@ void halfLife(){
   //decayEnergy->Add(decayEnergyBackground,-0.2/9); //The TGate is 200 ms, background is 9 s so amount of background should be 1/5/9 of measured amount
 
   //true for sorts 5-9-201
-  //decayEnergy->Add(decayEnergyBackground,-0.2/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
+  decayEnergy->Add(decayEnergyBackground,-0.2/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
 
   //for TGate=100ms I need to modify background subtraction
-  decayEnergy->Add(decayEnergyBackground,-0.1/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
+  //decayEnergy->Add(decayEnergyBackground,-0.1/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
 
   //for TGate=300ms run
   //decayEnergy->Add(decayEnergyBackground,-0.3/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount

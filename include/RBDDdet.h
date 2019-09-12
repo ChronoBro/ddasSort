@@ -27,6 +27,8 @@ class RBDDdet{
   std::vector<unsigned short> getTrace(){;}
   void erase(int i){auto it = events.begin()+i;events.erase(it);}
   int getAssignedChannel(){return assignedChannel;}
+  void setAssignedChannel(int givenChannel){assignedChannel = givenChannel;}
+
 
  private:
   int assignedChannel;

@@ -18,8 +18,9 @@ bool RBDDarray::fillArray(Event event){
 
   //std::cout << std::endl;
 
+
   for(auto & det: detectors){
-    bool detFilled = det.fillEvent(event);
+    bool detFilled = det->fillEvent(event);
 
     triggered = triggered || detFilled;
 
@@ -33,7 +34,7 @@ bool RBDDarray::fillArray(Event event){
     // }
 
     if(detFilled){
-      eventList.push_back(det.getFillerEvent());
+      eventList.push_back(det->getFillerEvent());
       //std::cout << "made it here" << std::endl;
 
     } //I calibrate when detector is filled so I need to grab event object from det
@@ -45,6 +46,21 @@ bool RBDDarray::fillArray(Event event){
   return triggered;
 
 }
+
+void RBDDarray::fillArray(){
+
+  for(auto&det : detectors){
+
+    for(auto& event : det->getEvents()){
+
+      eventList.push_back(event);
+
+    }
+
+  }
+
+}
+
 
 bool RBDDarray::compareE(const Event &event1, const Event &event2){
   return (event1.energy > event2.energy);

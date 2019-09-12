@@ -5,7 +5,7 @@
 #include <sstream>
 
 struct namedCounter{
-  int n = 0;
+  long long int n = 0;
   std::string name = "";
 
 };
@@ -18,7 +18,7 @@ class diagnostics{
   
   void add(std::string counterName);
   void count(std::string counterName);
-  int returnValue(std::string counterName);
+  long long int returnValue(std::string counterName);
   void reset(std::string counterName);
 
  private:

@@ -52,7 +52,7 @@ void diagnostics::reset(std::string counterName){
 
 }
 
-int diagnostics::returnValue(std::string counterName){
+long long int diagnostics::returnValue(std::string counterName){
 
 
   for(auto & nCounter : list){

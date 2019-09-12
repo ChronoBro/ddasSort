@@ -69,6 +69,7 @@ class histo
   TH2I  *h_cal_DSSD_hits;
 
   TH2I  *h_PID;
+  TH2I  *h_PID_gated;
   TH2I  *h_PIN1vsPIN2;
   TH2I  *hImplantXY;
   TH2I  *hDecayXY;

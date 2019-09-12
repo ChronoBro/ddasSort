@@ -23,6 +23,9 @@
 #include "diagnostics.h"
 #include "RBDDTrace.h"
 #include "RBDDASChannel.h"
+#include <sys/ioctl.h>
+#include <stdio.h>
+
 
 using namespace std;
 
@@ -409,11 +412,7 @@ int main(int argc,char *argv[]){
 
     ddasDet TOF(5); // PIN2-XFP TAC
     ddasDet PIN2(1); //PIN2 Energy
-
-    //testing for now
-    ddasDet XFP_CFD(6); //can use this to at least normalize some things
-                        //I think its time to revamp this system, and maybe make it portable from project to project?
-
+    
     double coinWindow     =  5000;//2000;        // Time (ns)
     double promptWindow   =  1000;
     double coinGammaWindow=  1000;        // Time (ns)
@@ -424,7 +423,7 @@ int main(int argc,char *argv[]){
     bool foundImplant = false;
     bool foundTrigger = false;
     bool foundTOF = false;
-    bool foundXFP = false;
+
 
     int fImplantEFMaxStrip = -100;
     int fImplantEBMaxStrip = -100;
@@ -441,13 +440,6 @@ int main(int argc,char *argv[]){
     dataChain.GetEntry(iEntry);
     buffer.fillEvent(curChannel, pDDASEvent);
     foundTrigger = trigger.fillEvent(buffer.getFillerEvent());
-
-    //tring to see if XFP could be useful
-    // foundXFP = XFP_CFD.fillEvent(buffer.getFillerEvent());
-    // if(foundXFP){cout << "There's data in XFP!" << endl;
-    //   cout << buffer.getFillerEvent().signal << endl;
-    // }
-
     testChannel.unpack();
     
     if(buffer.getFillerEvent().channel != testChannel.GetChanNo()){cout << "seems to an error in RBDDASChannel unpacking" << endl;}
@@ -736,6 +728,7 @@ int main(int argc,char *argv[]){
       bool foundDSSDfront = false;
       bool foundDSSDback = false;
       bool secondImplant = false;
+      bool secondImplantInPixels = false;
       double DSSDtime = 0; //want to set trigger time of DSSD
       double SSDtime = 0;
       bool foundSSD = false;
@@ -795,8 +788,9 @@ int main(int argc,char *argv[]){
    
       }
 
-      //I'll try this condition to see if I pick more events
-      if(secondImplant && (buffer.getFillerEvent().time-triggerTime) < 3E8 ){counterList.count("lostIonSecondImplant");break;}
+      
+
+      //if(secondImplant){cout << "CALL!" << endl;}
 
       //cout << "found DSSD" << endl;
       //cout << buffer.getEvents().size() << endl;
@@ -839,6 +833,17 @@ int main(int argc,char *argv[]){
 	  }
 	}
 
+	for(auto & DSSDfront : DSSDfrontLoGain){
+	  DSSDfront.fillEvent(bufferEvent);
+	  //cout << "found front" << endl;
+	}
+
+	for(auto & DSSDback : DSSDbackLoGain){
+	  DSSDback.fillEvent(bufferEvent);
+	  //cout << "found back" << endl;
+	}
+
+
       }
 
       // cout << endl;
@@ -874,6 +879,78 @@ int main(int argc,char *argv[]){
       double reportedE = 0;
       double reportedTime = 0;
       int decayChannel = -1;
+      int fImplantEFMaxStripCheck = -100.;
+      int fImplantEBMaxStripCheck = -100.;
+
+      //I'll try this condition to see if I pick more events
+      //only want to through out events if secondImplant is in stripTolerance
+      //need to calculate implantStrips below
+      if(secondImplant){
+
+	double EmaxCheck = 0;
+	for(auto & DSSDfront : DSSDfrontLoGain){
+      
+	  for(auto frontEvent : DSSDfront.getEvents()){
+	    if(foundIonOfInterest){counterList.count("frontImplantMult");}
+
+	    RBDDTrace trace(frontEvent.trace);
+	    double max = trace.GetMaximum();
+	    double QDC = trace.GetQDC();
+
+	    //if(frontEvent.signal > Emax){
+	    if(QDC > EmaxCheck){
+	      //Emax = frontEvent.signal;
+	      EmaxCheck = QDC;
+	      fImplantEFMaxStripCheck =  40 - (frontEvent.channel - 103); //5/7/2019 WOW DAN! YOUR STRIPS WERE OFF BECAUSE YOU CANT ADD (changed 104->103)
+	      implantTime = frontEvent.time;
+	    }
+
+	  }
+	}
+    
+	EmaxCheck=0;
+	for(auto & backs : DSSDbackLoGain){	  
+	  for(auto& backEvent : backs.getEvents()){
+	    if(foundIonOfInterest){counterList.count("backImplantMult");}
+
+	    RBDDTrace trace(backEvent.trace);
+	    double max = trace.GetMaximum();
+	    double QDC = trace.GetQDC();
+
+	    //if(backEvent.signal > Emax){
+	    if(QDC > EmaxCheck){
+	      //Emax = backEvent.signal;
+	      EmaxCheck = QDC;
+	      fImplantEBMaxStripCheck = 40 - (backEvent.channel - 183); //5/7/2019 WOW DAN! YOUR STRIPS WERE OFF BECAUSE YOU CANT ADD (changed 184->183)	 
+	    }
+
+	  }	
+	}
+	
+	if( abs(fImplantEBMaxStripCheck - fImplantEBMaxStrip) < stripTolerance && abs(fImplantEFMaxStripCheck - fImplantEFMaxStripCheck) < stripTolerance){
+	  secondImplantInPixels = true;
+	}
+
+      }
+
+      //make sure to clear loGain Detector buffers!
+      for(auto & fronts : DSSDfrontLoGain){
+	fronts.clear();
+      }
+      
+      for(auto & backs : DSSDbackLoGain){
+	backs.clear();
+      }
+      
+
+      //now secondImplant should be correlated
+      if(secondImplantInPixels){
+	counterList.count("lostIonSecondImplant");
+	break;	
+      }
+
+
+
 
       //need to create better scheme for adding events back together, should only add if they have front+back coincidence, and are within a certain pixel range of implantation event
 

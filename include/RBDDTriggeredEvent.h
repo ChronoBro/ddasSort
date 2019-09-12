@@ -37,6 +37,11 @@ class RBDDTriggeredEvent : public TNamed
   Double_t  fWindowFirstTime;       // Event time of window start (ns)
   Double_t  fWindowLastTime;        // Event time of window end (ns)
   Int_t triggerChanNo;
+
+  //creating list of pointers to point directly to detector objects, this should remove unnecessary loops over detector objects
+  static const int maxChannels = 256;  //hardcoding limit is not a great idea, but will be the simplest to implement for testing and such
+  RBDDdet *liveDets[maxChannels];
+  void setNull();
                                   //note: instantiated RBDDChannel needs to be a pointer since this is an abstract class
 
   long long int lastEntry=0;        //lastEntry accessed in TTree/TChain
@@ -114,6 +119,11 @@ class RBDDTriggeredEvent : public TNamed
   //should overload this with pointer support
   bool dumpBuffer(RBDDdet &det);
   bool dumpBuffer(RBDDarray &array);
+  bool dumpBuffer();
+
+  bool activateDetector(RBDDdet &det);
+  bool activateArray(RBDDarray &array);
+
 
   //at some point I want to pass a bool function into the trigger condition
 

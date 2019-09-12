@@ -448,6 +448,8 @@ bool RBDDTriggeredEvent::dumpBuffer(){
       //tell detector with assigned channel to handle event
       test = liveDets[bufferEvent.channel]->fillEvent(bufferEvent);
 
+      
+
     }
      
   }
