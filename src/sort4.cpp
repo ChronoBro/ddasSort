@@ -37,7 +37,7 @@ int main(int argc,char *argv[]){
 
   cerr << endl << "------------------------------------";
   cerr << endl << "NSCL DDAS sorting for unbuilt Events" << endl;
-  cerr << "------------------------------------" << endl << endl;
+  cerr <<         "------------------------------------" << endl << endl;
 
   /*****************************************
    
