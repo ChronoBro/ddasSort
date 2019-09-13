@@ -1,4 +1,4 @@
-#include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
+#include "DDASEvent.h" 
 #include <sstream>
 #include "TFile.h"
 #include "TTree.h"
