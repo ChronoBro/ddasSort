@@ -4,7 +4,7 @@
 
 #include <iostream>
 #include <vector>
-#include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
+#include "DDASEvent.h" 
 #include "math.h"
 #include <algorithm>
 #include "event.h"

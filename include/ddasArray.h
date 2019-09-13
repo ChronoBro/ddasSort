@@ -2,7 +2,7 @@
 #include "ddasDet.h"
 #include <vector>
 #include <iostream>
-#include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
+#include "DDASEvent.h" 
 #include "math.h"
 
 

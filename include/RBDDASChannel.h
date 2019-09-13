@@ -10,7 +10,7 @@
 #include <TNamed.h>
 #include <RBDDChannel.h>
 #include <vector>
-#include </opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h>
+#include <DDASEvent.h>
 
 class RBDDASChannel : public RBDDChannel
 {
