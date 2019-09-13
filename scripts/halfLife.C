@@ -43,7 +43,8 @@ void halfLife(){
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow_firstEventPlot.root";
   //dataName << directory.str() << "sort3all73Sr_3stripTolerance_allBadStripRemoval_5sCorrWindow_EdiffThreshold.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_bad+edgeStripRemoval_TGate100_5scorrWindow.root";
-  dataName << directory.str() << "secondImplantTest.root";
+  //dataName << directory.str() << "secondImplantTest.root";
+  dataName << directory.str() << "run_95-110_processed.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow.root";
   //dataName << directory.str() << "test71Kr.root";
   //dataName << directory.str() << "test101.root";

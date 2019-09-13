@@ -53,6 +53,9 @@ bool RBDDdet::fillEvent(ddaschannel* foundChannel, DDASEvent* eventPointer){
 
 bool RBDDdet::fillEvent(Event fillerEvent0){
 
+  if(events.size() > 2){
+    std::cout << "size of events in channel #" << assignedChannel << ": something is likely wrong e.g. detector not cleared" << std::endl;
+  }
 
   if(assignedChannel >= 0){
 

@@ -325,8 +325,8 @@ int main(int argc,char *argv[]){
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates2.root","READ");
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 

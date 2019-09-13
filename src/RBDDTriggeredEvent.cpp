@@ -344,6 +344,9 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
   
   triggerSignal = buffer.back().signal;
   triggerTime = buffer.back().time;
+  int triggerChannel = buffer.back().channel;
+  int triggerEnergy = buffer.back().energy;
+  std::vector<unsigned short> triggerTrace = buffer.back().trace;
 
   // triggerSignal = bufferTest.back()->GetSignal();
   // triggerTime = bufferTest.back()->GetTimestamp();
@@ -364,6 +367,23 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
     // cout << "WTF is going on?!" << endl;
     // cout << buffer.back().time << endl;
     // cout << triggerTime << endl;
+
+  }
+
+  //this should be a quick fix for the trigger not being put with the buffer
+  //this would mean that the last even is improperly grouped and that should be fixed ultimately
+  if(buffer.back().time - triggerTime > fWindowWidth/2.){
+    Event trigger;
+    trigger.signal = triggerSignal;
+    trigger.time = triggerTime;
+    trigger.channel = triggerChannel;
+    trigger.energy = triggerEnergy;
+    trigger.trace = triggerTrace;
+    buffer.insert(buffer.begin(),trigger);
+
+    //this should reset everything correctly 
+    buffer.erase(buffer.end());
+    lastEntry-1;
 
   }
 
@@ -447,6 +467,8 @@ bool RBDDTriggeredEvent::dumpBuffer(){
 
       //tell detector with assigned channel to handle event
       test = liveDets[bufferEvent.channel]->fillEvent(bufferEvent);
+
+      
 
     }
      

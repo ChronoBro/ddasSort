@@ -21,7 +21,7 @@ histo::histo(std::string name0)
     {
       if(errno == 17)
 	{
-	  printf("%s\n\n", "Directory 'root-files' already made");
+	  //printf("%s\n\n", "Directory 'root-files' already made");
 	}
       else
 	{

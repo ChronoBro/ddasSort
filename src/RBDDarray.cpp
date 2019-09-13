@@ -66,6 +66,11 @@ bool RBDDarray::compareE(const Event &event1, const Event &event2){
   return (event1.energy > event2.energy);
 }
 
+bool RBDDarray::compareE_raw(const Event &event1, const Event &event2){
+
+  return (event1.signal > event2.signal);
+}
+
 void RBDDarray::sortE(){
 
   // if(!isCalibrated){
@@ -74,4 +79,32 @@ void RBDDarray::sortE(){
   // }
 
   std::sort (eventList.begin(), eventList.end(), compareE);
+}
+
+void RBDDarray::sortEraw(){
+
+  // if(!isCalibrated){
+  //   std::cout << "Cannot sort uncalibrated detectors" << std::endl;
+  //   return;
+  // }
+
+  std::sort (eventList.begin(), eventList.end(), compareE_raw);
+}
+
+
+Event RBDDarray::addBack(){
+
+  sortE();
+  int stripTolerance = 2;
+  Event addBackEvent = eventList.front();
+
+  double addBackEnergy = 0.;
+  for(auto & event : eventList){
+    if( abs(event.channel-addBackEvent.channel)<stripTolerance   )
+    addBackEnergy += event.energy;
+  }
+
+  addBackEvent.energy = addBackEnergy;
+
+  return addBackEvent;
 }
