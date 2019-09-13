@@ -311,6 +311,7 @@ int main(int argc,char *argv[]){
   double corrWindow = 5E9;  //5 s
   //corrWindow = 1E9;
 
+  //if I create my own 'framework' for analysis this should probably be called the event handler
   RBDDTriggeredEvent* implant = new RBDDTriggeredEvent("Prompt Trigger", "title", bufferEvent, coinWindow);
   implant->setTriggerCh(0);
   //implant->activateDetector(PIN1);
@@ -381,11 +382,12 @@ int main(int argc,char *argv[]){
        implant->dumpBuffer();
 
        // //kind of stupid but you have to fillArrays after bufferdump. yes its bad design
-       SeGA.fillArray();
-       DSSDloGainBack.fillArray();
-       DSSDloGainFront.fillArray();
-       DSSDhiGainBack.fillArray();
-       DSSDhiGainFront.fillArray();
+       // SeGA.fillArray();
+       // DSSDloGainBack.fillArray();
+       // DSSDloGainFront.fillArray();
+       // DSSDhiGainBack.fillArray();
+       // DSSDhiGainFront.fillArray();
+       //dumpBuffer should now be doing the above fillArray()'s
        
 
        // cout << endl;
@@ -399,7 +401,7 @@ int main(int argc,char *argv[]){
        //if(implant->dumpBuffer(XFP_CFD)){counterList.count("XFP_CFD");}
        //cout << TOF.getEvents().size() << endl;
 
-       foundTOF = TOF.getEvents().size() > 0;
+       foundTOF = TOF.getEvents().size() > 0; 
 
        if(foundTOF){ //check that TOF actually got filled
 	 curTOF = TOF.getFillerEvent().signal;
@@ -407,8 +409,9 @@ int main(int argc,char *argv[]){
        }
 
        //clear detectors after their data has been used
-       TOF.clear();
+       //TOF.clear();
        //XFP_CFD.clear();
+       //above shouldn't be necessary, i.e. clear() only needs to be called once by the event handler
 
       foundIonOfInterest = fGate->IsInside(curTOF,PIN1energy);
       if(fGate74Sr->IsInside(curTOF,PIN1energy)){counterList.count("found74Sr");}
@@ -503,11 +506,13 @@ int main(int argc,char *argv[]){
 
 
       //clear detectors defined outside of event loop that had they're data operated on already
-      SeGA.clear();
-      DSSDloGainBack.clear();
-      DSSDloGainFront.clear();
-      DSSDhiGainBack.clear();
-      DSSDhiGainFront.clear();
+
+      implant->clear();
+      // SeGA.clear();
+      // DSSDloGainBack.clear();
+      // DSSDloGainFront.clear();
+      // DSSDhiGainBack.clear();
+      // DSSDhiGainFront.clear();
 
       //cout << "here1" << endl;
       //cout << "here2" << endl;
@@ -531,6 +536,11 @@ int main(int argc,char *argv[]){
 
       //will now need to check if event is in PID gate before calling correlated events
 
+
+      //would be very nice, if everytime that an implant is found, so long as it doesn't overlap in space with previous implant (within stripTolerance),
+      //that I would do another correlation search for an event in that region of the detector
+      //I think this could be parallelized
+      //not sure if its better to parallelize the main for loop or to parallelize searches
       
       //need to make search for decay events here
       do{
@@ -546,8 +556,8 @@ int main(int argc,char *argv[]){
       	  decay->dumpBuffer(); //dumpbuffer will send directly to activated 'RBDDdets' but not activated 'RBDDarrays'
 	  
 	  implantEvent = PIN1.getEvents().size() > 0;
-	  PIN1.clear(); //always clear right after you're finished with the data
-	  TOF.clear();
+	  //PIN1.clear(); //always clear right after you're finished with the data
+	  //TOF.clear();
 	  if(implantEvent){
 
 	    // Event frontImplant = DSSDloGainFront.maxEraw();
@@ -555,11 +565,12 @@ int main(int argc,char *argv[]){
 	    
 
 	    //need to clear events before dumping buffer again, no matter what
-	    SeGA.clear();
-	    DSSDhiGainBack.clear();
-	    DSSDhiGainFront.clear();
-	    DSSDloGainFront.clear();
-	    DSSDloGainBack.clear();
+	    // SeGA.clear();
+	    // DSSDhiGainBack.clear();
+	    // DSSDhiGainFront.clear();
+	    // DSSDloGainFront.clear();
+	    // DSSDloGainBack.clear();
+	    decay->clear(); //all clearing can be done with TriggeredEvent class
 	    continue;
 	    //just for fun below
 	    //break;
@@ -569,9 +580,9 @@ int main(int argc,char *argv[]){
 	  //if(implantEvent){break;}
 	  
       	  //need to fillArray for RBDDarrays to get list of buffer events, I know not the smartest
-      	  SeGA.fillArray();
-      	  DSSDhiGainBack.fillArray();
-      	  DSSDhiGainFront.fillArray();
+      	  // SeGA.fillArray();
+      	  // DSSDhiGainBack.fillArray();
+      	  // DSSDhiGainFront.fillArray();
 
       	  //for testing seeing the channel structure of grouped events
       	  // cout << endl;
@@ -587,15 +598,20 @@ int main(int argc,char *argv[]){
 
 	  //cout << "really?" << endl;
 
-      	  if(DSSDhiGainBack.getEventList().size() > 0){backDecay = DSSDhiGainBack.maxE();}
+	  bool foundBack = DSSDhiGainBack.getEventList().size() > 0;
+
+      	  if(foundBack){
+	    backDecay = DSSDhiGainBack.maxE();
+	  }
       	  else{
       	    //cout << "no back event found" << endl;
       	    //only want events where both a front and back strip fired
-	    SeGA.clear();
-	    DSSDhiGainBack.clear();
-	    DSSDhiGainFront.clear();
-	    DSSDloGainFront.clear();
-	    DSSDloGainBack.clear();
+	    // SeGA.clear();
+	    // DSSDhiGainBack.clear();
+	    // DSSDhiGainFront.clear();
+	    // DSSDloGainFront.clear();
+	    // DSSDloGainBack.clear();
+	    decay->clear();
       	    continue;
       	  }
 
@@ -619,11 +635,13 @@ int main(int argc,char *argv[]){
 	  
 	  
       	  double Ethreshold = 100;
-      	  double stripTolerance = 2;
+      	  double stripTolerance = 4;
+	  RBDDTrace test(frontDecay.trace);
 
       	  if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
       	      && abs(backStrip - fImplantEBMaxStrip) < stripTolerance
       	      && frontDecay.energy > Ethreshold
+	      && test.filter()
 	      ){
 
 	    Histo->hDecayTime->Fill(frontDecay.time-implantTime);
@@ -650,11 +668,12 @@ int main(int argc,char *argv[]){
 
       	}
 
-	SeGA.clear();
-	DSSDhiGainBack.clear();
-	DSSDhiGainFront.clear();
-	DSSDloGainFront.clear();
-	DSSDloGainBack.clear();
+	decay->clear();
+	// SeGA.clear();
+	// DSSDhiGainBack.clear();
+	// DSSDhiGainFront.clear();
+	// DSSDloGainFront.clear();
+	// DSSDloGainBack.clear();
 
 
       } while(  abs(decay->GetBuffer().back().time-implantTime) < corrWindow );

@@ -57,6 +57,8 @@ class RBDDTriggeredEvent : public TNamed
   std::vector<RBDDChannel*> bufferTest;
   void      setWindowWidth(Double_t windowWidth){fWindowWidth = windowWidth;}
 
+  std::vector<RBDDarray*> arrayList; //storing pointers to array objects
+
   Event fillEvent(RBDDChannel*); 
   void loadBar(double progress);
 
@@ -124,6 +126,8 @@ class RBDDTriggeredEvent : public TNamed
   bool activateDetector(RBDDdet &det);
   bool activateArray(RBDDarray &array);
 
+  void clear();
+  
 
   //at some point I want to pass a bool function into the trigger condition
 

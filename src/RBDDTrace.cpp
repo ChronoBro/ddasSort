@@ -19,6 +19,7 @@ RBDDTrace::RBDDTrace(vector<unsigned short> trace, double sampleFraction){
   for(unsigned int iBin=0;iBin<trace.size();iBin++){
     fTrace.push_back((double)trace[iBin]);
   }
+  analyze();
 }
 
 // RBDDTrace::RBDDTrace(vector<Double_t> trace){
@@ -30,6 +31,7 @@ RBDDTrace::RBDDTrace(vector<unsigned short> trace, double sampleFraction){
 RBDDTrace::RBDDTrace(vector<Double_t> trace, double sampleFraction){
   fBaseSampleFraction = sampleFraction;
   fTrace = trace;
+  analyze();
 }
 
 
@@ -210,9 +212,10 @@ bool RBDDTrace::filter(){
   
   //should erase the events that don't pass my filter if I'm going to use all front events
   //erasing events didn't have the desired output
-  if(fQDC<0 || fQDC >1E5 || fA < 0 || triggerCheck < -25){return true;}
+  //idk what the above is about but this should work now
+  if(fQDC<0 || fQDC >1E5 || fA < 0 || triggerCheck < -25){return false;}
   
-  return false;
+  return true;
 
 }
 

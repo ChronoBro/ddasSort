@@ -65,12 +65,13 @@ public:
   Double_t          GetSum(Double_t winBegin, Double_t winEnd);
   Int_t             GetSumAndStore(Double_t winBegin, Double_t winEnd);
   Double_t          GetCFDTime(Double_t fraction = 0.5);
-  bool              filter(); //returns true if trace should be filtered out
+  bool              filter(); //returns true if trace passes filter, false if should be filtered out
 
   void  SetBaseSampleFraction(double fraction){fBaseSampleFraction = fraction;}
   void  SetBaseSamples(Int_t nSamples){fBaseSamples = nSamples;}
   void  SetMSPS(double MSPS){fMSPS=MSPS;}
-  
+
+
 
   //ClassDef(RBDDTrace,1); //comment this if I want to compile normally, otherwise I have to do some root trickery in the compilation
 };

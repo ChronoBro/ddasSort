@@ -474,6 +474,11 @@ bool RBDDTriggeredEvent::dumpBuffer(){
      
   }
 
+  //force array to populate event list
+  for(auto & array : arrayList){
+    array->fillArray();
+  }
+  
   return test;
 }
 
@@ -505,6 +510,25 @@ bool RBDDTriggeredEvent::activateArray(RBDDarray &array){
     liveDets[det->getAssignedChannel()] = det;   
   }
 
+  //store pointer to array objects to call filling
+  arrayList.push_back(&array);
+
   return true;
 }
   
+void RBDDTriggeredEvent::clear(){
+  
+  for(int i=0;i<maxChannels;i++){
+ 
+    if(liveDets[i]!=NULL){ //should always check if pointer is NULL otherwise will get segfault
+   
+      liveDets[i]->clear();
+    }
+  }
+
+  for(auto & array : arrayList){
+    array->clear();
+  }
+
+
+}
