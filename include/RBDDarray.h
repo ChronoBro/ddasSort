@@ -30,6 +30,8 @@ class RBDDarray{
 
   void fillArray();
 
+  void Print();
+
  private:
   std::vector<RBDDdet*> detectors;
   std::vector<Event> eventList;

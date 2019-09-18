@@ -1,0 +1,266 @@
+added remote/root-files/run-0095-00_NoBuild.root to TChain                           
+added remote/root-files/run-0095-01_NoBuild.root to TChain                           
+added remote/root-files/run-0096-00_NoBuild.root to TChain                           
+added remote/root-files/run-0096-01_NoBuild.root to TChain                           
+added remote/root-files/run-0097-00_NoBuild.root to TChain                           
+added remote/root-files/run-0097-01_NoBuild.root to TChain                           
+added remote/root-files/run-0098-00_NoBuild.root to TChain                           
+added remote/root-files/run-0098-01_NoBuild.root to TChain                           
+added remote/root-files/run-0099-00_NoBuild.root to TChain                           
+added remote/root-files/run-0099-01_NoBuild.root to TChain                           
+added remote/root-files/run-0100-00_NoBuild.root to TChain                           
+added remote/root-files/run-0100-01_NoBuild.root to TChain                           
+added remote/root-files/run-0101-00_NoBuild.root to TChain                           
+added remote/root-files/run-0101-01_NoBuild.root to TChain                           
+added remote/root-files/run-0102-00_NoBuild.root to TChain                           
+added remote/root-files/run-0102-01_NoBuild.root to TChain                           
+added remote/root-files/run-0103-00_NoBuild.root to TChain                           
+added remote/root-files/run-0103-01_NoBuild.root to TChain                           
+added remote/root-files/run-0104-00_NoBuild.root to TChain                           
+added remote/root-files/run-0105-00_NoBuild.root to TChain                           
+added remote/root-files/run-0105-01_NoBuild.root to TChain                           
+added remote/root-files/run-0106-00_NoBuild.root to TChain                           
+added remote/root-files/run-0106-01_NoBuild.root to TChain                           
+added remote/root-files/run-0107-00_NoBuild.root to TChain                           
+added remote/root-files/run-0108-00_NoBuild.root to TChain                           
+added remote/root-files/run-0109-00_NoBuild.root to TChain                           
+added remote/root-files/run-0109-01_NoBuild.root to TChain                           
+added remote/root-files/run-0110-00_NoBuild.root to TChain                           
+added remote/root-files/run-0110-01_NoBuild.root to TChain                           
+
+Number of entries in TChain = 313250074
+
+--> Loaded Gate: cut_73Sr
+
+found implant event : 1
+=====================Event List=====================
+Event     : 1
+channel   : 137
+signal    : 9405
+energy    : 3194.94
+
+Decay Trigger
+=====================Event List=====================
+Event     : 1
+channel   : 66
+signal    : 0
+energy    : 96.8647
+
+Event     : 1
+channel   : 69
+signal    : 269
+energy    : 181.868
+
+Event     : 1
+channel   : 70
+signal    : 635
+energy    : 279.97
+
+Event     : 1
+channel   : 71
+signal    : 520
+energy    : 248.058
+
+Event     : 1
+channel   : 72
+signal    : 879
+energy    : 353.735
+
+Event     : 1
+channel   : 73
+signal    : 757
+energy    : 320.831
+
+Event     : 1
+channel   : 74
+signal    : 594
+energy    : 276.755
+
+Event     : 1
+channel   : 75
+signal    : 1185
+energy    : 446.188
+
+Event     : 1
+channel   : 76
+signal    : 871
+energy    : 352.784
+
+Event     : 1
+channel   : 77
+signal    : 1247
+energy    : 465.966
+
+Event     : 1
+channel   : 80
+signal    : 793
+energy    : 327.981
+
+Event     : 1
+channel   : 81
+signal    : 1000
+energy    : 378.841
+
+Event     : 1
+channel   : 82
+signal    : 876
+energy    : 357.908
+
+Event     : 1
+channel   : 83
+signal    : 934
+energy    : 364.038
+
+Event     : 1
+channel   : 84
+signal    : 789
+energy    : 314.525
+
+Event     : 1
+channel   : 85
+signal    : 610
+energy    : 260.662
+
+Event     : 1
+channel   : 86
+signal    : 424
+energy    : 206.486
+
+Event     : 1
+channel   : 87
+signal    : 773
+energy    : 314.796
+
+Event     : 1
+channel   : 88
+signal    : 622
+energy    : 274.271
+
+Event     : 1
+channel   : 89
+signal    : 641
+energy    : 279.939
+
+Event     : 1
+channel   : 90
+signal    : 674
+energy    : 303.604
+
+Event     : 1
+channel   : 91
+signal    : 840
+energy    : 344.112
+
+Event     : 1
+channel   : 92
+signal    : 634
+energy    : 300.77
+
+Event     : 1
+channel   : 93
+signal    : 642
+energy    : 270.846
+
+Event     : 1
+channel   : 94
+signal    : 790
+energy    : 325.569
+
+Event     : 1
+channel   : 95
+signal    : 950
+energy    : 363.595
+
+Event     : 1
+channel   : 96
+signal    : 575
+energy    : 284.278
+
+Event     : 1
+channel   : 97
+signal    : 646
+energy    : 328.07
+
+Event     : 1
+channel   : 98
+signal    : 756
+energy    : 352.057
+
+Event     : 1
+channel   : 99
+signal    : 652
+energy    : 312.777
+
+Event     : 1
+channel   : 100
+signal    : 842
+energy    : 368.361
+
+Event     : 1
+channel   : 101
+signal    : 569
+energy    : 286.889
+
+Event     : 1
+channel   : 102
+signal    : 427
+energy    : 242.904
+
+Event     : 1
+channel   : 103
+signal    : 1290
+energy    : 515.959
+
+Decay Trigger
+=====================Event List=====================
+Event     : 1
+channel   : 86
+signal    : 289
+energy    : 167.319
+
+found implant event : 2
+=====================Event List=====================
+Event     : 1
+channel   : 132
+signal    : 9339
+energy    : 2919.13
+
+Decay Trigger
+=====================Event List=====================
+Event     : 1
+channel   : 89
+signal    : 1780
+energy    : 621.167
+
+Decay Trigger
+=====================Event List=====================
+Event     : 1
+channel   : 68
+signal    : 29623
+energy    : 9008.56
+
+Event     : 1
+channel   : 69
+signal    : 0
+energy    : 100.647
+
+Event     : 2
+channel   : 69
+signal    : 0
+energy    : 100.647
+
+Event     : 1
+channel   : 70
+signal    : 0
+energy    : 96.7193
+v
+Event     : 1
+channel   : 71
+signal    : 6526
+energy    : 2044.34
+
+Event     : 1
+channel   : 72
+signal    : 8382
+energy    : 2618.41
+

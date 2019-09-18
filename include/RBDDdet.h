@@ -24,11 +24,11 @@ class RBDDdet{
   void pop(){events.erase(events.begin());}
   void addEvent(Event event){events.push_back(event);}
   bool fillEvent(Event fillerEvent0);
-  std::vector<unsigned short> getTrace(){;}
+  //std::vector<unsigned short> getTrace(){;}
   void erase(int i){auto it = events.begin()+i;events.erase(it);}
   int getAssignedChannel(){return assignedChannel;}
   void setAssignedChannel(int givenChannel){assignedChannel = givenChannel;}
-
+  void Print();
 
  private:
   int assignedChannel;

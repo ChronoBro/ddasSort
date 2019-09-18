@@ -95,7 +95,7 @@ void RBDDarray::sortEraw(){
 Event RBDDarray::addBack(){
 
   sortE();
-  int stripTolerance = 2;
+  int stripTolerance = 3;
   Event addBackEvent = eventList.front();
 
   double addBackEnergy = 0.;
@@ -107,4 +107,15 @@ Event RBDDarray::addBack(){
   addBackEvent.energy = addBackEnergy;
 
   return addBackEvent;
+}
+
+void RBDDarray::Print(){
+  //std::cout << std::endl;
+  std::cout << "=====================Event List=====================" << std::endl;
+  int i=1;
+  for(auto & det : detectors){
+    det->Print();
+  }
+
+
 }

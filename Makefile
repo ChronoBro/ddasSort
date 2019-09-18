@@ -12,7 +12,7 @@ CFLAGS= -c -O2 -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 
-all: sort4 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
+all: src/DDASdict.cpp sort4 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
 
 sort: objs/sort.o $(OBJECTS)
 	$(COMPILER) -o sort objs/sort.o $(OBJECTS) $(LINKOPTION)

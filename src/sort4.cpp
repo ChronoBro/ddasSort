@@ -24,13 +24,20 @@ inline bool exists_test (const std::string& name) {
   return (stat (name.c_str(), &buffer) == 0); 
 }
 
+//not sure why... but this seems to be missing tons of stuff when I have this active 9/16/2019
 bool triggerCondition(int Chan){
+
+  //return true;
 
   if(Chan >= 64 && Chan < 104) {
     return true;
   }
-
-  return false;
+  else if(Chan >= 144 && Chan < 184){
+    return true;
+  }
+  else{
+    return false;
+  }
 }
 
 int main(int argc,char *argv[]){
@@ -203,6 +210,10 @@ int main(int argc,char *argv[]){
       frontLo[i].setCalibration(params);
       frontLo[i].setAssignedChannel(chan+40);
 
+      //I should be able to remove strips by just not adding them to the RBDDarray
+      double strip = chan-64.;
+      if(strip == 3 || strip == 14 || strip == 15){continue;}
+
       DSSDhiGainFront.addDet(frontHi[i]);
       DSSDloGainFront.addDet(frontLo[i]);
     }
@@ -309,6 +320,7 @@ int main(int argc,char *argv[]){
   double coinWindow = 5000; //5 us
   double coinWindow2 = 10000;
   double corrWindow = 5E9;  //5 s
+  double waitWindow = 5E4; //0.05ms
   //corrWindow = 1E9;
 
   //if I create my own 'framework' for analysis this should probably be called the event handler
@@ -318,6 +330,8 @@ int main(int argc,char *argv[]){
   implant->activateDetector(TOF);
   //implant->activateDetector(XFP_CFD);
 
+  implant->activateDetector(PIN1);
+  implant->activateDetector(TOF);
   implant->activateArray(SeGA);
   implant->activateArray(DSSDloGainFront);
   implant->activateArray(DSSDloGainBack);
@@ -346,6 +360,10 @@ int main(int argc,char *argv[]){
     need to figure out my buffering issues... 5/2/2019
     i.e. ->not grouping together events perfectly, so I'm throwing away events
     *************************/
+
+    //clear detectors defined outside of event loop that had they're data operated on already
+    implant->clear();
+
 
     //normal use
     lastEntry = implant->FillBuffer(dataChain, iEntry);
@@ -406,6 +424,7 @@ int main(int argc,char *argv[]){
        if(foundTOF){ //check that TOF actually got filled
 	 curTOF = TOF.getFillerEvent().signal;
 	 Histo->h_PID->Fill(curTOF, PIN1energy);
+	 //counterList.count("foundIon");
        }
 
        //clear detectors after their data has been used
@@ -435,8 +454,11 @@ int main(int argc,char *argv[]){
       // cout << endl;
       // for(auto & bufferEvent: implant->GetBuffer()){
       // 	cout << bufferEvent.channel << endl;
+      // 	cout << bufferEvent.time << endl;
       // }
       // cout << endl;
+
+      // implant->Print();
 
       for( auto &SeGAEvent: SeGA.getEventList() ){
     	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
@@ -474,6 +496,7 @@ int main(int argc,char *argv[]){
 
       }
 
+
       // if(frontImplant.signal!=0){ //need to make sure that there is a frontImplant!
       // 	RBDDTrace trace(frontImplant.trace);
       // 	trace.GetBaseline(); //calling GetBaseline() will set base value so that histograms are corrected for baseline
@@ -498,16 +521,32 @@ int main(int argc,char *argv[]){
     	if(QDC > Emax){
     	  //Emax = backEvent.signal;
     	  Emax = QDC;
+	  if(backEvent.channel < 0){cout << "OK..." << endl;}
     	  fImplantEBMaxStrip = 40 - (backEvent.channel - 183);	  
     	  backImplant = backEvent;
     	}
 
       }	
 
+      Event frontImplantTest;// = DSSDloGainFront.maxEraw();
+      Event backImplantTest;// = DSSDloGainBack.maxEraw();
 
-      //clear detectors defined outside of event loop that had they're data operated on already
+      int implantFrontTest =  -100;
+      int implantBackTest = -100;
 
-      implant->clear();
+      if(DSSDloGainFront.getEventList().size() > 0){implantFrontTest = 40 - (DSSDloGainFront.maxEraw().channel - 103);}
+      if(DSSDloGainBack.getEventList().size() > 0){implantBackTest = 40 - (DSSDloGainBack.maxEraw().channel - 183);}
+
+      
+      //these unfortunately don't agree, will have to look into it closer
+      // if(implantBackTest != fImplantEBMaxStrip){cout << "back E raw sorting not consistent" << endl; cout << implantBackTest << " " << fImplantEBMaxStrip << endl;}
+      // if(implantFrontTest != fImplantEFMaxStrip){cout << "front E raw sorting not consistent" << endl; cout << implantFrontTest << " " <<fImplantEFMaxStrip<< endl;}
+
+      
+      // fImplantEBMaxStrip = implantBackTest;
+      // fImplantEFMaxStrip = implantFrontTest;
+
+
       // SeGA.clear();
       // DSSDloGainBack.clear();
       // DSSDloGainFront.clear();
@@ -525,17 +564,27 @@ int main(int argc,char *argv[]){
 
       //implant->GetBuffer().clear();
 
+      //will now need to check if event is in PID gate before calling correlated events
 
+      // commented line below for just counting PID
       if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
       counterList.count("foundIon");
 
       if(fImplantEFMaxStrip == -100 && fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
-      else if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
+      if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
 
+      
 
+      Histo->h_PID_gated->Fill(curTOF,PIN1energy);
 
-      //will now need to check if event is in PID gate before calling correlated events
+      // cout << "found implant event : " << counterList.returnValue("foundIon") << endl;
+      // cout << "front strip : " << fImplantEFMaxStrip << endl;
+      // cout << "back strip  : " <<fImplantEBMaxStrip << endl;
 
+      // DSSDloGainFront.Print();
+      // DSSDloGainBack.Print();
+
+      //continue; //I'm lazy and don't want to go through correlation loop
 
       //would be very nice, if everytime that an implant is found, so long as it doesn't overlap in space with previous implant (within stripTolerance),
       //that I would do another correlation search for an event in that region of the detector
@@ -543,18 +592,24 @@ int main(int argc,char *argv[]){
       //not sure if its better to parallelize the main for loop or to parallelize searches
       
       //need to make search for decay events here
+      bool firstEvent = true;
       do{
 	//cout << "in correlation loop" << endl;
 
+	decay->clear();
 	bool implantEvent = false;
       	if(lastEntry >= dataChain.GetEntries()){break;}
       	lastEntry = decay->FillBuffer(dataChain, lastEntry+1);
 
-      	if(decay->isTriggered( triggerCondition ) ){
+	if( (decay->GetBuffer().back().time - implantTime) < waitWindow ){continue;}
+
+	
+	//I may have better luck if I remove this second trigger condition, as I will be considering whether there is a front and back below
+      	//if(decay->isTriggered( triggerCondition ) ){
 	
       	  lastEntry = decay->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events	
       	  decay->dumpBuffer(); //dumpbuffer will send directly to activated 'RBDDdets' but not activated 'RBDDarrays'
-	  
+	                       //it fills data in RBDDarrays now
 	  implantEvent = PIN1.getEvents().size() > 0;
 	  //PIN1.clear(); //always clear right after you're finished with the data
 	  //TOF.clear();
@@ -570,7 +625,7 @@ int main(int argc,char *argv[]){
 	    // DSSDhiGainFront.clear();
 	    // DSSDloGainFront.clear();
 	    // DSSDloGainBack.clear();
-	    decay->clear(); //all clearing can be done with TriggeredEvent class
+	    //decay->clear(); //all clearing can be done with TriggeredEvent class
 	    continue;
 	    //just for fun below
 	    //break;
@@ -592,15 +647,17 @@ int main(int argc,char *argv[]){
 	  // cout << implantEvent << endl;
       	  // cout << endl;
 	  
-      	  Event frontDecay = DSSDhiGainFront.maxE();
-      	  Event frontDecayAddBack = DSSDhiGainFront.addBack();
+      	  Event frontDecay;
+      	  Event frontDecayAddBack;
       	  Event backDecay;
 
 	  //cout << "really?" << endl;
-
+	  bool foundFront = DSSDhiGainFront.getEventList().size() > 0;
 	  bool foundBack = DSSDhiGainBack.getEventList().size() > 0;
 
-      	  if(foundBack){
+      	  if(foundBack && foundFront){
+	    frontDecay  = DSSDhiGainFront.maxE();
+	    frontDecayAddBack  = DSSDhiGainFront.addBack();
 	    backDecay = DSSDhiGainBack.maxE();
 	  }
       	  else{
@@ -611,7 +668,7 @@ int main(int argc,char *argv[]){
 	    // DSSDhiGainFront.clear();
 	    // DSSDloGainFront.clear();
 	    // DSSDloGainBack.clear();
-	    decay->clear();
+	    //decay->clear();
       	    continue;
       	  }
 
@@ -632,43 +689,131 @@ int main(int argc,char *argv[]){
       	  // cout << "front strip max E: " << frontDecay.channel << endl;
       	  // cout << "back strip max E: " << backDecay.channel << endl;
       	  // cout << "back strip energy: " << backDecay.energy << endl;
+
+	  cout << "Decay Trigger" << endl;
+	  cout << "front max E strip : " << frontStrip << endl;
+	  cout << "back max E strip  : " << backStrip << endl;
+	  cout << endl;
 	  
+	  cout << "Fronts-> " << endl;
+	  DSSDhiGainFront.Print();
+	  cout << "Backs-> " << endl;
+	  DSSDhiGainBack.Print();
+	  //continue;
 	  
       	  double Ethreshold = 100;
-      	  double stripTolerance = 3;
+      	  double stripTolerance = 1.;
 	  RBDDTrace test(frontDecay.trace);
 
-      	  if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
-      	      && abs(backStrip - fImplantEBMaxStrip) < stripTolerance
-      	      && frontDecay.energy > Ethreshold
+	  // if(!test.filter()){
+	  //   cout << endl;
+	  //   cout << "signal = " << frontDecay.signal;
+	  //   cout << endl;
+	  //   cout << "energy = " << frontDecay.energy;
+	  //   cout << endl;
+	  //   cout << "strip = " << frontStrip;
+	  //   test.Print();
+	  // }
+
+
+
+	  //main difference I can find between logic below and that from sort3_v2
+	  //is that sort3_v2 searches through all front+back events for something within stripTolerance
+	  //I will try implementing something similar for testing
+	  //Implementing above recovers similar results from previous sorting, as it should!
+
+	  // for(auto& backEvent : DSSDhiGainBack.getEventList()){
+	  //   backStrip = backEvent.channel -144.;
+
+	  if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
+	      //&& abs(backStrip - fImplantEBMaxStrip) < stripTolerance //I till think something is screwy with the backs...
+	      && frontDecay.energy > Ethreshold
+	      //&& backEvent.energy > Ethreshold
 	      && test.filter()
 	      ){
 
 	    Histo->hDecayTime->Fill(frontDecay.time-implantTime);
-	    Histo->hDecayTimeLog->Fill(frontDecay.time-implantTime);
-      	    Histo->hDecayEnergy->Fill(frontDecay.energy);
-      	    Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
-      	    counterList.count("decays");
+	    Histo->hDecayEnergy->Fill(frontDecay.energy);
+	    Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
+	    counterList.count("decays");
 	    
 	    double decayTime = frontDecay.time-implantTime;
 	    double TCutoff = 2E8; //200ms
 
 	    if(decayTime < TCutoff){
 	      Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
-	    }
+	      Histo->hDecayEnergyTGate->Fill(frontDecay.energy);
+	      for(auto & segaEvent : SeGA.getEventList()){
+		Histo->hGammaEnergy->Fill(segaEvent.energy);
+		if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
+		  Histo->hGammaEnergyG->Fill(segaEvent.energy);
+		}
+	      }
 
+	    }
+	    
 	    if(decayTime > 1E9){
 	      Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
 	    }
 
+	    if(firstEvent){
+	      Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
+	      Histo->hDecayTimeLog->Fill(frontDecay.time-implantTime);
+	      firstEvent = false;
+	    }
+	    
+	      
+	    //break;
+	  }
 
-      	  }
+	    //}
+
+	  // for(auto & frontEvent : DSSDhiGainFront.getEventList()){
+	  //   frontStrip = frontEvent.channel - 64;
+	  //   RBDDTrace test2(frontEvent.trace);
+	   
+	  //   for(auto & backEvent : DSSDhiGainBack.getEventList()){
+	  //     backStrip = backEvent.channel - 144;	    
+	  //     if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
+	  // 	  && abs(backStrip - fImplantEBMaxStrip) < stripTolerance
+	  // 	  && frontEvent.energy > Ethreshold
+	  // 	  && backEvent.energy > Ethreshold
+	  // 	  && test2.filter()
+	  // 	  ){
+
+	  // 	Histo->hDecayTime->Fill(frontDecay.time-implantTime);
+	  // 	Histo->hDecayEnergy->Fill(frontEvent.energy);
+	  // 	Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
+	  // 	counterList.count("decays");
+	    
+	  // 	double decayTime = frontEvent.time-implantTime;
+	  // 	double TCutoff = 2E8; //200ms
+
+	  // 	if(decayTime < TCutoff){
+	  // 	  Histo->hDecayEnergyTot_TGate->Fill(frontEvent.energy);
+	  // 	}
+
+	  // 	if(decayTime > 1E9){
+	  // 	  Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
+	  // 	}
+
+	  // 	if(firstEvent){
+	  // 	  Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
+	  // 	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
+	  // 	  firstEvent = false;
+	  // 	}
+	    
+	  // 	break; 
+	  //     }
+
+	  //   }
+	  // }
 	  
-	  //cout << "wtf" << endl;
 
-      	}
+	  
 
-	decay->clear();
+	  //}      //end second trigger
+	//decay->clear();
 	// SeGA.clear();
 	// DSSDhiGainBack.clear();
 	// DSSDhiGainFront.clear();

@@ -10,16 +10,16 @@ struct Event{
   long long int entry = -1;
   std::vector<unsigned short> trace;
 
-  /* Event& operator=(const Event& a) */
-  /* { */
-  /*   energy=a.energy; */
-  /*   signal=a.signal; */
-  /*   channel=a.channel; */
-  /*   time = a.time; */
-  /*   entry = a.entry; */
-  /*   trace = a.trace; */
-  /*   return *this; */
-  /* } */
+  Event& operator=(const Event& a)
+  {
+    energy=a.energy;
+    signal=a.signal;
+    channel=a.channel;
+    time = a.time;
+    entry = a.entry;
+    trace = a.trace;
+    return *this;
+  }
 
 
 };

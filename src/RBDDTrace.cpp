@@ -73,7 +73,14 @@ void RBDDTrace::Print(Option_t *) const
 //  cout << "*  Event length 2   : " << fEventLength2 << endl;    // Length of traces from channel 2 (in blocks)
 //  cout << "*  Event length 3   : " << fEventLength3 << endl;    // Length of traces from channel 3 (in blocks)
 //  cout << "==================== XIA RBPixie4eHeader (END)   ====================" << endl;
-  
+
+  cout << endl;
+  cout << "=====================Trace Parameters=====================" << endl;
+  cout << "Baseline          : " << fB << endl;
+  cout << "Local Max or Min  : " << fA << endl;
+  cout << "QDC               : " << fQDC << endl;
+  cout << "=====================Trace Parameters=====================" << endl;
+  cout << endl;
 }
 
 

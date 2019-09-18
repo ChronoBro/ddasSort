@@ -308,22 +308,22 @@ long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int iE
 
   //should also pop events off the front if they aren't in coincidence with latest event
 
-  for(auto & bufferEvent : buffer ){
-    double timeDiff = abs(fillerChannel->GetTimestamp()-bufferEvent.time);
-    if(timeDiff > fWindowWidth){buffer.erase( buffer.begin() );} 
-    else{break;}
-  }
+  // for(auto & bufferEvent : buffer ){
+  //   double timeDiff = abs(fillerChannel->GetTimestamp()-bufferEvent.time);
+  //   if(timeDiff > fWindowWidth){buffer.erase( buffer.begin() );} 
+  //   else{break;}
+  // }
 
   //below seems to work better
   //it does but now I'm losing the triggered events in the buffer... which means I'm losing ALL good events presumably,
   //would explain why I'm not seeing any decays, but I do think the below code is more in line with my original goals.
   //below code throws out almost half the events and I don't know why 5/2/2019
 
-  // for(std::vector<Event>::iterator it = buffer.begin(); it != buffer.end();) {
-  //   double timeDiff = abs(fillerChannel->GetTimestamp()-(*it).time); //need parentheses around iterator for this to work
-  //   if(timeDiff > fWindowWidth){it = buffer.erase(it);}
-  //   else{it++;}
-  // }
+  for(std::vector<Event>::iterator it = buffer.begin(); it != buffer.end();) {
+    double timeDiff = abs(fillerChannel->GetTimestamp()-(*it).time); //need parentheses around iterator for this to work
+    if(timeDiff > fWindowWidth){it = buffer.erase(it);}
+    else{it++;}
+  }
 
    double progress0 =  (double)lastEntry/(double)dataChain.GetEntries();
    if(lastEntry % 10000 == 0){   
@@ -371,14 +371,15 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
   }
 
   //this should be a quick fix for the trigger not being put with the buffer
-  //this would mean that the last even is improperly grouped and that should be fixed ultimately
-  if(buffer.back().time - triggerTime > fWindowWidth/2.){
+  //this would mean that the last event is improperly grouped and that should be fixed ultimately
+  if(buffer.back().time - triggerTime > fWindowWidth){ //I originally had fWindowWidth/2. ... this was dumb...
     Event trigger;
     trigger.signal = triggerSignal;
     trigger.time = triggerTime;
     trigger.channel = triggerChannel;
     trigger.energy = triggerEnergy;
     trigger.trace = triggerTrace;
+    //buffer.push_front(trigger);
     buffer.insert(buffer.begin(),trigger);
 
     //this should reset everything correctly 
@@ -528,6 +529,20 @@ void RBDDTriggeredEvent::clear(){
 
   for(auto & array : arrayList){
     array->clear();
+  }
+
+
+}
+
+void RBDDTriggeredEvent::Print(){
+
+  for(int i=0;i<maxChannels;i++){
+
+    if(liveDets[i]!=NULL){
+
+      liveDets[i]->Print();
+    }
+
   }
 
 

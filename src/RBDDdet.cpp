@@ -121,3 +121,21 @@ double RBDDdet::calibrate(unsigned int energyR){
 
 }
 
+
+void RBDDdet::Print(){
+
+  //std::cout << std::endl;
+    //cout << "=====================Event List=====================" << std::endl;
+  int i=1;
+  for(auto & event : events){    
+    std::cout << "Event     : " << i << std::endl;
+    std::cout << "channel   : " << event.channel << std::endl;
+    std::cout << "signal    : " << event.signal << std::endl;
+    std::cout << "energy    : " << event.energy << std::endl;
+    std::cout << "time      : " << event.time << std::endl;
+    std::cout << std::endl;
+    i++;
+  }
+
+
+}

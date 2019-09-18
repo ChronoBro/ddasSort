@@ -127,7 +127,8 @@ class RBDDTriggeredEvent : public TNamed
   bool activateArray(RBDDarray &array);
 
   void clear();
-  
+
+  void Print();
 
   //at some point I want to pass a bool function into the trigger condition
 
