@@ -338,6 +338,56 @@ long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int iE
 
 }
 
+long long int RBDDTriggeredEvent::FillBufferCoin(TChain &dataChain, long long int iEntry){
+
+  //put load bar in here
+
+  // if(lastEntry > dataChain.GetEntries()){
+  //   std::cout << "WTF" <<std::endl;
+  //   std::cout << "WTF" <<std::endl;
+  // }
+
+  dataChain.GetEntry(iEntry);
+  fillerChannel->unpack();
+  //bufferTest.push_back(fillerChannel); //is this the memory leak? commented this one line and it largely went away so this contributed.
+  // cout << "fillerChannel time = " <<fillerChannel->GetTimestamp() << endl;
+  // cout << "fillerChannel chan = " <<fillerChannel->GetChanNo() << endl;
+  buffer.push_back(fillEvent(fillerChannel));
+
+  lastEntry = iEntry;
+
+  //memory leak was occuring in the program where buffer was being filled indefinitely
+  //I believe this is an issue where events aren't being erased from the buffer
+  //throwing in abs() in time check made this problem go away as far as I can tell
+
+  //I think something is wrong with how my buffer is being filled... 5/2/2019
+
+  //should also pop events off the front if they aren't in coincidence with latest event
+
+  //I'm losing a lot of events compared to my spaghetti code version of buffer filling... 9/19/2019
+  //Could be an issue with timestamping...
+  
+  //below seems to work better
+  //it does but now I'm losing the triggered events in the buffer... which means I'm losing ALL good events presumably,
+  //would explain why I'm not seeing any decays, but I do think the below code is more in line with my original goals.
+  //below code throws out almost half the events and I don't know why 5/2/2019
+
+  // for(std::vector<Event>::iterator it = buffer.begin(); it != buffer.end();) {
+  //   double timeDiff = abs(fillerChannel->GetTimestamp()-(*it).time); //need parentheses around iterator for this to work
+  //   if(timeDiff > fWindowWidth){it = buffer.erase(it);}
+  //   else{it++;}
+  // }
+
+   double progress0 =  (double)lastEntry/(double)dataChain.GetEntries();
+   if(lastEntry % 10000 == 0){   
+     loadBar(progress0);    
+   }
+
+
+   return lastEntry;
+
+}
+
 long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
 
   //have to figure out a scheme to keep the original trigger event in the buffer...
@@ -363,8 +413,9 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
     lastEntry = lastEntry +1; //hmmmm.... Idk why lastEntry++ didn't work here but it sure screwed things up!
                               //lets see if buffer works with RBDDChannels now
     
-
-    lastEntry = FillBuffer(dataChain,lastEntry);
+    //For a 'quick' fix to buffer elimination problem, I will worry about popping off events in buffer 
+    //in this method, and create separate filling methods
+    lastEntry = FillBufferCoin(dataChain,lastEntry);
     
     // cout << lastEntry+1 << endl;
     // cout << "WTF is going on?!" << endl;
@@ -373,23 +424,33 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
 
   }
 
+
   //this should be a quick fix for the trigger not being put with the buffer
   //this would mean that the last event is improperly grouped and that should be fixed ultimately
   if(buffer.back().time - triggerTime > fWindowWidth){ //I originally had fWindowWidth/2. ... this was dumb...
-    Event trigger;
-    trigger.signal = triggerSignal;
-    trigger.time = triggerTime;
-    trigger.channel = triggerChannel;
-    trigger.energy = triggerEnergy;
-    trigger.trace = triggerTrace;
-    //buffer.push_front(trigger);
-    buffer.insert(buffer.begin(),trigger);
+    // Event trigger;
+    // trigger.signal = triggerSignal;
+    // trigger.time = triggerTime;
+    // trigger.channel = triggerChannel;
+    // trigger.energy = triggerEnergy;
+    // trigger.trace = triggerTrace;
+    // //buffer.push_front(trigger);
+    // buffer.insert(buffer.begin(),trigger);
 
     //this should reset everything correctly 
     buffer.erase(buffer.end());
     lastEntry-1;
 
   }
+
+  //now that buffer shouldn't have extranous event at end we can pop off events from the front of the buffer
+  for(auto & bufferEvent : buffer ){
+      double timeDiff = abs(triggerTime-bufferEvent.time);
+      if(buffer.size() == 1){break;} //need to make sure there is always at least one thing in my buffer... or else calling it will segfault
+      if(timeDiff > fWindowWidth/2.){buffer.erase( buffer.begin() );} 
+      else{break;}
+    }
+  
 
   //if one calls FillBuffer first then the buffer should only have events from the first half of window
 
@@ -465,6 +526,8 @@ bool RBDDTriggeredEvent::dumpBuffer(){
 
   bool test = false;
 
+  //cout << endl;
+
   for(auto & bufferEvent : buffer){
     
     if(liveDets[bufferEvent.channel]!=NULL){ //should always check if pointer is NULL otherwise will get segfault
@@ -475,14 +538,32 @@ bool RBDDTriggeredEvent::dumpBuffer(){
       
 
     }
+
+    //for testing, to see where I'm dropping events
+    // cout << bufferEvent.channel << endl;
+    // cout << setprecision(15)  << bufferEvent.time << endl;
+
+    //investigating curious segfault...
+    if(bufferEvent.time == 2927704650){
+      
+
+      cout << "WHY THE FUCK WONT GDB GO INTO MY IF STATEMENT!?!?!!!!" << endl;
+      //answer: I had it compiled with optimizatons
+      cout << "hey!" << endl;
+
+    }
      
   }
+
+  //cout << endl;
 
   //force array to populate event list
   for(auto & array : arrayList){
     array->fillArray();
   }
   
+  //abort();
+
   return test;
 }
 

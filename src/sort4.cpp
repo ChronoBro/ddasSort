@@ -457,12 +457,12 @@ int main(int argc,char *argv[]){
       // cout << DSSDloGainBack.getEventList().size() << endl;
       // cout << endl;
 
-      cout << endl;
-      for(auto & bufferEvent: implant->GetBuffer()){
-      	cout << bufferEvent.channel << endl;
-      	cout << setprecision(15)  << bufferEvent.time << endl;
-      }
-      cout << endl;
+      // cout << endl;
+      // for(auto & bufferEvent: implant->GetBuffer()){
+      // 	cout << bufferEvent.channel << endl;
+      // 	cout << setprecision(15)  << bufferEvent.time << endl;
+      // }
+      // cout << endl;
 
       //implant->Print();
 
@@ -619,7 +619,7 @@ int main(int argc,char *argv[]){
 	  implantEvent = PIN1.getEvents().size() > 0;
 	  //PIN1.clear(); //always clear right after you're finished with the data
 	  //TOF.clear();
-	  if(implantEvent){
+	  if(implantEvent && (PIN1.getEvents()[0].time - implantTime) < 5E8){
 
 	    // Event frontImplant = DSSDloGainFront.maxEraw();
 	    // Event backImplant = DSSDloGainBack.maxEraw();
@@ -632,7 +632,8 @@ int main(int argc,char *argv[]){
 	    // DSSDloGainFront.clear();
 	    // DSSDloGainBack.clear();
 	    //decay->clear(); //all clearing can be done with TriggeredEvent class
-	    continue;
+	    break;
+	    //continue;
 	    //just for fun below
 	    //break;
 	  }
@@ -708,7 +709,7 @@ int main(int argc,char *argv[]){
 	  //continue;
 	  
       	  double Ethreshold = 100;
-      	  double stripTolerance = 1.;
+      	  double stripTolerance = 3.;
 	  RBDDTrace test(frontDecay.trace);
 
 	  // if(!test.filter()){

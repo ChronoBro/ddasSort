@@ -327,8 +327,8 @@ int main(int argc,char *argv[]){
   // Load PID gate
 
   TFile *fGateFile = new TFile("PIDGates2.root","READ");
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -496,11 +496,11 @@ int main(int argc,char *argv[]){
     double curTOF = 0;
     double PIN2Energy = 0;
     //dump buffer into detectors
-    cout << endl;
+    //cout << endl;
     for(auto & bufferEvent : buffer.getEvents()){
 
-      cout << bufferEvent.channel << endl;
-      cout << setprecision(15) << bufferEvent.time << endl;
+      //cout << bufferEvent.channel << endl;
+      //cout << setprecision(15) << bufferEvent.time << endl;
 
       foundTOF = TOF.fillEvent(bufferEvent);
 
@@ -534,11 +534,12 @@ int main(int argc,char *argv[]){
       }
 
     }
-    cout << endl;
+    //cout << endl;
    
       
     //curTOF = TOF.getFillerEvent().signal;
-    if(foundTOF){Histo->h_PID->Fill(curTOF, PIN1energy);}
+    if(curTOF){Histo->h_PID->Fill(curTOF, PIN1energy);}
+    //Histo->h_PID->Fill(curTOF, PIN1energy);
     Histo->h_PIN1vsPIN2->Fill(PIN2Energy, PIN1energy);
 
     if( fGate->IsInside(curTOF,PIN1energy) ){//&& checkBack && checkFront && checkTOF){ 
