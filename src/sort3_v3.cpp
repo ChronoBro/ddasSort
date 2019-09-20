@@ -6,7 +6,8 @@
 
  ***********************/
 
-#include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
+//#include "/opt/build/nscldaq-ddas/main/ddasdumper/DDASEvent.h" 
+#include "DDASEvent.h"
 #include <sstream>
 #include "TFile.h"
 #include "TTree.h"
@@ -25,7 +26,7 @@
 #include "RBDDASChannel.h"
 #include <sys/ioctl.h>
 #include <stdio.h>
-
+#include <iomanip>
 
 using namespace std;
 

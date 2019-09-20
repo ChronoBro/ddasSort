@@ -308,22 +308,25 @@ long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int iE
 
   //should also pop events off the front if they aren't in coincidence with latest event
 
-  // for(auto & bufferEvent : buffer ){
-  //   double timeDiff = abs(fillerChannel->GetTimestamp()-bufferEvent.time);
-  //   if(timeDiff > fWindowWidth){buffer.erase( buffer.begin() );} 
-  //   else{break;}
-  // }
-
+  //I'm losing a lot of events compared to my spaghetti code version of buffer filling... 9/19/2019
+  //Could be an issue with timestamping...
+  
+    for(auto & bufferEvent : buffer ){
+      double timeDiff = abs(fillerChannel->GetTimestamp()-bufferEvent.time);
+      if(timeDiff > fWindowWidth){buffer.erase( buffer.begin() );} 
+      else{break;}
+    }
+  
   //below seems to work better
   //it does but now I'm losing the triggered events in the buffer... which means I'm losing ALL good events presumably,
   //would explain why I'm not seeing any decays, but I do think the below code is more in line with my original goals.
   //below code throws out almost half the events and I don't know why 5/2/2019
 
-  for(std::vector<Event>::iterator it = buffer.begin(); it != buffer.end();) {
-    double timeDiff = abs(fillerChannel->GetTimestamp()-(*it).time); //need parentheses around iterator for this to work
-    if(timeDiff > fWindowWidth){it = buffer.erase(it);}
-    else{it++;}
-  }
+  // for(std::vector<Event>::iterator it = buffer.begin(); it != buffer.end();) {
+  //   double timeDiff = abs(fillerChannel->GetTimestamp()-(*it).time); //need parentheses around iterator for this to work
+  //   if(timeDiff > fWindowWidth){it = buffer.erase(it);}
+  //   else{it++;}
+  // }
 
    double progress0 =  (double)lastEntry/(double)dataChain.GetEntries();
    if(lastEntry % 10000 == 0){   
