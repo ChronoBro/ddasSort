@@ -95,7 +95,7 @@ void RBDDarray::sortEraw(){
 Event RBDDarray::addBack(){
 
   sortE();
-  int stripTolerance = 3;
+  int stripTolerance = 2;
   Event addBackEvent = eventList.front();
 
   double addBackEnergy = 0.;

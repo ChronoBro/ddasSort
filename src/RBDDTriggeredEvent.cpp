@@ -544,14 +544,14 @@ bool RBDDTriggeredEvent::dumpBuffer(){
     // cout << setprecision(15)  << bufferEvent.time << endl;
 
     //investigating curious segfault...
-    if(bufferEvent.time == 2927704650){
+    // if(bufferEvent.time == 2927704650){
       
 
-      cout << "WHY THE FUCK WONT GDB GO INTO MY IF STATEMENT!?!?!!!!" << endl;
-      //answer: I had it compiled with optimizatons
-      cout << "hey!" << endl;
+    //   cout << "WHY THE FUCK WONT GDB GO INTO MY IF STATEMENT!?!?!!!!" << endl;
+    //   //answer: I had it compiled with optimizatons
+    //   cout << "hey!" << endl;
 
-    }
+    // }
      
   }
 

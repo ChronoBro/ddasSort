@@ -16,6 +16,8 @@
 #include "RBDDarray.h"
 #include "RBDDTrace.h"
 #include <iomanip>
+#include <chrono>
+#include <ctime>
 
 using namespace std;
 
@@ -42,6 +44,8 @@ bool triggerCondition(int Chan){
 }
 
 int main(int argc,char *argv[]){
+
+  auto start = std::chrono::system_clock::now();
 
   cerr << endl << "------------------------------------";
   cerr << endl << "NSCL DDAS sorting for unbuilt Events" << endl;
@@ -267,8 +271,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -619,24 +623,24 @@ int main(int argc,char *argv[]){
 	  implantEvent = PIN1.getEvents().size() > 0;
 	  //PIN1.clear(); //always clear right after you're finished with the data
 	  //TOF.clear();
-	  if(implantEvent && (PIN1.getEvents()[0].time - implantTime) < 5E8){
+	  // if(implantEvent && (PIN1.getEvents()[0].time - implantTime) < 3E8){
 
-	    // Event frontImplant = DSSDloGainFront.maxEraw();
-	    // Event backImplant = DSSDloGainBack.maxEraw();
+	  //   // Event frontImplant = DSSDloGainFront.maxEraw();
+	  //   // Event backImplant = DSSDloGainBack.maxEraw();
 	    
 
-	    //need to clear events before dumping buffer again, no matter what
-	    // SeGA.clear();
-	    // DSSDhiGainBack.clear();
-	    // DSSDhiGainFront.clear();
-	    // DSSDloGainFront.clear();
-	    // DSSDloGainBack.clear();
-	    //decay->clear(); //all clearing can be done with TriggeredEvent class
-	    break;
-	    //continue;
-	    //just for fun below
-	    //break;
-	  }
+	  //   //need to clear events before dumping buffer again, no matter what
+	  //   // SeGA.clear();
+	  //   // DSSDhiGainBack.clear();
+	  //   // DSSDhiGainFront.clear();
+	  //   // DSSDloGainFront.clear();
+	  //   // DSSDloGainBack.clear();
+	  //   //decay->clear(); //all clearing can be done with TriggeredEvent class
+	  //   break;
+	  //   //continue;
+	  //   //just for fun below
+	  //   //break;
+	  // }
 
 	  //just for fun
 	  //if(implantEvent){break;}
@@ -729,92 +733,102 @@ int main(int argc,char *argv[]){
 	  //I will try implementing something similar for testing
 	  //Implementing above recovers similar results from previous sorting, as it should!
 
-	  // for(auto& backEvent : DSSDhiGainBack.getEventList()){
-	  //   backStrip = backEvent.channel -144.;
+	  for(auto& backEvent : DSSDhiGainBack.getEventList()){
+	    backStrip = backEvent.channel -144.;
 
-	  // if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
-	  //     //&& abs(backStrip - fImplantEBMaxStrip) < stripTolerance //I till think something is screwy with the backs...
-	  //     && frontDecay.energy > Ethreshold
-	  //     //&& backEvent.energy > Ethreshold
-	  //     && test.filter()
-	  //     ){
+	    if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
+		&& abs(backStrip - fImplantEBMaxStrip) < stripTolerance //I till think something is screwy with the backs...
+		&& frontDecay.energy > Ethreshold
+		&& backEvent.energy > Ethreshold
+		&& test.filter()
+		){
 
-	  //   Histo->hDecayTime->Fill(frontDecay.time-implantTime);
-	  //   Histo->hDecayEnergy->Fill(frontDecay.energy);
-	  //   Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
-	  //   counterList.count("decays");
+	      Histo->hDecayTime->Fill(frontDecay.time-implantTime);
+	      Histo->hDecayEnergy->Fill(frontDecay.energy);
+	      Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
+	      counterList.count("decays");
 	    
-	  //   double decayTime = frontDecay.time-implantTime;
-	  //   double TCutoff = 2E8; //200ms
+	      double decayTime = frontDecay.time-implantTime;
+	      double TCutoff = 2E8; //200ms
 
-	  //   if(decayTime < TCutoff){
-	  //     Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
-	  //     Histo->hDecayEnergyTGate->Fill(frontDecay.energy);
-	  //     for(auto & segaEvent : SeGA.getEventList()){
-	  // 	Histo->hGammaEnergy->Fill(segaEvent.energy);
-	  // 	if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
-	  // 	  Histo->hGammaEnergyG->Fill(segaEvent.energy);
+	      if(decayTime < TCutoff){
+		Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
+		Histo->hDecayEnergyTGate->Fill(frontDecay.energy);
+		for(auto & segaEvent : SeGA.getEventList()){
+		  //Histo->hGammaEnergy->Fill(segaEvent.energy);
+		  //if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
+		  Histo->hGammaEnergyG->Fill(segaEvent.energy);
+		    //}
+		}
+
+	      }
+
+	      for(auto & segaEvent : SeGA.getEventList()){
+		Histo->hGammaEnergy->Fill(segaEvent.energy);
+		//if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
+		//Histo->hGammaEnergyG->Fill(segaEvent.energy);
+		//}
+	      }
+
+
+	    
+	      if(decayTime > 1E9){
+		Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
+		Histo->hDecayEnergyBackground->Fill(frontDecay.energy);
+	      }
+
+	      if(firstEvent){
+		Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
+		Histo->hDecayTimeLog->Fill(frontDecay.time-implantTime);
+		firstEvent = false;
+	      }
+	    
+	      
+	      break;
+	    }
+
+	  } //end loop over DSSD back events
+
+	  // for(auto & frontEvent : DSSDhiGainFront.getEventList()){
+	  //   frontStrip = frontEvent.channel - 64;
+	  //   RBDDTrace test2(frontEvent.trace);
+	   
+	  //   for(auto & backEvent : DSSDhiGainBack.getEventList()){
+	  //     backStrip = backEvent.channel - 144;	    
+	  //     if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
+	  // 	  && abs(backStrip - fImplantEBMaxStrip) < stripTolerance
+	  // 	  && frontEvent.energy > Ethreshold
+	  // 	  && backEvent.energy > Ethreshold
+	  // 	  && test2.filter()
+	  // 	  ){
+
+	  // 	Histo->hDecayTime->Fill(frontDecay.time-implantTime);
+	  // 	Histo->hDecayEnergy->Fill(frontEvent.energy);
+	  // 	Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
+	  // 	counterList.count("decays");
+	    
+	  // 	double decayTime = frontEvent.time-implantTime;
+	  // 	double TCutoff = 2E8; //200ms
+
+	  // 	if(decayTime < TCutoff){
+	  // 	  Histo->hDecayEnergyTot_TGate->Fill(frontEvent.energy);
 	  // 	}
+
+	  // 	if(decayTime > 1E9){
+	  // 	  Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
+	  // 	}
+
+	  // 	if(firstEvent){
+	  // 	  Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
+	  // 	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
+	  // 	  firstEvent = false;
+	  // 	}
+	    
+	  // 	break; 
 	  //     }
 
 	  //   }
-	    
-	  //   if(decayTime > 1E9){
-	  //     Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
-	  //   }
-
-	  //   if(firstEvent){
-	  //     Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
-	  //     Histo->hDecayTimeLog->Fill(frontDecay.time-implantTime);
-	  //     firstEvent = false;
-	  //   }
-	    
-	      
-	  //   //break;
 	  // }
-
-	    //}
-
-	  for(auto & frontEvent : DSSDhiGainFront.getEventList()){
-	    frontStrip = frontEvent.channel - 64;
-	    RBDDTrace test2(frontEvent.trace);
-	   
-	    for(auto & backEvent : DSSDhiGainBack.getEventList()){
-	      backStrip = backEvent.channel - 144;	    
-	      if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
-	  	  && abs(backStrip - fImplantEBMaxStrip) < stripTolerance
-	  	  && frontEvent.energy > Ethreshold
-	  	  && backEvent.energy > Ethreshold
-	  	  && test2.filter()
-	  	  ){
-
-	  	Histo->hDecayTime->Fill(frontDecay.time-implantTime);
-	  	Histo->hDecayEnergy->Fill(frontEvent.energy);
-	  	Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
-	  	counterList.count("decays");
-	    
-	  	double decayTime = frontEvent.time-implantTime;
-	  	double TCutoff = 2E8; //200ms
-
-	  	if(decayTime < TCutoff){
-	  	  Histo->hDecayEnergyTot_TGate->Fill(frontEvent.energy);
-	  	}
-
-	  	if(decayTime > 1E9){
-	  	  Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
-	  	}
-
-	  	if(firstEvent){
-	  	  Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
-	  	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
-	  	  firstEvent = false;
-	  	}
-	    
-	  	break; 
-	      }
-
-	    }
-	  }
 	  
 
 	  
@@ -850,6 +864,17 @@ int main(int argc,char *argv[]){
   cout << "found72Rb: " << counterList.returnValue("found72Rb") << endl;
   cout << "found70Kr: " << counterList.returnValue("found70Kr") << endl;
 
+  cout << endl;
+
+
+  // Some computation here
+  auto end = std::chrono::system_clock::now();
+
+  std::chrono::duration<double> elapsed_seconds = end-start;
+  std::time_t end_time = std::chrono::system_clock::to_time_t(end);
+
+  std::cout << "finished computation at " << std::ctime(&end_time)
+	    << "elapsed time: " << elapsed_seconds.count() << "s\n";  
   cout << endl;
 
   return 1; //cuz I'm old school
