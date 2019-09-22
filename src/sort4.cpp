@@ -28,6 +28,7 @@ inline bool exists_test (const std::string& name) {
 }
 
 //not sure why... but this seems to be missing tons of stuff when I have this active 9/16/2019
+//may have been an issue with buffering which should be fixed now 9/21/2019
 bool triggerCondition(int Chan){
 
   //return true;
@@ -271,8 +272,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -615,11 +616,11 @@ int main(int argc,char *argv[]){
 
 	
 	//I may have better luck if I remove this second trigger condition, as I will be considering whether there is a front and back below
-      	//if(decay->isTriggered( triggerCondition ) ){
+      	if(decay->isTriggered( triggerCondition ) ){
 	
-      	  lastEntry = decay->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events	
-      	  decay->dumpBuffer(); //dumpbuffer will send directly to activated 'RBDDdets' but not activated 'RBDDarrays'
-	                       //it fills data in RBDDarrays now
+	  lastEntry = decay->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events	
+	  decay->dumpBuffer(); //dumpbuffer will send directly to activated 'RBDDdets' but not activated 'RBDDarrays'
+	//it fills data in RBDDarrays now
 	  implantEvent = PIN1.getEvents().size() > 0;
 	  //PIN1.clear(); //always clear right after you're finished with the data
 	  //TOF.clear();
@@ -733,107 +734,75 @@ int main(int argc,char *argv[]){
 	  //I will try implementing something similar for testing
 	  //Implementing above recovers similar results from previous sorting, as it should!
 
-	  for(auto& backEvent : DSSDhiGainBack.getEventList()){
-	    backStrip = backEvent.channel -144.;
+	  for(auto& frontEvent : DSSDhiGainFront.getEventList()){
+	    frontStrip = frontEvent.channel - 64.;
 
-	    if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
-		&& abs(backStrip - fImplantEBMaxStrip) < stripTolerance //I till think something is screwy with the backs...
-		&& frontDecay.energy > Ethreshold
-		&& backEvent.energy > Ethreshold
-		&& test.filter()
-		){
-
-	      Histo->hDecayTime->Fill(frontDecay.time-implantTime);
-	      Histo->hDecayEnergy->Fill(frontDecay.energy);
-	      Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
-	      counterList.count("decays");
-	    
-	      double decayTime = frontDecay.time-implantTime;
-	      double TCutoff = 2E8; //200ms
-
-	      if(decayTime < TCutoff){
-		Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
-		Histo->hDecayEnergyTGate->Fill(frontDecay.energy);
-		for(auto & segaEvent : SeGA.getEventList()){
-		  //Histo->hGammaEnergy->Fill(segaEvent.energy);
-		  //if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
-		  Histo->hGammaEnergyG->Fill(segaEvent.energy);
-		    //}
-		}
-
+	    if(frontEvent.energy <1500){
+	      RBDDTrace test2(frontEvent.trace);
+	      if(!test2.filter()){ // returns true if passes filter
+		break;
 	      }
-
-	      for(auto & segaEvent : SeGA.getEventList()){
-		Histo->hGammaEnergy->Fill(segaEvent.energy);
-		//if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
-		//Histo->hGammaEnergyG->Fill(segaEvent.energy);
-		//}
-	      }
-
-
-	    
-	      if(decayTime > 1E9){
-		Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
-		Histo->hDecayEnergyBackground->Fill(frontDecay.energy);
-	      }
-
-	      if(firstEvent){
-		Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
-		Histo->hDecayTimeLog->Fill(frontDecay.time-implantTime);
-		firstEvent = false;
-	      }
-	    
-	      
-	      break;
 	    }
 
-	  } //end loop over DSSD back events
+	    for(auto& backEvent : DSSDhiGainBack.getEventList()){
+	      backStrip = backEvent.channel -144.;
 
-	  // for(auto & frontEvent : DSSDhiGainFront.getEventList()){
-	  //   frontStrip = frontEvent.channel - 64;
-	  //   RBDDTrace test2(frontEvent.trace);
-	   
-	  //   for(auto & backEvent : DSSDhiGainBack.getEventList()){
-	  //     backStrip = backEvent.channel - 144;	    
-	  //     if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
-	  // 	  && abs(backStrip - fImplantEBMaxStrip) < stripTolerance
-	  // 	  && frontEvent.energy > Ethreshold
-	  // 	  && backEvent.energy > Ethreshold
-	  // 	  && test2.filter()
-	  // 	  ){
+	      if( abs(frontStrip - fImplantEFMaxStrip) < stripTolerance 
+		  && abs(backStrip - fImplantEBMaxStrip) < stripTolerance //I till think something is screwy with the backs...
+		  && frontEvent.energy > Ethreshold
+		  && backEvent.energy > Ethreshold
+		  ){
 
-	  // 	Histo->hDecayTime->Fill(frontDecay.time-implantTime);
-	  // 	Histo->hDecayEnergy->Fill(frontEvent.energy);
-	  // 	Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
-	  // 	counterList.count("decays");
+		Histo->hDecayTime->Fill(frontEvent.time-implantTime);
+		Histo->hDecayEnergy->Fill(frontEvent.energy);
+		Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
+		counterList.count("decays");
 	    
-	  // 	double decayTime = frontEvent.time-implantTime;
-	  // 	double TCutoff = 2E8; //200ms
+		double decayTime = frontEvent.time-implantTime;
+		double TCutoff = 2E8; //200ms
 
-	  // 	if(decayTime < TCutoff){
-	  // 	  Histo->hDecayEnergyTot_TGate->Fill(frontEvent.energy);
-	  // 	}
+		if(decayTime < TCutoff){
+		  Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
+		  Histo->hDecayEnergyTGate->Fill(frontEvent.energy);
+		  for(auto & segaEvent : SeGA.getEventList()){
+		    //Histo->hGammaEnergy->Fill(segaEvent.energy);
+		    //if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
+		    Histo->hGammaEnergyG->Fill(segaEvent.energy);
+	  	    //}
+		  }
 
-	  // 	if(decayTime > 1E9){
-	  // 	  Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
-	  // 	}
+		}
 
-	  // 	if(firstEvent){
-	  // 	  Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
-	  // 	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
-	  // 	  firstEvent = false;
-	  // 	}
+		for(auto & segaEvent : SeGA.getEventList()){
+		  Histo->hGammaEnergy->Fill(segaEvent.energy);
+		  //if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
+		  //Histo->hGammaEnergyG->Fill(segaEvent.energy);
+		  //}
+		}
+
+
 	    
-	  // 	break; 
-	  //     }
+		if(decayTime > 1E9){
+		  Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
+		  Histo->hDecayEnergyBackground->Fill(frontEvent.energy);
+		}
 
-	  //   }
-	  // }
-	  
+		if(firstEvent){
+		  Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
+		  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
+		  firstEvent = false;
+		}
+	    
+	      
+		break;
+	      }
 
-	  
+	    } //end loop over DSSD back events
 
-	  //}      //end second trigger
+	  } //end loop over DSSD front events	    
+
+	}  //end second trigger
+
 	//decay->clear();
 	// SeGA.clear();
 	// DSSDhiGainBack.clear();
