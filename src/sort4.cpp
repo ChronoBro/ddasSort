@@ -737,7 +737,7 @@ int main(int argc,char *argv[]){
 	  for(auto& frontEvent : DSSDhiGainFront.getEventList()){
 	    frontStrip = frontEvent.channel - 64.;
 
-	    if(frontEvent.energy <1500){
+	    if(frontEvent.energy <1500){ //apparently I needed this low energy gate for the filter to only work on things that were actually BAD
 	      RBDDTrace test2(frontEvent.trace);
 	      if(!test2.filter()){ // returns true if passes filter
 		break;
