@@ -71,6 +71,20 @@ bool RBDDarray::compareE_raw(const Event &event1, const Event &event2){
   return (event1.signal > event2.signal);
 }
 
+bool RBDDarray::compareE_rawTrace(const Event & event1, const Event &event2){
+
+    	RBDDTrace trace1(event1.trace);
+	RBDDTrace trace2(event2.trace);
+    	double max1 = trace1.GetMaximum();
+    	double QDC1 = trace1.GetQDC();
+
+	double max2 = trace2.GetMaximum();
+	double QDC2 = trace2.GetQDC();
+
+	return (QDC1 > QDC2); 
+
+}
+
 void RBDDarray::sortE(){
 
   // if(!isCalibrated){
@@ -80,6 +94,11 @@ void RBDDarray::sortE(){
 
   std::sort (eventList.begin(), eventList.end(), compareE);
 }
+
+void RBDDarray::sortErawTrace(){
+  std::sort (eventList.begin(), eventList.end(), compareE_rawTrace);
+}
+
 
 void RBDDarray::sortEraw(){
 

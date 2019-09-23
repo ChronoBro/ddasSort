@@ -3,6 +3,7 @@
 
 
 #include "RBDDdet.h"
+#include "RBDDTrace.h"
 
 class RBDDarray{
 
@@ -14,11 +15,14 @@ class RBDDarray{
   void clear(){eventList.clear();for(auto & det : detectors){det->clear();}}
   static bool compareE(const Event & event1, const Event & event2); //static makes there be only 1 copy of this function regardless of how many ddasDet's get implemented. Takes it up a level, out of the class, allowing it to be used in sorting
   static bool compareE_raw(const Event & event1, const Event & event2); //static makes there be only 1 copy of this function regardless of how many ddasDet's get implemented. Takes it up a level, out of the class, allowing it to be used in sorting
+  static bool compareE_rawTrace(const Event & event1, const Event & event2);
   void sortE();
   void sortEraw();
+  void sortErawTrace();
 
   Event maxE(){sortE();return eventList.front();}
   Event maxEraw(){sortEraw(); return eventList.front();}
+  Event maxErawTrace(){sortErawTrace(); return eventList.front();}
   Event addBack();
 
   //if I pass address when adding detectors then I should be able to access them with pointer list liveDets in RBDDTriggeredEvent
