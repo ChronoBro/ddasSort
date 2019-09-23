@@ -1,11 +1,11 @@
 #include "ionCorrelator.h"
 
 
-ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0){
+ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo0){
   implantFront = implantFront0;
   implantBack = implantBack0;
   corrWindow = corrWindow0;
-
+  Histo = Histo0;
   Ethreshold = Ethreshold0;
   stripTolerance = stripTolerance0;
   frontImplantStrip = 40 - (implantFront.channel - 103);
@@ -17,7 +17,7 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   // std::cout << std::endl;
 }
 
-void ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents, histo *Histo){
+void ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents){
 
   decayFront = frontEvents.front(); //just to make sure there is some data in there
   decayBack = backEvents.back(); //just to make sure there is some data in there

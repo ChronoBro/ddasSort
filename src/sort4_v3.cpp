@@ -498,7 +498,7 @@ int main(int argc,char *argv[]){
 
       Histo->h_PID_gated->Fill(curTOF,PIN1energy);
 
-      ionCorrelator ionOfInterest(corrWindow, 100., 3., testFrontImplant, testBackImplant); 
+      ionCorrelator ionOfInterest(corrWindow, 100., 3., testFrontImplant, testBackImplant, Histo); 
       
       //make search for decay events here
       bool firstEvent = true;
@@ -553,7 +553,7 @@ int main(int argc,char *argv[]){
       	  double stripTolerance = 3.;
 	  RBDDTrace test(frontDecay.trace);
 
-	  ionOfInterest.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList(), Histo);
+	  ionOfInterest.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList());
 
 	  //With filtering change, I reproduce the spectra for 73Sr that I got before, hooray!!! 9/22/2019
 
