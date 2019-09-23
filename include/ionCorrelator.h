@@ -49,10 +49,10 @@ public:
   int getImplantFrontStrip(){return frontImplantStrip;}
   int getImplantBackStrip(){return backImplantStrip;}
 
-  bool implantOverlap(ionCorrelator secondImplant){
-    if( abs(secondImplant.getImplantFrontStrip() - frontImplantStrip) < stripTolerance){
+  bool implantOverlap(int frontStrip, int backStrip){
+    if( abs(frontStrip - frontImplantStrip) < 2*stripTolerance-1.){ //to take into account possible overlap of decays
       
-      if( abs(secondImplant.getImplantBackStrip() - backImplantStrip) < stripTolerance){
+      if( abs(backStrip - backImplantStrip) < 2*stripTolerance-1.){
 	return true;
       }
 
