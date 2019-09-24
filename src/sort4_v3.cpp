@@ -582,8 +582,9 @@ int main(int argc,char *argv[]){
 
     //should check if correlator needs to be deleted if decayTime over
     int it= 0;
+    double curTime = eventHandler->GetBuffer().back().time;
     for(auto & ion : implantedIonList){
-      if( ion.shouldDelete() ){
+      if(curTime > 0 && (curTime - ion.getFrontImplant().time) > corrWindow ){
 	implantedIonList.erase(implantedIonList.begin()+it);
       }
       else{
