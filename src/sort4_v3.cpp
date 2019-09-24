@@ -580,6 +580,17 @@ int main(int argc,char *argv[]){
 	  
     } //second trigger
 
+    //should check if correlator needs to be deleted if decayTime over
+    int it= 0;
+    for(auto & ion : implantedIonList){
+      if( ion.shouldDelete() ){
+	implantedIonList.erase(implantedIonList.begin()+it);
+      }
+      else{
+	it++;
+      }
+    }
+
 
   } //end of loop over entries
     

@@ -20,7 +20,7 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
 void ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents){
 
   decayFront = frontEvents.front(); //just to make sure there is some data in there
-  decayBack = backEvents.back(); //just to make sure there is some data in there
+  decayBack = backEvents.back(); //just to make sure there is some data in there so can check things
 
   double implantTime = implantFront.time;
 
