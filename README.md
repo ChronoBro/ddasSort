@@ -5,5 +5,6 @@ The code has been written with the functionality to extract other data types fro
 Requires [ROOT](https://root.cern.ch/)
 
 To get started:
-    make root
-    make
+
+    `make root`
+    `make`
