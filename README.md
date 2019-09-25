@@ -6,5 +6,5 @@ Requires [ROOT](https://root.cern.ch/)
 
 To get started:
 
-    `make root`
-    `make`
+    make root
+    make
