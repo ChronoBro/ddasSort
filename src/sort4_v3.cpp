@@ -415,7 +415,8 @@ int main(int argc,char *argv[]){
       // //should make a very big difference when analyzing large set of implantation events
       // line of code below should no longer be needed 
       // it is because detectors are no longer in scope
-      eventHandler->dumpBuffer();       
+      // nevermind?
+      //eventHandler->dumpBuffer();       
 
       foundTOF = TOF.getEvents().size() > 0; 
 
@@ -545,7 +546,7 @@ int main(int argc,char *argv[]){
     else if(eventHandler->isTriggered( triggerCondition ) ){
 	
 	lastEntry = eventHandler->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events
-	eventHandler->dumpBuffer();
+	//eventHandler->dumpBuffer();
 
 	//for testing
 	// cout << endl;

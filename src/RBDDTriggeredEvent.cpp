@@ -456,7 +456,8 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
 
   //dump the buffer to the detectors so people can use it without having to call dumpBuffer() Dan!
   //nevermind... looks like pointers to RBDDdets aren't in scope here to it will segfault...
-  //dumpBuffer();
+  //nevermind... nevermind?
+  dumpBuffer();
 
   return lastEntry;
 
