@@ -454,6 +454,10 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
 
   //if one calls FillBuffer first then the buffer should only have events from the first half of window
 
+  //dump the buffer to the detectors so people can use it without having to call dumpBuffer() Dan!
+  //nevermind... looks like pointers to RBDDdets aren't in scope here to it will segfault...
+  //dumpBuffer();
+
   return lastEntry;
 
 }

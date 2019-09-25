@@ -269,7 +269,7 @@ int main(int argc,char *argv[]){
   
   // Load PID gate
 
-  TFile *fGateFile = new TFile("PIDGates2.root","READ");
+  TFile *fGateFile = new TFile("root-files/PIDGates2.root","READ");
   TCutG *fGate;          //! PID Gate
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
@@ -413,6 +413,8 @@ int main(int argc,char *argv[]){
 
       // //dumpBuffer() now pushes event data to exact detector for the channel, this should reduce number of loops when filling events
       // //should make a very big difference when analyzing large set of implantation events
+      // line of code below should no longer be needed 
+      // it is because detectors are no longer in scope
       eventHandler->dumpBuffer();       
 
       foundTOF = TOF.getEvents().size() > 0; 
