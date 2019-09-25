@@ -1,9 +1,0 @@
-Directory 'root-files' already made
-
-added remote/root-files/run-0096-00_NoBuild.root to TChain                           
-added remote/root-files/run-0096-01_NoBuild.root to TChain                           
-
-Number of entries in TChain = 24196091
-
---> Loaded Gate: cut_71Kr
-
