@@ -1,5 +1,5 @@
 remote
-sort
+sort*
 andyBuild
 root-files
 log
@@ -12,6 +12,13 @@ sort4
 *~
 bashTest.sh
 *#
-*#*
+#*
 log*
 *.txt
+include/*#
+include/*~
+src/*#
+src/*~
+objs/*.o
+scripts/*#
+scripts/*~

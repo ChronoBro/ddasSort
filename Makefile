@@ -12,10 +12,12 @@ CFLAGS= -c -O2 -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 
-all: src/DDASdict.cpp sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
+all: sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
 
-src/DDASdict.cpp: $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h LinkDef.h
-	rootcint -f src/DDASdict.cpp $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h LinkDef.h
+root: src/DDASdict.cpp
+
+src/DDASdict.cpp: $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
+	rootcint -f src/DDASdict.cpp $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
 
 objs/DDASdict.o: src/DDASdict.cpp
 

@@ -275,7 +275,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -578,9 +579,9 @@ int main(int argc,char *argv[]){
 	  cout << "Dan you need to figure out a way to handle this" << endl;
 	}
 	  
-    } //second trigger
+    } //end of second trigger
 
-    //should check if correlator needs to be deleted if decayTime over
+    //should check if correlator needs to be deleted if decayTime over corrWindow
     int it= 0;
     double curTime = eventHandler->GetBuffer().back().time;
     for(auto & ion : implantedIonList){

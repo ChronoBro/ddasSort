@@ -1,9 +1,0 @@
-#include "ddasArray.h"
-
-
-ddasArray::ddasArray(){
-}
-
-ddasArray::~ddasArray(){
-  detectors.clear();
-}
