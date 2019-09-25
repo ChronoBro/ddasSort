@@ -1,4 +1,4 @@
-Requires [ROOT](https://root.cern.ch/)
+**Requires [ROOT](https://root.cern.ch/)**
 
 Program for sorting NSCL DDAS data that has been unbuilt to include only one ddaschannel per DDASEvent and the resulting ROOT tree is time ordered. 
 
