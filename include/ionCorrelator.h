@@ -38,7 +38,7 @@ protected:
 
 public:
   ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo);
-  void analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents);
+  bool analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents);
 
   bool shouldDelete(){return abs(decayFront.time - implantFront.time) > corrWindow;}
 

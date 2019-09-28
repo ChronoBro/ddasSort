@@ -274,9 +274,9 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -574,7 +574,9 @@ int main(int argc,char *argv[]){
 
 
 	  for(auto & ion : implantedIonList){
-	    ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList());
+	    if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
+	      counterList.count("decays");
+	    }
 	  }
 
 	}
