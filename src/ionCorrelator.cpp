@@ -101,7 +101,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	decayBack = backEvent;;
 	foundDecay = true;
 
-	break;
+	return foundDecay;
 
       }//end valid decay restriction
 
