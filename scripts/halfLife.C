@@ -44,7 +44,8 @@ void halfLife(){
   //dataName << directory.str() << "sort3all73Sr_3stripTolerance_allBadStripRemoval_5sCorrWindow_EdiffThreshold.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_bad+edgeStripRemoval_TGate100_5scorrWindow.root";
   //dataName << directory.str() << "secondImplantTest.root";
-  dataName << directory.str() << "run_95-110_processed.root";
+  //dataName << directory.str() << "run_95-110_processed.root";
+  dataName << directory.str() << "sort4_v3_73Sr_decayTimeEnergyGates.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow.root";
   //dataName << directory.str() << "test71Kr.root";
   //dataName << directory.str() << "test101.root";
@@ -63,13 +64,13 @@ void halfLife(){
 
   CdecayTime.cd();
   CdecayTime.SetLogy();
-  TH1D * decayTime = (TH1D*)data->Get("Histos/hDecayTime")->Clone("Decay Time");
+  TH1D * decayTime = (TH1D*)data->Get("Histos/hDecayTimeEx")->Clone("Decay Time");
   TH1D * decayTimeLog = (TH1D*)data->Get("Histos/hDecayTimeLog")->Clone("Decay Time Log");
 
   decayTime->GetYaxis()->SetTitle("Counts");
   decayTime->GetXaxis()->SetTitle("ms");
 
-  decayTime->Rebin(1);
+  decayTime->Rebin(20);
   decayTime->Sumw2();
 
   decayTime->GetXaxis()->SetRangeUser(0,fitRange);
@@ -90,9 +91,9 @@ void halfLife(){
   func->SetParameter(2,20);
   func->SetParameter(3,3E-10); //for background peak
   //func->SetParameter(3,2E-7);
-  decayTimeLog->Draw("PE1");
-  decayTimeLog->Rebin(5);
-  decayTimeLog->Fit("logFit", "ML");
+  // decayTimeLog->Draw("PE1");
+  // decayTimeLog->Rebin(5);
+  // decayTimeLog->Fit("logFit", "ML");
 
   double half_lifeLog = log(2)/func->GetParameter(1)*1E-6;
   
@@ -153,7 +154,7 @@ void halfLife(){
   //TH1D * decayEnergy = (TH1D*)data->Get("Histos/hDecayEnergyTot")->Clone("Decay Energy"); //going to try directly subtracting background cuz why not
   TH1D * decayEnergyBackground = (TH1D*)data->Get("Histos/hDecayEnergyTotBackground")->Clone("Background");
 
-  TH1D* decayEnergy71Kr = (TH1D*)data2->Get("Histos/hDecayEnergyTot_TGate")->Clone("Decay 71Kr");
+  //TH1D* decayEnergy71Kr = (TH1D*)data2->Get("Histos/hDecayEnergyTot_TGate")->Clone("Decay 71Kr");
   
   
   
@@ -164,9 +165,9 @@ void halfLife(){
 
   decayEnergy->Rebin(rebinFactor);
   decayEnergyBackground->Rebin(rebinFactor);
-  decayEnergy71Kr->Rebin(rebinFactor);
+  // decayEnergy71Kr->Rebin(rebinFactor);
 
-  decayEnergy71Kr->Scale(0.005);
+  // decayEnergy71Kr->Scale(0.005);
 
   //background depends on Run, I should make this standard
 

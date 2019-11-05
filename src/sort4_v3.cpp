@@ -274,9 +274,10 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -302,6 +303,7 @@ int main(int argc,char *argv[]){
   counterList.add("found72Rb");
   counterList.add("found70Kr");
   counterList.add("XFP_CFD");
+  counterList.add("totalIon");
 
   /*****************************************
    
@@ -383,8 +385,15 @@ int main(int argc,char *argv[]){
   std::vector<ionCorrelator> implantedIonList;
   long unsigned int oldIonNumber = 0;
 
+  std::vector<ionCorrelator> decayIonList;
+
+
   RBDDTriggeredEvent* XFP = new RBDDTriggeredEvent("XFP Trigger", "title", bufferEvent, coinWindow);
   XFP->setTriggerCh(6);
+
+  double firstTime = 0;
+  double lastTime = 0;
+  bool alreadyTriggered = false;
 
   for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
 
@@ -392,7 +401,6 @@ int main(int argc,char *argv[]){
 
     //clear detectors defined outside of event loop that had they're data operated on already
     eventHandler->clear();
-
 
     //normal use
     lastEntry = eventHandler->FillBuffer(dataChain, iEntry);  
@@ -423,7 +431,10 @@ int main(int argc,char *argv[]){
       if(foundTOF){ //check that TOF actually got filled
 	curTOF = TOF.getFillerEvent().signal;
 	Histo->h_PID->Fill(curTOF, PIN1energy);
-	//counterList.count("foundIon");
+	counterList.count("totalIon");
+	if(!alreadyTriggered){
+	  firstTime = implantTime;
+	}
       }
 
       foundIonOfInterest = fGate->IsInside(curTOF,PIN1energy);
@@ -579,6 +590,16 @@ int main(int argc,char *argv[]){
 	    }
 	  }
 
+
+
+
+	  // double Ethreshold=100.;
+	  // double stripTolerance=3.;
+	  
+	  // ionCorrelator ionOfInterest(corrWindow, Ethreshold, stripTolerance, frontDecay, backDecay, Histo); 
+	  
+	  // decayIonList.push_back(ionOfInterest);
+
 	}
 	else if(implantEvent){
 	  cout << "Dan you need to figure out a way to handle this" << endl;
@@ -598,9 +619,11 @@ int main(int argc,char *argv[]){
       }
     }
 
+    lastTime = curTime;
 
   } //end of loop over entries
     
+
   
   Histo->write(); // this forces the histrograms to be read out to file
 
@@ -617,6 +640,7 @@ int main(int argc,char *argv[]){
   cout << "found74Sr: " << counterList.returnValue("found74Sr") << endl;
   cout << "found72Rb: " << counterList.returnValue("found72Rb") << endl;
   cout << "found70Kr: " << counterList.returnValue("found70Kr") << endl;
+  cout << "average particle rate (Hz): " << counterList.returnValue("totalIon")/(lastTime-firstTime)*1E9 << endl;
 
   cout << endl;
 

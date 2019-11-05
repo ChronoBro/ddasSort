@@ -85,6 +85,10 @@ void histo::histos(){
   h_PID_gated  = new TH2I("h_PID_gated","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
   hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",2000,0,2E9); // ms
+  hDecayTimeGS   = new TH1D("hDecayTimeGS","Implant-decay correlation time",2000,0,2E9); // ms
+  hDecayTimeEx   = new TH1D("hDecayTimeEx","Implant-decay correlation time",2000,0,2E9); // ms
+
+
 
   int Nbins = 500;
   double maxT = 100E9; //2 seconds

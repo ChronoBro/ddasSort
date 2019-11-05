@@ -74,6 +74,8 @@ class histo
   TH2I  *hImplantXY;
   TH2I  *hDecayXY;
   TH1D  *hDecayTime;
+  TH1D  *hDecayTimeGS;
+  TH1D  *hDecayTimeEx;
   TH1D  *hDecayTimeLog;
   TH2D  *hDecayTimeLogVsDecayEtot;
   TH1D  *hDecayTimeEgate;

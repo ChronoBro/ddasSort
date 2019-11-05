@@ -50,6 +50,14 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  ){
 
 	Histo->hDecayTime->Fill(frontEvent.time-implantTime);
+	if(frontEvent.energy > 3000 && frontEvent.energy < 3800){
+	  Histo->hDecayTimeEx->Fill(frontEvent.time-implantTime);
+	}
+	if(frontEvent.energy > 3800 && frontEvent.energy < 4600){
+	  Histo->hDecayTimeGS->Fill(frontEvent.time-implantTime);
+	}
+
+
 	Histo->hDecayEnergy->Fill(frontEvent.energy);
 	//Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
 	//counterList.count("decays");
