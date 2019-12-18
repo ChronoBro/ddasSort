@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(/home/hoff/Projects/e12024/Analysis/lib/libddaschannel.so) //somehow this just tells ROOT to load this library before the script, no '.L libddashchannel.so' necessary
+R__LOAD_LIBRARY(../lib/libddaschannel.so) //somehow this just tells ROOT to load this library before the script, no '.L libddashchannel.so' necessary
 
 #include <vector>
 #include <sstream>
