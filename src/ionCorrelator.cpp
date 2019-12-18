@@ -31,14 +31,14 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
   for(auto& frontEvent : frontEvents){
     double frontStrip = frontEvent.channel - 64.;
 
-    if(frontEvent.energy <1500){ //apparently I needed this low energy gate for the filter to only work on things that were actually BAD 9/22/2019
+    //if(frontEvent.energy <1500){ //apparently I needed this low energy gate for the filter to only work on things that were actually BAD 9/22/2019
       RBDDTrace test2(frontEvent.trace);
 
-      if(!test2.filter()){ // filter() returns true if passes filter
-	break;
-      }
+      //if(!test2.filter()){ // filter() returns true if passes filter
+      //break;
+      //}
 
-    }
+      //}
 
     for(auto& backEvent : backEvents){
       double backStrip = backEvent.channel -144.;
@@ -101,7 +101,10 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	decayBack = backEvent;;
 	foundDecay = true;
 
+	Histo->trace_vs_signal->Fill(test2.GetQDC(),frontEvent.signal);
+
 	return foundDecay;
+	//break;
 
       }//end valid decay restriction
 

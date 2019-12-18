@@ -22,3 +22,4 @@ src/*~
 objs/*.o
 scripts/*#
 scripts/*~
+link_remote.sh

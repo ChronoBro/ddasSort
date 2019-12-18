@@ -63,6 +63,8 @@ class histo
 //  TH1I  *h_mult_B_A;
 //  TH2I  *h_DSSD_hits_A;
 
+  TH2D  * trace_vs_signal;
+
   TH2D  *h_cal_summary;
   TH1D  *h_cal_DSSD[80];
   TH2D  *h_EFEB;

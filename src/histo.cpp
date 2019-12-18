@@ -88,7 +88,7 @@ void histo::histos(){
   hDecayTimeGS   = new TH1D("hDecayTimeGS","Implant-decay correlation time",2000,0,2E9); // ms
   hDecayTimeEx   = new TH1D("hDecayTimeEx","Implant-decay correlation time",2000,0,2E9); // ms
 
-
+  trace_vs_signal = new TH2D("trace_vs_signal","trace_vs_signal",2E4,-1E6,1E6,1000,-1E4,1E5);
 
   int Nbins = 500;
   double maxT = 100E9; //2 seconds

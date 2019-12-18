@@ -14,12 +14,15 @@ LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libd
 
 all: sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
 
-root: src/DDASdict.cpp
+root:  objs src/DDASdict.cpp
+
+objs: 
+	mkdir -p objs	
 
 src/DDASdict.cpp: $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
 	rootcint -f src/DDASdict.cpp $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
 
-objs/DDASdict.o: src/DDASdict.cpp
+objs/DDASdict.o: objs src/DDASdict.cpp
 
 $(ALLOBJECTS): $(OBJDIR)%.o : $(SRCDIR)%.cpp
 	$(COMPILER) $(CFLAGS) $< -o $@
