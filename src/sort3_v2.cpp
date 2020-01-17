@@ -326,9 +326,9 @@ int main(int argc,char *argv[]){
   
   // Load PID gate
 
-  TFile *fGateFile = new TFile("PIDGates2.root","READ");
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  TFile *fGateFile = new TFile("root-files/PIDGates2.root","READ");
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
@@ -420,7 +420,7 @@ int main(int argc,char *argv[]){
     double promptWindow   =  1000;
     double coinGammaWindow=  1000;        // Time (ns)
     double corrWindow     =  5E9;//10E9;//1E9;        // Time (ns)  now 1000ms (1s)
-    double waitWindow     =  5E4;//1E5 =  0.1 ms
+    double waitWindow     =  5E3;//5E4;//1E5 =  0.1 ms //changing to 5E3 to try and reproduce OG data
 
     bool foundIonOfInterest = false;
     bool foundImplant = false;
@@ -443,6 +443,7 @@ int main(int argc,char *argv[]){
     dataChain.GetEntry(iEntry);
     buffer.fillEvent(curChannel, pDDASEvent);
     foundTrigger = trigger.fillEvent(buffer.getFillerEvent());
+    
 
     //tring to see if XFP could be useful
     // foundXFP = XFP_CFD.fillEvent(buffer.getFillerEvent());
@@ -498,7 +499,7 @@ int main(int argc,char *argv[]){
     //dump buffer into detectors
     //cout << endl;
     for(auto & bufferEvent : buffer.getEvents()){
-
+      
       //cout << bufferEvent.channel << endl;
       //cout << setprecision(15) << bufferEvent.time << endl;
 
@@ -547,19 +548,19 @@ int main(int argc,char *argv[]){
                                               // DONE
       foundIonOfInterest = true;              //--->can also add other gates to find other ions
       counterList.count("foundIon");
-
+      
       //only want to read out prompt gammas if gated on ion
 
-      if(checkSEGA){ //readout prompt gammas
-	for(auto & SEGAdet : SEGA){
+      // if(checkSEGA){ //readout prompt gammas
+      // 	for(auto & SEGAdet : SEGA){
 	
-	  for(auto segaEvent : SEGAdet.getEvents()){
-	    Histo->hPromptGammaEnergy->Fill(segaEvent.energy);
-	    Histo->h_PromptGamma_summary->Fill(segaEvent.channel,segaEvent.energy);
-	  }
+      // 	  for(auto segaEvent : SEGAdet.getEvents()){
+      // 	    Histo->hPromptGammaEnergy->Fill(segaEvent.energy);
+      // 	    Histo->h_PromptGamma_summary->Fill(segaEvent.channel,segaEvent.energy);
+      // 	  }
 
-	}
-      }
+      // 	}
+      // }
 
       //andy wants me to read out traces for DSSD implantation events
 
@@ -570,6 +571,7 @@ int main(int argc,char *argv[]){
 
     //need to do a waveform analysis of the back strips in order to choose the correct implantation pixel
     //this might require you to refactor your code, which was already the plan
+
 
     unsigned int Emax = 0;
     double implantTime = 0;
@@ -582,6 +584,7 @@ int main(int argc,char *argv[]){
 	double max = trace.GetMaximum();
 	double QDC = trace.GetQDC();
 
+	QDC = frontEvent.signal; // 1/10/2020 OG data used signal from implants
 	//if(frontEvent.signal > Emax){
 	if(QDC > Emax){
 	  //Emax = frontEvent.signal;
@@ -592,15 +595,22 @@ int main(int argc,char *argv[]){
 
       }
     }
+
+    // if(counterList.returnValue("foundIon") == 3){
+    //   cout << "let me do stuff" << endl;
+    // }
+
     
     //removing bad strips
-    if(fImplantEFMaxStrip == 3 || fImplantEFMaxStrip == 14 || fImplantEFMaxStrip == 15){// || fImplantEFMaxStrip == 0 || fImplantEFMaxStrip == 39 ){ //these strips have bad hi gain calibrations, I shoudl hvae thrown                  
+    if(fImplantEFMaxStrip == 3 || fImplantEFMaxStrip == 14){// || fImplantEFMaxStrip == 15){// || fImplantEFMaxStrip == 0 || fImplantEFMaxStrip == 39 ){ //these strips have bad hi gain calibrations, I shoudl hvae thrown                  
                                                              //them out earlier 5-7-2019
                                                              //appears to be working now with buffer clear 5-8-2019
+                                                             // 1/10/2020 attempting to reproduce OG data. strip 15 was present for this
       buffer.clear();
       continue;
 
     }
+
 
     Emax=0;
     for(auto & backs : DSSDbackLoGain){	  
@@ -611,6 +621,7 @@ int main(int argc,char *argv[]){
 	double max = trace.GetMaximum();
 	double QDC = trace.GetQDC();
 
+	QDC = backEvent.signal;
 	//if(backEvent.signal > Emax){
 	if(QDC > Emax){
 	  //Emax = backEvent.signal;
@@ -620,6 +631,8 @@ int main(int argc,char *argv[]){
 
       }	
     }
+
+
 
     //readout implantation traces from LoGain for highest energy signal
     //so much energy is deposited it appears that the High gains fire multiple times in coincidence window
@@ -689,6 +702,8 @@ int main(int argc,char *argv[]){
 
     //only take events where the implantation event was found
     if(!foundIonOfInterest){continue;}
+
+
 
     //check multiplicity of implant events when Ion of interest is found
     Histo->h_mult_F_implant->Fill(counterList.returnValue("frontImplantMult"));
@@ -803,7 +818,9 @@ int main(int argc,char *argv[]){
       }
 
       //I'll try this condition to see if I pick more events
-      if(secondImplant && (buffer.getFillerEvent().time-triggerTime) < 3E8 ){counterList.count("lostIonSecondImplant");break;}
+      //if(secondImplant && (buffer.getFillerEvent().time-triggerTime) < 3E8 ){counterList.count("lostIonSecondImplant");break;}
+      if(secondImplant){counterList.count("lostIonSecondImplant");break;}
+      // 1/9/2020 only thing I can think of that's different in this file than 5/9/2019 file for publishing that is different is second implant condition which should give more events... unfortunately this does not seem to be the culprit
 
       //cout << "found DSSD" << endl;
       //cout << buffer.getEvents().size() << endl;
@@ -868,6 +885,8 @@ int main(int argc,char *argv[]){
                                           // on spurious events
                                           // Long wait window (0.1ms) and removal of this added a lot more low energy events
 
+      EdiffPercentThreshold = 0.5;// 1/10/2020 I believe for OG data this was turned on. Would explain extraneous stuff in new data set
+
       double Ethreshold = 100; //keV <--- setting threshold has a large impact on decays seen, likely from large number of background betas
                                // 100 keV cuts out very low energy noise ~98 keV
 
@@ -923,7 +942,7 @@ int main(int argc,char *argv[]){
 
 	//this is really only an issue for very low energy events ( <600keV )
 	//found this issue happening for an event ~1200 keV so I will open this up a little
-	if(decayEventFront.energy < 1500){
+	if(decayEventFront.energy < 1500){ //originally had 1500
 	  double base = 0;
 	  double qdc0 = 0;
 	  double max = 0;
@@ -1075,9 +1094,21 @@ int main(int argc,char *argv[]){
 	  
 	}
 	
-	if(decayTime < TGate){Histo->hDecayEnergyTot_TGate->Fill(Etot);} //events found in first 200 ms
-	if(decayTime > 1E9){Histo->hDecayEnergyTotBackground->Fill(Etot);}
+	//setting up sourData for Nature
+	ofstream sourceData("sourceDataNature.txt",ofstream::app);	
+	//ofstream sourceDataBackground("sourceDataBackgroundNature.txt",ofstream::app);
 
+	//sourceData << "Event #" << counterList.returnValue("decays") << "\t";
+	sourceData << Etot << "\t" << reportedTime/1.0E6;
+	//sourceData << "Time = " << reportedTime/1.0E6 << endl;
+
+	
+	if(decayTime < TGate){Histo->hDecayEnergyTot_TGate->Fill(Etot);
+	} //events found in first 200 ms
+	if(decayTime > 1E9){Histo->hDecayEnergyTotBackground->Fill(Etot);
+	}
+
+	int it = 0;
 	for(auto & segaEvent : segaEvents.getEvents()){
 	  Histo->hGammaEnergy->Fill(segaEvent.energy);
 	  Histo->hGammaVsDecay->Fill(reportedE,segaEvent.energy);
@@ -1085,9 +1116,22 @@ int main(int argc,char *argv[]){
 	  //if( abs(segaEvent.time - DSSDtime) < promptWindow/2. ){Histo->hGammaVsDecayTGated->Fill(reportedE,segaEvent.energy);}
 	  if(decayTime < TGate){Histo->hGammaVsDecayTGated->Fill(Etot,segaEvent.energy);}
 	  if(segaEvent.energy > 708 && segaEvent.energy < 712){cout << endl << "710 gamma ray event in det# " << segaEvent.channel-16 << endl;}
+	  //sourceData << "Gamma E = " << segaEvent.energy << endl;
+	  if(it==0){
+	    sourceData << "\t" << segaEvent.energy << endl;
+	  }
+	  else{sourceData << "\t\t" << segaEvent.energy << endl;}
+	  //sourceDataBackground << "Gamma E = " << segaEvent.energy << endl;
+	  it++;
 	}
+	
+	//closing sourceDataFile
+	sourceData << endl;
+	//sourceDataBackground << endl;
+	sourceData.close();
+	//sourceDataBackground.close();
+
 	//check calibrations to investigate large energy values
-	  
 	Histo->hDecayEnergy->Fill(reportedE);
 	Histo->hDecayEnergyTot->Fill(Etot);
 	Histo->hDecayTime->Fill(reportedTime);

@@ -8,7 +8,7 @@ OBJECTS = objs/histo.o objs/ddasDet.o objs/ddasArray.o objs/ddasDSSD.o objs/diag
 #ALLOBJECTS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 ALLOBJECTS := $(patsubst $(SRCDIR)%.cpp,$(OBJDIR)%.o,$(wildcard $(SRCDIR)*.cpp))
 
-CFLAGS= -c -O2 -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
+CFLAGS= -c -fPIC -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 

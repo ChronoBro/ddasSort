@@ -1,5 +1,6 @@
 #include "ionCorrelator.h"
-
+#include "TFile.h"
+#include "TCutG.h"
 
 ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo0){
   implantFront = implantFront0;
@@ -28,15 +29,27 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
   //std::cout << "I'm in ionCorrelator::analyze()" << std::endl;
 
+  double frontAddBackE = 0.;
+
+  TFile* filterFile = new TFile("root-files/filter.root");
+  TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
+
   for(auto& frontEvent : frontEvents){
     double frontStrip = frontEvent.channel - 64.;
 
     //if(frontEvent.energy <1500){ //apparently I needed this low energy gate for the filter to only work on things that were actually BAD 9/22/2019
       RBDDTrace test2(frontEvent.trace);
 
-      //if(!test2.filter()){ // filter() returns true if passes filter
-      //break;
-      //}
+      Histo->trace_vs_signal->Fill(test2.GetQDC(), frontEvent.signal);
+
+      if( !filter->IsInside(test2.GetQDC(), frontEvent.signal) )
+	{
+	  break;
+	}
+
+      // if(!test2.filter() && frontEvent.energy > 1200){ // filter() returns true if passes filter
+      // break;
+      // }
 
       //}
 

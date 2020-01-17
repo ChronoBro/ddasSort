@@ -274,8 +274,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
@@ -532,7 +532,7 @@ int main(int argc,char *argv[]){
       Histo->h_PID_gated->Fill(curTOF,PIN1energy);
 
       double Ethreshold=100.;
-      double stripTolerance=3.;
+      double stripTolerance=2.;//3.;
 
       ionCorrelator ionOfInterest(corrWindow, Ethreshold, stripTolerance, frontImplant, backImplant, Histo); 
       
@@ -587,9 +587,18 @@ int main(int argc,char *argv[]){
 	  for(auto & ion : implantedIonList){
 	    if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
 	      counterList.count("decays");
+	      double TGate = 2E8;
+	      if(ion.getDecayTime() < TGate){
+		Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
+	      }
+	      else{
+		Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
+	      }
+	  
 	    }
+	  
 	  }
-
+	
 
 
 

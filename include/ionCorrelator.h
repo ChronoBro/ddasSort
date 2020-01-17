@@ -50,6 +50,8 @@ public:
   int getImplantFrontStrip(){return frontImplantStrip;}
   int getImplantBackStrip(){return backImplantStrip;}
 
+  double getDecayTime(){return(decayFront.time-implantFront.time);}
+
   bool implantOverlap(int frontStrip, int backStrip){
     if( abs(frontStrip - frontImplantStrip) < 2*stripTolerance-1.){ //to take into account possible overlap of decays
       
