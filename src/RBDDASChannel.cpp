@@ -41,6 +41,19 @@ void RBDDASChannel::setEventPointer(DDASEvent* event){
  
 }
 
+int RBDDASChannel::channelMap(){
+  
+  int channelsPerSlot = 16;
+  int slotsPerCrate = 13;
+  
+  //old map for e12024
+  return curChannel->GetCrateID()*64+(curChannel->GetSlotID()-2)*16+curChannel->GetChannelID();
+
+  //what I think the unique map should be
+  //return curChannel->GetCrateID()*slotsPerCrate*channelsPerSlot+(curChannel->GetSlotID)*channelsPerSlot + curChannel->GetChannelID();
+  
+}
+
 void RBDDASChannel::unpack(){
   
   if(isPointerSet){

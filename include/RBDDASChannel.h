@@ -30,7 +30,7 @@ class RBDDASChannel : public RBDDChannel
   void unpack();
   void setEventPointer(ddaschannel*, DDASEvent*);
   void setEventPointer(DDASEvent*);
-
+  int channelMap();
 
   Int_t                 GetChanNo(){return fChanNo;}
   ULong64_t             GetTimestamp(){return fTimestamp;} // Value of time counter
