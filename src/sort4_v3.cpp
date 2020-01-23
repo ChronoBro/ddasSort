@@ -399,7 +399,7 @@ int main(int argc,char *argv[]){
 
     bool needIonOverlapCheck = oldIonNumber != implantedIonList.size();
 
-    //clear detectors defined outside of event loop that had they're data operated on already
+    //Clear Detectors defined outside of event loop that had they're data operated on already
     eventHandler->clear();
 
     //normal use

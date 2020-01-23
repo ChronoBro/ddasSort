@@ -7,6 +7,11 @@ name = "e12024"
 dataDir = "remote/root-files/" # Assumes NSCL ddasDumper + UnbuildData.C format
 #Also, don't forget the / at the end of directories!
 
+[Analysis]
+coinWindow = 5000 # 5us
+corrWindow = 5E9 # 5s
+stripTolerance = 3
+
 #For detector arrays, by calling [[Arrays]] this will add to the list of Arrays
 [[Arrays]]
 name = "DSSDfrontHiGain"
@@ -22,6 +27,7 @@ channelListFile = "IDK"
 [[Arrays]]
 name = "DSSDbackHiGain"
 calibrationFile = "Calibrations/alphaBack.dat"
+
 
 [[Arrays]]
 name = "DSSDbackLoGain"

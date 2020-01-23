@@ -39,7 +39,8 @@ class RBDDTriggeredEvent : public TNamed
   Int_t triggerChanNo;
 
   //creating list of pointers to point directly to detector objects, this should remove unnecessary loops over detector objects
-  static const int maxChannels = 256;  //hardcoding limit is not a great idea, but will be the simplest to implement for testing and such
+  static const int maxChannels = 1024;  //hardcoding limit is not a great idea, but will be the simplest to implement for testing and such
+  //maxChannels should be the same as number of detector objects in config.h
   RBDDdet *liveDets[maxChannels];
   void setNull();
                                   //note: instantiated RBDDChannel needs to be a pointer since this is an abstract class
