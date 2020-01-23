@@ -8,6 +8,7 @@
 #include "math.h"
 #include <algorithm>
 #include "event.h"
+#include <string>
 
 class RBDDdet{
  public:
@@ -29,6 +30,8 @@ class RBDDdet{
   int getAssignedChannel(){return assignedChannel;}
   void setAssignedChannel(int givenChannel){assignedChannel = givenChannel;}
   void Print();
+  string getName(){return name;}
+  void setName(string name0){name = name0;}
 
  private:
   int assignedChannel;
@@ -38,7 +41,7 @@ class RBDDdet{
   std::vector<double> params;
   Event fillerEvent;
   //would be nice to have some kind of geometry attached to these
-
+  string name;
 
 };
 #endif

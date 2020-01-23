@@ -4,6 +4,7 @@
 
 #include "RBDDdet.h"
 #include "RBDDTrace.h"
+#include <string>
 
 class RBDDarray{
 
@@ -31,6 +32,8 @@ class RBDDarray{
   void addDet(RBDDdet &det){detectors.push_back(&det);channelList.push_back(det.getAssignedChannel());}
   void erase(int i){auto it = eventList.begin()+i;eventList.erase(it);}
   std::vector<RBDDdet*> getDetectors(){return detectors;}
+  string getName(){return name;}
+  void setName(string name0){name = name0;}
 
   void fillArray();
 
@@ -40,6 +43,8 @@ class RBDDarray{
   std::vector<RBDDdet*> detectors;
   std::vector<Event> eventList;
   std::vector<int> channelList;
+  string name;
+
 
 };
 #endif
