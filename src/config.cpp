@@ -43,7 +43,10 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
 
 	}
 	else{
-	  //std::cout << "Couldn't find file " << infile.str() << "                        " << std::endl; 
+
+	  if(subRun ==0){
+	    std::cout << "Couldn't find file " << infile.str() << "                        " << std::endl; 
+	  }
 	  break;
 	}
       } 
@@ -71,11 +74,14 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
       arrayObjects[iArray].setName(*name);
 
 
-      if(cal){
+      if(cal && exists_test(*cal)){
 	std::ifstream calibFile(*cal);
+	std::cout << "Loaded " << *cal << std::endl;
 	while(!calibFile.eof()){
-	  calibFile >> chan >> slope >> offset;
-	  
+	  calibFile >> chan >> offset >> slope;
+	 
+	  //std::cout << chan << " " << offset << " " << slope << std::endl;
+ 
 	  std::vector<double> params;
 	  params.push_back(offset);
 	  params.push_back(slope);
@@ -85,20 +91,26 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
 	  arrayObjects[iArray].addDet(detectorObjects[chan]);
 	}
       }
-      else if(map){
+      else if(map && exists_test(*map)){
 	std::ifstream channelFile(*map);
-	channelFile >> chan;
-	detectorObjects[chan].setAssignedChannel(chan);
-	arrayObjects[iArray].addDet(detectorObjects[chan]);
+	std::cout << "Loaded" << *map << std::endl;
+	while(!channelFile.eof()){
+	  channelFile >> chan;
+	  //std::cout << "here?" << std::endl;
+	  //std::cout << chan << std::endl;
+	  detectorObjects[chan].setAssignedChannel(chan);
+	  arrayObjects[iArray].addDet(detectorObjects[chan]);
+	  }
       }
       else{
-	std::cout << "Need to have channel map file specified in config file, aborting..." << std::endl;
+	std::cout << "Didn't find calibration or channel map file, aborting..." << std::endl;
 	abort();
       }
 
       iArray++;
     }
-    
+
+    std::cout << std::endl;    
     auto Dets = config->get_table_array("Detectors");
     
     for (const auto& table : *Dets){

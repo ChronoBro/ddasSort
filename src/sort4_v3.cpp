@@ -426,6 +426,8 @@ int main(int argc,char *argv[]){
       // nevermind?
       //eventHandler->dumpBuffer();       
 
+      //eventHandler->Print();
+
       foundTOF = TOF.getEvents().size() > 0; 
 
       if(foundTOF){ //check that TOF actually got filled

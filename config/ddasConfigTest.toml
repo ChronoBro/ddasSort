@@ -21,13 +21,12 @@ calibrationFile = "Calibrations/alphaCalibFrontDSSD.dat"
 
 [[Arrays]]
 name = "DSSDloGainFront"
-channelListFile = "DSSDloFrontChannels.dat"
+channelListFile = "Calibrations/DSSDloFrontChannels.dat"
 #need to provide channel list at very least
 
 [[Arrays]]
 name = "DSSDhiGainBack"
 calibrationFile = "Calibrations/alphaCalibBackDSSD.dat"
-
 
 [[Arrays]]
 name = "DSSDloGainBack"
@@ -44,11 +43,11 @@ calibrationFile = "Calibrations/alphaCalibrationSSD.dat"
 #For singular detectors, similarly this will add to a list of Detectors
 [[Detectors]]
 name = "PIN1"
-channel = 1
+channel = 0
 
 [[Detectors]]
 name = "PIN2"
-channel = 2
+channel = 1
 
 [[Detectors]]
 name = "TOF"

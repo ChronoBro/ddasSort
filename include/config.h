@@ -22,8 +22,8 @@ class config{
   RBDDarray getArray(std::string arrayName);
   RBDDdet getDet(std::string detName);
 
-  double getCoinWindow(){return corrWindow;}
-  double getCorrWindow(){return coinWindow;}
+  double getCoinWindow(){return coinWindow;}
+  double getCorrWindow(){return corrWindow;}
   double getStripTolerance(){return stripTolerance;}
  
  private:
