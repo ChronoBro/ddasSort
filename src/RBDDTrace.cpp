@@ -95,7 +95,7 @@ Double_t RBDDTrace::FindPeak()
 {
   /*Need to implement*/
   
-
+  return 0;
 
 }
 
@@ -168,7 +168,8 @@ Double_t RBDDTrace::GetSum(Int_t sumWinID)
 Double_t RBDDTrace::GetSum(Double_t winBegin, Double_t winEnd)
 {
   //
-  
+
+  return 0;
 }
 
 //______________________________________________________________________________
@@ -176,13 +177,13 @@ Int_t    RBDDTrace::GetSumAndStore(Double_t winBegin, Double_t winEnd)
 {
   //
   
-  
+  return 0;
 }
 
 //______________________________________________________________________________
 Double_t RBDDTrace::GetCFDTime(Double_t fraction)
 {
-  
+  return 0;
 }
 
 

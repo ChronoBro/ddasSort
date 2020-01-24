@@ -19,7 +19,14 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
     auto config = cpptoml::parse_file(configName);
 
     auto dataDir = config->get_qualified_as<std::string>("Experiment.dataDir");
+    auto Lab = config->get_qualified_as<std::string>("Experiment.Lab");
+    auto name = config->get_qualified_as<std::string>("Experiment.name");
 
+    std::cout << std::endl;
+    if(Lab && name){
+      std::cout << "Searching for data taken at " << *Lab << " in Exp. " << *name << std::endl;
+    }
+    std::cout << std::endl;
 
     int maxSubRun = 9;
     for(int iFile=runStart;iFile<=runEnd;iFile++){
