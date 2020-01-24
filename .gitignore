@@ -19,6 +19,7 @@ include/*#
 include/*~
 src/*#
 src/*~
+!src/sort5.cpp
 objs/*.o
 scripts/*#
 scripts/*~
