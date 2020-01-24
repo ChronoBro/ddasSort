@@ -11,3 +11,5 @@ To get started:
 
 
 With the latest version, **sort5**, one can use a [TOML](https://github.com/toml-lang/toml) configuration file to point to the data and setup all of the detector objects. This is parsed using [cpptoml](https://github.com/skystrife/cpptoml). Sample configuration and calibration files are provided.
+
+Until I find a better way to sprinkle in histograms, one needs to declare histogram names in *include/histo.h* and then instatiate them in *src/histo.cpp*. 
