@@ -26,3 +26,4 @@ link_remote.sh
 Calibrations/*
 !Calibrations/*.dat
 lib
+scripts/getCal.C
