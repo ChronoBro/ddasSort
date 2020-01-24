@@ -625,6 +625,7 @@ void RBDDTriggeredEvent::clear(){
 
 void RBDDTriggeredEvent::Print(){
 
+  cout << "START: " << endl;
   for(int i=0;i<maxChannels;i++){
 
     if(liveDets[i]!=NULL){
@@ -634,5 +635,7 @@ void RBDDTriggeredEvent::Print(){
 
   }
 
+  cout << "STOP" << endl;
+  cout << endl;
 
 }

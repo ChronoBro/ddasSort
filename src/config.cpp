@@ -83,7 +83,7 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
 
       if(cal && exists_test(*cal)){
 	std::ifstream calibFile(*cal);
-	std::cout << "Loaded " << *cal << std::endl;
+	std::cout << "Loaded: " << *cal << std::endl;
 	while(!calibFile.eof()){
 	  calibFile >> chan >> offset >> slope;
 	 
@@ -100,7 +100,7 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
       }
       else if(map && exists_test(*map)){
 	std::ifstream channelFile(*map);
-	std::cout << "Loaded" << *map << std::endl;
+	std::cout << "Loaded: " << *map << std::endl;
 	while(!channelFile.eof()){
 	  channelFile >> chan;
 	  //std::cout << "here?" << std::endl;
