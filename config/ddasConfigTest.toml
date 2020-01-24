@@ -14,28 +14,32 @@ stripTolerance = 3
 
 #For detector arrays, by calling [[Arrays]] this will add to the list of Arrays
 [[Arrays]]
-name = "DSSDfrontHiGain"
-calibrationFile = "Calibrations/alphaFront.dat" 
+name = "DSSDhiGainFront"
+calibrationFile = "Calibrations/alphaCalibFrontDSSD.dat" 
 #can store channels in this file, look at provided file for example
 #REMEMBER - all channels are defined by unique channel mapping function defined in RBDDASChannel.cpp
 
 [[Arrays]]
-name = "DSSDfrontLoGain"
-channelListFile = "IDK"
+name = "DSSDloGainFront"
+channelListFile = "DSSDloFrontChannels.dat"
 #need to provide channel list at very least
 
 [[Arrays]]
-name = "DSSDbackHiGain"
-calibrationFile = "Calibrations/alphaBack.dat"
+name = "DSSDhiGainBack"
+calibrationFile = "Calibrations/alphaCalibBackDSSD.dat"
 
 
 [[Arrays]]
-name = "DSSDbackLoGain"
-channelListFile = "IDK"
+name = "DSSDloGainBack"
+channelListFile = "Calibrations/DSSDloBackChannels.dat"
 
 [[Arrays]]
 name = "SeGA"
-calibrationFile = "IDK"
+calibrationFile = "Calibrations/SeGACalib.dat"
+
+[[Arrays]]
+name = "SSD"
+calibrationFile = "Calibrations/alphaCalibrationSSD.dat"
 
 #For singular detectors, similarly this will add to a list of Detectors
 [[Detectors]]
@@ -50,3 +54,6 @@ channel = 2
 name = "TOF"
 channel = 5
 
+[[Detectors]]
+name = "XFP"
+channel = 6

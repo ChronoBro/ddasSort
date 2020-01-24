@@ -8,16 +8,17 @@ inline bool config::exists_test (const std::string& name) {
 }
 
 
-config::config(std::string configName, int runStart, int runEnd){
+config::config(std::string configName, int runStart, int runEnd, TChain &dataChainObject){
 
-  dataChainObject.SetName("dchan");
+  //dataChainObject.SetName("dchan");
+  //dataChainObject = new TChain("dchan");
 
   if(exists_test(configName)){
 
     //parsing configuration file
     auto config = cpptoml::parse_file(configName);
 
-    auto dataDir = config->get_as<std::string>("dataDir");
+    auto dataDir = config->get_qualified_as<std::string>("Experiment.dataDir");
 
 
     int maxSubRun = 9;
@@ -42,7 +43,7 @@ config::config(std::string configName, int runStart, int runEnd){
 
 	}
 	else{
-	  ////std::cout << "Couldn't find file " << infile.str() << "                        " << std::endl; 
+	  //std::cout << "Couldn't find file " << infile.str() << "                        " << std::endl; 
 	  break;
 	}
       } 
@@ -107,9 +108,20 @@ config::config(std::string configName, int runStart, int runEnd){
       detectorObjects[*channel].setName(*name);
     }
     
+
+    auto coinWin = config->get_qualified_as<double>("Analysis.coinWindow");
+    coinWindow = *coinWin;
+
+    auto corrWin = config->get_qualified_as<double>("Analysis.corrWindow");
+    corrWindow = *corrWin;
+
+    auto stripTol = config->get_qualified_as<double>("Analysis.stripTolerance");
+    stripTolerance = *stripTol;
+    
+
   }
   else{
-    std::cout << "Couldn't find configuration file, aborting..." << std::endl;
+    std::cout << "Couldn't find configuration file, " << configName << ", aborting..." << std::endl;
     abort();
   }
 
@@ -141,3 +153,4 @@ RBDDdet config::getDet(std::string detName){
 
 
 }
+

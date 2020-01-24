@@ -12,7 +12,7 @@ CFLAGS= -c -fPIC -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 
-all: sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
+all: sort5 sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
 
 root:  objs src/DDASdict.cpp
 
@@ -53,6 +53,9 @@ sort4_v2: objs/sort4_v2.o $(OBJECTS) src/DDASdict.cpp
 
 sort4_v3: objs/sort4_v3.o $(OBJECTS) src/DDASdict.cpp
 	$(COMPILER) -o sort4_v3 objs/sort4_v3.o $(OBJECTS) $(LINKOPTION)
+
+sort5: objs/sort5.o $(OBJECTS) src/DDASdict.cpp
+	$(COMPILER) -o sort5 objs/sort5.o $(OBJECTS) $(LINKOPTION)
 
 andyBuild: objs/andyBuild.o $(OBJECTS)
 	$(COMPILER) -o andyBuild objs/andyBuild.o $(OBJECTS) $(LINKOPTION)
