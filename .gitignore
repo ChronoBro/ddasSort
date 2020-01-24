@@ -20,6 +20,7 @@ include/*~
 src/*#
 src/*~
 !src/sort5.cpp
+!src/sortPID.cpp
 objs/*.o
 scripts/*#
 scripts/*~
