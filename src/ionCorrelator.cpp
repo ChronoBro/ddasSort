@@ -33,6 +33,8 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
   TFile* filterFile = new TFile("root-files/filter.root");
   TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
+  filterFile->Close();
+  
 
   for(auto& frontEvent : frontEvents){
     double frontStrip = frontEvent.channel - 64.;
@@ -43,9 +45,9 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
       Histo->trace_vs_signal->Fill(test2.GetQDC(), frontEvent.signal);
 
       if( !filter->IsInside(test2.GetQDC(), frontEvent.signal) )
-	{
-	  break;
-	}
+      	{
+      	  break;
+      	}
 
       // if(!test2.filter() && frontEvent.energy > 1200){ // filter() returns true if passes filter
       // break;

@@ -128,6 +128,7 @@ void RBDDdet::Print(){
     //cout << "=====================Event List=====================" << std::endl;
   int i=1;
   for(auto & event : events){    
+    std::cout << std::setprecision(13);;
     std::cout << "Event     : " << i << std::endl;
     std::cout << "channel   : " << event.channel << std::endl;
     std::cout << "signal    : " << event.signal << std::endl;

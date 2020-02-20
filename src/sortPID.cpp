@@ -27,6 +27,20 @@ using namespace std;
 //not sure why... but this seems to be missing tons of stuff when I have this active 9/16/2019
 //may have been an issue with buffering which should be fixed now 9/21/2019
 //this condition was used to reproduce 73Sr data so it works fine 9/22/2019
+bool triggerCondition(int Chan){
+
+  //return true;
+
+  if(Chan >= 64 && Chan < 104) {
+    return true;
+  }
+  else if(Chan >= 144 && Chan < 184){
+    return true;
+  }
+  else{
+    return false;
+  }
+}
 
 int main(int argc,char *argv[]){
 
@@ -231,7 +245,7 @@ int main(int argc,char *argv[]){
 
       
     }
-
+    
     double curTime = eventHandler->GetBuffer().back().time;
     lastTime = curTime;
 

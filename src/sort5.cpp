@@ -80,11 +80,11 @@ int main(int argc,char *argv[]){
     outRootfile << s_outRootfile << ".root";
   }
   else{
-    cerr << "./sort5 configFile(no '.toml') firstRun# lastRun# outputFilename(no '.root')" << endl;
+    cerr << "Example: ./sort5 ddasConfigTest 100 101 myOutputFile" << endl;
     abort();
   }
 
-  TChain dataChain("dchan"); //dchan is name of tree is ddasdumped files
+  TChain dataChain("dchan"); //dchan is name of tree for ddasdumped files
 
   //reading in config file
   //because TChain doesn't have a copy function set I havee to feed it into config contructor
@@ -130,8 +130,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
@@ -362,6 +362,12 @@ int main(int argc,char *argv[]){
 	  frontDecayAddBack  = DSSDhiGainFront.addBack();
 	  backDecay = DSSDhiGainBack.maxE();
 
+
+	  // RBDDTrace test(frontDecay.trace);
+	  // if(test.GetQDC() < -50000.){
+	  //   std::cout << "bad channel = " << frontDecay.channel << std::endl;
+	  //   eventHandler->Print();
+	  // }
 
 	  for(auto & ion : implantedIonList){
 	    if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){

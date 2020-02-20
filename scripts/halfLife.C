@@ -45,7 +45,8 @@ void halfLife(){
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_bad+edgeStripRemoval_TGate100_5scorrWindow.root";
   //dataName << directory.str() << "secondImplantTest.root";
   //dataName << directory.str() << "run_95-110_processed.root";
-  dataName << directory.str() << "sort4_v3_73Sr_decayTimeEnergyGates.root";
+  //dataName << directory.str() << "sort4_v3_73Sr_decayTimeEnergyGates.root";
+  dataName << directory.str() << "sort4_v3_73Sr_correlator_TimeOut_AddBack_Filter.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow.root";
   //dataName << directory.str() << "test71Kr.root";
   //dataName << directory.str() << "test101.root";
@@ -57,9 +58,9 @@ void halfLife(){
 
   TFile * data = new TFile(dataName.str().c_str());
   dataName.str("");
-  dataName.clear();
-  dataName << directory.str() << "sort3all71Kr_2.root";
-  TFile* data2 = new TFile(dataName.str().c_str());
+  // dataName.clear();
+  // dataName << directory.str() << "sort3all71Kr_2.root";
+  // TFile* data2 = new TFile(dataName.str().c_str());
   
 
   CdecayTime.cd();
@@ -243,7 +244,6 @@ void halfLife(){
   gr0->GetXaxis()->SetTitle("parameter 0 (constant)");
   gr0->GetYaxis()->SetTitle("parameter 1 (decayValue)");
   gr0->SetTitle("1-sigma uncertainties on fit parameters");
-
 
 
 }

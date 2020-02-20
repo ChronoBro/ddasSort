@@ -466,16 +466,16 @@ class __attribute__((annotate("$clingAutoload$include/DDASEvent.h")))  DDASEvent
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";
-    static const char* classesHeaders[] = {
+    static const char* classesHeaders[]={
 "DDASEvent", payloadCode, "@",
 "ddaschannel", payloadCode, "@",
-nullptr
-};
+nullptr};
+
     static bool isInitialized = false;
     if (!isInitialized) {
       TROOT::RegisterModule("DDASdict",
         headers, includePaths, payloadCode, fwdDeclCode,
-        TriggerDictionaryInitialization_DDASdict_Impl, {}, classesHeaders, /*hasCxxModule*/false);
+        TriggerDictionaryInitialization_DDASdict_Impl, {}, classesHeaders, /*has no C++ module*/false);
       isInitialized = true;
     }
   }
