@@ -13,7 +13,7 @@ class RBDDarray{
   RBDDarray();
   ~RBDDarray();
   std::vector<Event> getEventList(){return eventList;}
-  void clear(){eventList.clear();for(auto & det : detectors){det->clear();}}
+  void clear(){if(eventList.size()>0){eventList.clear();for(auto & det : detectors){det->clear();}}}
   static bool compareE(const Event & event1, const Event & event2); //static makes there be only 1 copy of this function regardless of how many ddasDet's get implemented. Takes it up a level, out of the class, allowing it to be used in sorting
   static bool compareE_raw(const Event & event1, const Event & event2); //static makes there be only 1 copy of this function regardless of how many ddasDet's get implemented. Takes it up a level, out of the class, allowing it to be used in sorting
   static bool compareE_rawTrace(const Event & event1, const Event & event2);
