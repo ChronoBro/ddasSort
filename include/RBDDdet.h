@@ -21,7 +21,7 @@ class RBDDdet{
   int getChannelNumber(ddaschannel *dchan, int firstSlot) {return dchan->GetCrateID()*64+(dchan->GetSlotID()-firstSlot)*16+dchan->GetChannelID();}
   void reset(){events.clear();params.clear();isCalibrated=false;}
   void setCalibration(std::vector<double> par); //ordered list of polynomial parameters p0,p1,p2,...
-  void clear(){events.clear();}
+  void clear(){if(events.size()>0)events.clear();}
   Event getFillerEvent(){return fillerEvent;}
   void pop(){events.erase(events.begin());}
   void addEvent(Event event){events.push_back(event);}
