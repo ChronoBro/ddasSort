@@ -20,6 +20,7 @@ class RBDDarray{
   void sortE();
   void sortEraw();
   void sortErawTrace();
+  bool fired(return eventList.size() > 0;)
 
   Event maxE(){sortE();return eventList.front();}
   Event maxEraw(){sortEraw(); return eventList.front();}
