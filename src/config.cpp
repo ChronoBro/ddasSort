@@ -28,20 +28,37 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
     }
     std::cout << std::endl;
 
-    int maxSubRun = 9;
+    int maxSubRun = 99;
     for(int iFile=runStart;iFile<=runEnd;iFile++){
- 
+            
       for(int subRun = 0;subRun <= maxSubRun;subRun++){
 
 	std::stringstream infile;      
-
-	if(iFile>= 100){
-	  infile << *dataDir <<  "run-0" << iFile << "-0" << subRun << "_NoBuild.root";
+      
+	if(iFile>= 1000){
+	  infile << *dataDir <<  "run-" << iFile;
+	}	
+	else if(iFile>= 100){
+	  infile << *dataDir <<  "run-0" << iFile;
 	}
-	else{
-	  infile << *dataDir << "run-00" << iFile << "-0" << subRun << "_NoBuild.root";
+	else if(iFile>=10){
+	  infile << *dataDir << "run-00" << iFile;
 	}   
+	else{
+	  infile << *dataDir << "run-000" << iFile;
+	}
+	
+	//std::cout << subRun << std::endl;
+	
+	if(subRun>=10){
+	  infile << "-" << subRun << "_NoBuild.root";
+	}   
+	else{
+	  infile <<  "-0" << subRun << "_NoBuild.root";
+	}
 
+	//std::cout << infile.str().c_str() << std::endl;
+	
 	if( exists_test(infile.str()) ){
 
       

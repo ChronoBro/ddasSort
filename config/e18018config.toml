@@ -1,0 +1,69 @@
+# ddasSort Configuration file using TOML parser
+# <- For comments
+
+[Experiment]
+Lab = "NSCL"
+name = "e18018"
+dataDir = "/mnt/analysis/e18018/unbuilt/" # Assumes NSCL ddasDumper + UnbuildData.C format
+#Also, don't forget the / at the end of directories!
+#dataDir = "/home/mansi/ddasSort/" # Assumes NSCL ddasDumper + UnbuildData.C format
+
+[Analysis]
+coinWindow = 5000 # 5us
+#coinWindow = 2000 # 2us
+corrWindow = 5E9 # 5s
+stripTolerance = 3
+
+#For detector arrays, by calling [[Arrays]] this will add to the list of Arrays
+[[Arrays]]
+name = "DSSDhiGainFront"
+calibrationFile = "Calibrations/alphaCalibFrontDSSD.dat" 
+#can store channels in this file, look at provided file for example
+#REMEMBER - all channels are defined by unique channel mapping function defined in RBDDASChannel.cpp
+
+[[Arrays]]
+name = "DSSDloGainFront"
+channelListFile = "Calibrations/DSSDloFrontChannels.dat"
+#need to provide channel list at very least
+
+[[Arrays]]
+name = "DSSDhiGainBack"
+calibrationFile = "Calibrations/alphaCalibBackDSSD.dat"
+
+[[Arrays]]
+name = "DSSDloGainBack"
+channelListFile = "Calibrations/DSSDloBackChannels.dat"
+
+[[Arrays]]
+name = "Clovers"
+calibrationFile = "Calibrations/clovers.dat"
+
+[[Arrays]]
+name = "SSD"
+calibrationFile = "Calibrations/alphaCalibrationSSD.dat"
+
+[[Arrays]]
+name = "LaBr"
+calibrationFile = "Calibrations/LaBr.dat"
+
+#For singular detectors, similarly this will add to a list of Detectors
+[[Detectors]]
+name = "PIN1_XFP"
+channel = 176
+
+[[Detectors]]
+name = "PIN2_XFP"
+channel = 177
+
+[[Detectors]]
+name = "PIN1_RF"
+channel = 178
+
+[[Detectors]]
+name = "PIN1"
+channel = 181
+
+[[Detectors]]
+name = "PIN2"
+channel = 182
+

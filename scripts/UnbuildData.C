@@ -1,4 +1,4 @@
-R__LOAD_LIBRARY(../lib/libddaschannel.current.so)//have to update this to the libddaschannel.so that you built
+R__LOAD_LIBRARY(../lib/libddaschannel.so)//have to update this to the libddaschannel.so that you built
 
 #include <iostream>
 #include <TFile.h>
@@ -58,7 +58,6 @@ Int_t UnbuildData(const char* iFileName, const char* oFileName)
 void UnbuildDataFiles(const char* path, Int_t first, Int_t last){
   //
   Char_t name[500];
-
   TSystemDirectory sd("sd",path);
   TList *fileList = sd.GetListOfFiles();
   fileList->Sort();
@@ -70,7 +69,8 @@ void UnbuildDataFiles(const char* path, Int_t first, Int_t last){
         sprintf(name,"run-%04i-%02i.root",i,j);
         Char_t filePath[500], outFilePath[500];
         sprintf(filePath,"%s/%s",path,name);
-        sprintf(outFilePath,"%s/run-%04i-%02i_NoBuild.root",path,i,j);
+	//path += '../unbuilt';
+        sprintf(outFilePath,"%s/../unbuilt/run-%04i-%02i_NoBuild.root",path,i,j);
         if(strcmp(name,file->GetName())==0) UnbuildData(filePath,outFilePath);
       }
     }

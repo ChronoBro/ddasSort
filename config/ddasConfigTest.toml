@@ -4,9 +4,10 @@
 [Experiment]
 Lab = "NSCL"
 name = "e12024"
-dataDir = "remote/root-files/" # Assumes NSCL ddasDumper + UnbuildData.C format
+#dataDir = "remote/root-files/" # Assumes NSCL ddasDumper + UnbuildData.C format
 #Also, don't forget the / at the end of directories!
 
+dataDir = "/home/mansi/ddasSort/" # Assumes NSCL ddasDumper + UnbuildData.C format
 [Analysis]
 coinWindow = 5000 # 5us
 corrWindow = 5E9 # 5s

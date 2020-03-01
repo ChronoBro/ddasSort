@@ -17,6 +17,7 @@
 #include <TH1D.h>
 #include <TNamed.h>
 #include <TObject.h>
+#include <sstream>
 //#include <TTree.h>
 //#include <TList.h>
 
@@ -57,7 +58,7 @@ public:
   Double_t          FindPeak();//{/*need to implement*/}
   
   std::vector<Double_t> GetTrace(){return fTrace;}
-  TH1D*             GetTraceHisto();//{return fTraceHisto;}
+  TH1D*             GetTraceHisto(std::string nameTrace);//{return fTraceHisto;}
   Double_t          GetMaximum(); //max and QDC are calculated at the same time 
   Double_t          GetQDC();//this and above should just return values or do calculation if not done
   Double_t          GetBaseline();
@@ -70,7 +71,6 @@ public:
   void  SetBaseSampleFraction(double fraction){fBaseSampleFraction = fraction;}
   void  SetBaseSamples(Int_t nSamples){fBaseSamples = nSamples;}
   void  SetMSPS(double MSPS){fMSPS=MSPS;}
-
 
 
   //ClassDef(RBDDTrace,1); //comment this if I want to compile normally, otherwise I have to do some root trickery in the compilation

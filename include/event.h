@@ -5,7 +5,7 @@
 struct Event{
   double energy = -1;  //calibrated energy
   unsigned int signal = 0; //Raw signal
-  int channel = -1;
+  int channel = -100;
   double time = 0;
   long long int entry = -1;
   std::vector<unsigned short> trace;

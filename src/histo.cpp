@@ -82,6 +82,7 @@ void histo::histos(){
   h_raw_DSSD_hitsXY->GetYaxis()->SetTitle("y (mm)");
   
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
+  h_PID_PIN1_XFP        = new TH2I("h_PID_PIN1_XFP","PID PIN1 Energy vs PIN1-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PID_gated  = new TH2I("h_PID_gated","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
   hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",2000,0,2E9); // ms
@@ -114,21 +115,22 @@ void histo::histos(){
   hDecayTimeLogVsDecayEtot = new TH2D("hDecayTimeLogVsDecayEtot","time correlations with decay energy",10000,0,10000,Nbins,edges);
 
   hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",2000,0,2E9); // ms
-  hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",10000,0,10000);
-  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",20000,0,20000);
+  hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",20000,0,20000);
   hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",10000,0,10000);
-  hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",10000,0,10000);
-  hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
-  hDecayEnergyTot_firstEvent = new TH1D("hDecayEnergyTot_firstEvent","Decay energy (DSSD) first Event",10000,0,10000);
+  hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",20000,0,20000);
+  hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",20000,0,20000);
+  hDecayEnergyTot_firstEvent = new TH1D("hDecayEnergyTot_firstEvent","Decay energy (DSSD) first Event",10000,0,20000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hDecayEnergyBackground = new TH1D("hDecayEnergyBackground","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTotBackground = new TH1D("hDecayEnergyTotBackground","Decay energy (DSSD)",10000,0,10000);
 
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
   hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);
-  hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
-  hGammaVsDecayEtot = new TH2D("hGammaVsDecayEtot","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
-  hGammaVsDecayTGated = new TH2D("hGammaVsDecayTGated","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
+  hPromptGammaEnergy_gated = new TH1D("hPromptGammaEnergy_gated","SeGA gamma energy",10000,0,10000);
+  hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",1500,0,15000,20000,0,20000);
+  hGammaVsDecayEtot = new TH2D("hGammaVsDecayEtot","Gamma E vs Decay E",1500,0,15000,20000,0,20000);
+  hGammaVsDecayTGated = new TH2D("hGammaVsDecayTGated","Gamma E vs Decay E",1500,0,15000,20000,0,20000);
   hGammaVsDecayAll = new TH2D("hGammaVsDecayAll","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
   
@@ -146,6 +148,9 @@ void histo::histos(){
   calibratedSSDhiGain = new TH1D("calibratedSSDhiGainAll","SSD energy",10000,0,10000);
   rawScint = new TH1I("rawScint", "Raw Scintillator",(int)pow(2,10),0,pow(2,15));
 
+  expSummary = new TH2D("expSummary","Experiment Summary", 350, -0.5, 349.5,
+			4000,0,64000);
+  
 }
 
 

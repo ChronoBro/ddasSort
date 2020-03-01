@@ -188,13 +188,13 @@ Double_t RBDDTrace::GetCFDTime(Double_t fraction)
 
 
 
-TH1D* RBDDTrace::GetTraceHisto(){
+TH1D* RBDDTrace::GetTraceHisto(std::string nameTrace){
   if(!isHistCreated){
 
     double timeUnit = 1./fMSPS; //timeunit will be in us if in MEGA samples/second
 
     if(fTrace.size()>0){
-      fTraceHisto = new TH1D("trace","trace",fTrace.size(),0,(double)fTrace.size()*timeUnit);
+      fTraceHisto = new TH1D(nameTrace.c_str(),nameTrace.c_str(),fTrace.size(),0,(double)fTrace.size()*timeUnit);
       fTraceHisto->GetXaxis()->SetTitle("time (us)");
       for(unsigned int iBin=0;iBin<fTrace.size();iBin++){
 	fTraceHisto->SetBinContent(iBin,fTrace[iBin]-fB); //I like to remove baseline for plotting

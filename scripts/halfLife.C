@@ -3,7 +3,7 @@
 TCanvas CdecayTime("CdecayTime","CdecayTime",800,600);
 TCanvas CdecayEnergy("CdecayEnergy","CdecayEnergy", 800,600);
 TCanvas CdecayTimeError("CdecayTimeError","CdecayTimeError", 800,600);
-
+TCanvas CdecayTimeLog("CdecayTimeLog","CdecayTimeLog",800,600);
 
 Double_t logFit(double* x, double* par){
 
@@ -16,7 +16,7 @@ Double_t logFit(double* x, double* par){
 
 }
 
-void halfLife(){
+void halfLife(string dataName0){
   gStyle->SetOptStat(1); //turn off stat box on histogram
   //gStyle->SetOptFit(1111);
   
@@ -44,13 +44,19 @@ void halfLife(){
   //dataName << directory.str() << "sort3all73Sr_3stripTolerance_allBadStripRemoval_5sCorrWindow_EdiffThreshold.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_bad+edgeStripRemoval_TGate100_5scorrWindow.root";
   //dataName << directory.str() << "secondImplantTest.root";
-  //dataName << directory.str() << "run_95-110_processed.root";
-  dataName << directory.str() << "sort4_v3_73Sr_decayTimeEnergyGates.root";
+  //dataName << directory.str() << "run_90_processed.root";
+  //dataName << directory.str() << "run_104-104_processed.root";
+  // dataName << directory.str() << "sort4_v3_73Sr_decayTimeEnergyGates.root";
   //dataName << directory.str() << "sort3all73Sr_2stripTolerance_badStripRemoval_5sCorrWindow.root";
   //dataName << directory.str() << "test71Kr.root";
   //dataName << directory.str() << "test101.root";
   //dataName << directory.str() << "test222.root";
+  
 
+  dataName << directory.str() << dataName0;
+
+  cout << dataName.str() << endl;
+  
   double fitRange = 3E8;
   //fitRange = 6E8; // 1E9=1s
   fitRange = 2E9;
@@ -58,13 +64,14 @@ void halfLife(){
   TFile * data = new TFile(dataName.str().c_str());
   dataName.str("");
   dataName.clear();
-  dataName << directory.str() << "sort3all71Kr_2.root";
+  // dataName << directory.str() << "sort3all71Kr_2.root";
+  //dataName << directory.str() << "run_90_processed.root";
   TFile* data2 = new TFile(dataName.str().c_str());
   
 
   CdecayTime.cd();
   CdecayTime.SetLogy();
-  TH1D * decayTime = (TH1D*)data->Get("Histos/hDecayTimeEx")->Clone("Decay Time");
+  TH1D * decayTime = (TH1D*)data->Get("Histos/hDecayTime")->Clone("Decay Time");
   TH1D * decayTimeLog = (TH1D*)data->Get("Histos/hDecayTimeLog")->Clone("Decay Time Log");
 
   decayTime->GetYaxis()->SetTitle("Counts");
@@ -91,9 +98,11 @@ void halfLife(){
   func->SetParameter(2,20);
   func->SetParameter(3,3E-10); //for background peak
   //func->SetParameter(3,2E-7);
-  // decayTimeLog->Draw("PE1");
-  // decayTimeLog->Rebin(5);
-  // decayTimeLog->Fit("logFit", "ML");
+
+  CdecayTimeLog.cd();
+  decayTimeLog->Draw("PE1");
+  decayTimeLog->Rebin(5);
+  decayTimeLog->Fit("logFit", "ML");
 
   double half_lifeLog = log(2)/func->GetParameter(1)*1E-6;
   
@@ -176,7 +185,7 @@ void halfLife(){
   //decayEnergy->Add(decayEnergyBackground,-0.2/9); //The TGate is 200 ms, background is 9 s so amount of background should be 1/5/9 of measured amount
 
   //true for sorts 5-9-201
-  decayEnergy->Add(decayEnergyBackground,-0.2/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
+  //decayEnergy->Add(decayEnergyBackground,-0.2/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
 
   //for TGate=100ms I need to modify background subtraction
   //decayEnergy->Add(decayEnergyBackground,-0.1/4); //The TGate is 200 ms, background is 4 s so amount of background should be 1/5/4 of measured amount
@@ -213,13 +222,13 @@ void halfLife(){
   // cout << binLo2 << endl;
   // cout << binHi2 << endl;
   
-  cout << endl;
-  cout << "Number of counts in 3200 peak = " << decayEnergy->Integral(binLo,binHi) << endl;
-  cout << endl;
+  // cout << endl;
+  // cout << "Number of counts in 3200 peak = " << decayEnergy->Integral(binLo,binHi) << endl;
+  // cout << endl;
 
-  cout << endl;
-  cout << "Number of counts in 3900 peak = " << decayEnergy->Integral(binLo2,binHi2) << endl;
-  cout << endl;
+  // cout << endl;
+  // cout << "Number of counts in 3900 peak = " << decayEnergy->Integral(binLo2,binHi2) << endl;
+  // cout << endl;
 
 
 

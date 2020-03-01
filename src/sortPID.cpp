@@ -24,10 +24,6 @@
 using namespace std;
 
 
-//not sure why... but this seems to be missing tons of stuff when I have this active 9/16/2019
-//may have been an issue with buffering which should be fixed now 9/21/2019
-//this condition was used to reproduce 73Sr data so it works fine 9/22/2019
-
 int main(int argc,char *argv[]){
 
   auto start = std::chrono::system_clock::now();
@@ -100,39 +96,39 @@ int main(int argc,char *argv[]){
 
   RBDDarray SSD  = setup.getArray("SSD");
 
-  RBDDarray DSSDloGainFront = setup.getArray("DSSDloGainFront");
-  RBDDarray DSSDloGainBack = setup.getArray("DSSDloGainBack");
+  //RBDDarray DSSDloGainFront = setup.getArray("DSSDloGainFront");
+  //RBDDarray DSSDloGainBack = setup.getArray("DSSDloGainBack");
   
   RBDDarray DSSDhiGainFront = setup.getArray("DSSDhiGainFront");
   RBDDarray DSSDhiGainBack = setup.getArray("DSSDhiGainBack");
-
-  RBDDarray SeGA = setup.getArray("SeGA");
-
+  
+  RBDDarray Clovers = setup.getArray("Clovers");
+  
   
   // Load PID gate
 
-  TFile *fGateFile = new TFile("root-files/PIDGates2.root","READ");
+  TFile *fGateFile = new TFile("root-files/PIDGates_124.root","READ");
   TCutG *fGate;          //! PID Gate
-  TCutG *fGate72Rb;
-  TCutG *fGate70Kr;
-  TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
-  fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
-  fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Kr")); 
-  fGate70Kr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr")); 
+  TCutG *fGate56Cu;
+  
+  if(fGateFile->IsOpen()){
+    fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_57Zn"));
+    fGate56Cu = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_56Cu"));
+    //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("biggestBlob"));
+    //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("bigBlob"));
 
   cout << "--> Loaded Gate: " << fGate->GetName() << endl << endl;
   fGateFile->Close();
+  }
+  else{
+    cout << endl << "Couldn't open PIDGates file" << endl;
+  }
 
 
   //creating diagnostics class for counting...
   diagnostics counterList;
   counterList.add("foundIon");
+  counterList.add("found56Cu");
   counterList.add("totalIon");
 
   /*****************************************
@@ -150,13 +146,15 @@ int main(int argc,char *argv[]){
   long long int lastEntry = 0;  //keep track of the last entry accessed in the branch
 
   RBDDdet PIN1 = setup.getDet("PIN1");
-  RBDDdet TOF = setup.getDet("TOF");
-  RBDDdet XFP_CFD = setup.getDet("XFP");
+  RBDDdet PIN2 = setup.getDet("PIN2");
+  RBDDdet PIN1_XFP = setup.getDet("PIN1_XFP");
+  RBDDdet PIN2_XFP = setup.getDet("PIN2_XFP");
+  RBDDdet PIN1_RF = setup.getDet("PIN1_RF");
 
   //clock ticks are in ns for DDAS
   double coinWindow2 = 10000;
   double waitWindow = 5E4; //0.05ms
-
+  
   double coinWindow = setup.getCoinWindow();
   double corrWindow = setup.getCorrWindow();
 
@@ -171,16 +169,19 @@ int main(int argc,char *argv[]){
   bufferEvent->setEventPointer(pDDASEvent);
 
   RBDDTriggeredEvent* eventHandler = new RBDDTriggeredEvent("Correlated Events", "title", bufferEvent, coinWindow);
-  eventHandler->setTriggerCh(0);
+  eventHandler->setTriggerCh(181);
 
   eventHandler->activateDetector(PIN1);
-  eventHandler->activateDetector(TOF);
-  eventHandler->activateArray(SeGA);
-  eventHandler->activateArray(DSSDhiGainFront);
-  eventHandler->activateArray(DSSDhiGainBack);
-  eventHandler->activateArray(DSSDloGainFront);
-  eventHandler->activateArray(DSSDloGainBack);
-  eventHandler->activateDetector(XFP_CFD);
+  eventHandler->activateArray(Clovers);
+  eventHandler->activateDetector(PIN1_XFP);
+  eventHandler->activateDetector(PIN2_XFP);
+  //eventHandler->activateArray(DSSDhiGainFront);
+  //eventHandler->activateArray(DSSDhiGainBack);
+  //eventHandler->activateArray(SSD);
+
+   // eventHandler->activateArray(DSSDloGainFront);
+  // eventHandler->activateArray(DSSDloGainBack);
+  // eventHandler->activateDetector(XFP_CFD);
 
   std::vector<ionCorrelator> implantedIonList;
   long unsigned int oldIonNumber = 0;
@@ -192,7 +193,8 @@ int main(int argc,char *argv[]){
   double lastTime = 0;
   bool alreadyTriggered = false;
 
-  for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
+  
+  for(long long int iEntry=0;iEntry<fNEntries;iEntry=lastEntry+1){
 
     bool needIonOverlapCheck = oldIonNumber != implantedIonList.size();
 
@@ -201,33 +203,63 @@ int main(int argc,char *argv[]){
 
     //normal use
     lastEntry = eventHandler->FillBuffer(dataChain, iEntry);  
+
+    //Histo->expSummary->Fill(eventHandler->GetBuffer().back().channel,eventHandler->GetBuffer().back().signal);
     
     if(eventHandler->isTriggered()){
 
       oldIonNumber = implantedIonList.size();
 
       bool foundTOF = false;
+      bool foundTOF2 = false;
       bool foundIonOfInterest = false;
       double curTOF = 0;
+      double curTOF2 = 0;
       double implantTime = eventHandler->triggerTime;
       int fImplantEFMaxStrip = -100;
       int fImplantEBMaxStrip = -100;
 
-      lastEntry = eventHandler->GetCoinEvents(dataChain); //implant buffer will be filled with a list of coincidence Events
+      lastEntry = eventHandler->GetCoinEvents(dataChain); //implant buffer will be filled with a list of coincidence Events and detector objects will be filled
       double PIN1energy = eventHandler->triggerSignal;
 
       //eventHandler->Print(); //if you want a human-readable list of events
 
-      foundTOF = TOF.getEvents().size() > 0; 
+      foundTOF2 = PIN1_XFP.fired();
+      foundTOF = PIN2_XFP.fired(); 
 
+
+      
       if(foundTOF){ //check that TOF actually got filled
-	curTOF = TOF.getFillerEvent().signal;
-	Histo->h_PID->Fill(curTOF, PIN1energy);
-	counterList.count("totalIon");
-	if(!alreadyTriggered){
-	  firstTime = implantTime;
-	}
+	curTOF = PIN2_XFP.getFillerEvent().signal;
+    	Histo->h_PID->Fill(curTOF, PIN1energy);
+    	counterList.count("totalIon");
+    	if(!alreadyTriggered){
+    	  firstTime = implantTime;
+    	}
       }
+
+      if(fGate->IsInside(curTOF,PIN1energy)){
+	counterList.count("foundIon");
+      }
+      
+      if(fGate56Cu->IsInside(curTOF,PIN1energy)){
+	counterList.count("found56Cu");
+      }
+
+
+      if(foundTOF2){ //check that TOF actually got filled
+	curTOF2 = PIN1_XFP.getFillerEvent().signal;
+    	Histo->h_PID_PIN1_XFP->Fill(curTOF2, PIN1energy);
+      }
+
+	
+	if(fGate->IsInside(curTOF, PIN1energy)){
+	    for(auto & gammaEvent : Clovers.getEventList()){
+	      Histo->hPromptGammaEnergy_gated->Fill(gammaEvent.energy);
+	    }
+	}
+	  
+      
 
       
     }
@@ -243,6 +275,8 @@ int main(int argc,char *argv[]){
 
   cout << "Total number of Ions of Interest found: " << counterList.returnValue("foundIon") << endl;
 
+  cout << endl <<  "Total number of 56Cu found: " << counterList.returnValue("found56Cu") << endl;
+  
   cout << endl;
 
   auto end = std::chrono::system_clock::now();

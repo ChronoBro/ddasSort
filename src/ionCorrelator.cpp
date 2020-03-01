@@ -9,8 +9,8 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   Histo = Histo0;
   Ethreshold = Ethreshold0;
   stripTolerance = stripTolerance0;
-  frontImplantStrip = 40 - (implantFront.channel - 103);
-  backImplantStrip = 40 - (implantBack.channel - 183);
+  frontImplantStrip = 40 - (implantFront.channel - 40);
+  backImplantStrip = 40 - (implantBack.channel - 120);
 
   // std::cout << std::endl;
   // std::cout << "frontImplantStrip : " << frontImplantStrip << std::endl;
@@ -31,21 +31,25 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
   double frontAddBackE = 0.;
 
-  TFile* filterFile = new TFile("root-files/filter.root");
-  TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
+  //  TFile* filterFile = new TFile("root-files/filter.root");MS
+  // TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));MS
 
   for(auto& frontEvent : frontEvents){
-    double frontStrip = frontEvent.channel - 64.;
+    double frontStrip = frontEvent.channel;
 
     //if(frontEvent.energy <1500){ //apparently I needed this low energy gate for the filter to only work on things that were actually BAD 9/22/2019
       RBDDTrace test2(frontEvent.trace);
 
+      //save traces
+      //Histo->traceHistos.push_back(test2.GetTraceHisto(""));
+
+      
       Histo->trace_vs_signal->Fill(test2.GetQDC(), frontEvent.signal);
 
-      if( !filter->IsInside(test2.GetQDC(), frontEvent.signal) )
-	{
-	  break;
-	}
+      //  if( !filter->IsInside(test2.GetQDC(), frontEvent.signal) )
+      //	{
+      //  break;
+      //	} MS
 
       // if(!test2.filter() && frontEvent.energy > 1200){ // filter() returns true if passes filter
       // break;
@@ -54,7 +58,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
       //}
 
     for(auto& backEvent : backEvents){
-      double backStrip = backEvent.channel -144.;
+      double backStrip = backEvent.channel - 80;
 
       if( abs(frontStrip - frontImplantStrip) < stripTolerance 
 	  && abs(backStrip - backImplantStrip) < stripTolerance //I till think something is screwy with the backs...
@@ -63,13 +67,6 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  ){
 
 	Histo->hDecayTime->Fill(frontEvent.time-implantTime);
-	if(frontEvent.energy > 3000 && frontEvent.energy < 3800){
-	  Histo->hDecayTimeEx->Fill(frontEvent.time-implantTime);
-	}
-	if(frontEvent.energy > 3800 && frontEvent.energy < 4600){
-	  Histo->hDecayTimeGS->Fill(frontEvent.time-implantTime);
-	}
-
 
 	Histo->hDecayEnergy->Fill(frontEvent.energy);
 	//Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
@@ -77,7 +74,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	counter++;
     
 	double decayTime = frontEvent.time-implantTime;
-	double TCutoff = 2E8; //200ms
+	double TCutoff = 1.63278E8; //163.278ms
 
 	if(decayTime < TCutoff){
 	  //Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);

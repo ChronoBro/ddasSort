@@ -1,7 +1,6 @@
 // Do NOT change. Changes will be lost next time file is generated
 
 #define R__DICTIONARY_FILENAME srcdIDDASdict
-#define R__NO_DEPRECATION
 
 /*******************************************************************/
 #include <stddef.h>
@@ -34,12 +33,12 @@
 
 #include "TDataMember.h"
 
-// The generated code does not explicitly qualifies STL entities
+// Since CINT ignores the std namespace, we need to do so in this file.
 namespace std {} using namespace std;
 
 // Header files passed as explicit arguments
-#include "/home/hoff/ddasSort/include/DDASEvent.h"
-#include "/home/hoff/ddasSort/include/ddaschannel.h"
+#include "/user/e18018/ddasSort/include/DDASEvent.h"
+#include "/user/e18018/ddasSort/include/ddaschannel.h"
 
 // Header files passed via #pragma extra_include
 
@@ -138,7 +137,7 @@ TClass *ddaschannel::Dictionary()
 //______________________________________________________________________________
 TClass *ddaschannel::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::ddaschannel*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::ddaschannel*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -173,7 +172,7 @@ TClass *DDASEvent::Dictionary()
 //______________________________________________________________________________
 TClass *DDASEvent::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::DDASEvent*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::DDASEvent*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -258,7 +257,7 @@ namespace ROOT {
       vector<unsigned short> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<unsigned short>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<unsigned short>", -2, "vector", 339,
+         instance("vector<unsigned short>", -2, "vector", 214,
                   typeid(vector<unsigned short>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &vectorlEunsignedsPshortgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<unsigned short>) );
@@ -321,7 +320,7 @@ namespace ROOT {
       vector<unsigned int> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<unsigned int>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<unsigned int>", -2, "vector", 339,
+         instance("vector<unsigned int>", -2, "vector", 214,
                   typeid(vector<unsigned int>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &vectorlEunsignedsPintgR_Dictionary, isa_proxy, 0,
                   sizeof(vector<unsigned int>) );
@@ -384,7 +383,7 @@ namespace ROOT {
       vector<ddaschannel*> *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(vector<ddaschannel*>));
       static ::ROOT::TGenericClassInfo 
-         instance("vector<ddaschannel*>", -2, "vector", 339,
+         instance("vector<ddaschannel*>", -2, "vector", 214,
                   typeid(vector<ddaschannel*>), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &vectorlEddaschannelmUgR_Dictionary, isa_proxy, 4,
                   sizeof(vector<ddaschannel*>) );
@@ -440,8 +439,8 @@ namespace {
 0
     };
     static const char* includePaths[] = {
-"/opt/root-build/include",
-"/home/hoff/ddasSort/",
+"/mnt/misc/sw/x86_64/Debian/8/root/gnu/6.10.02/include",
+"/user/e18018/ddasSort/",
 0
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(
@@ -458,24 +457,26 @@ class __attribute__((annotate("$clingAutoload$include/DDASEvent.h")))  DDASEvent
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "DDASdict dictionary payload"
 
+#ifndef G__VECTOR_HAS_CLASS_ITERATOR
+  #define G__VECTOR_HAS_CLASS_ITERATOR 1
+#endif
 
 #define _BACKWARD_BACKWARD_WARNING_H
-// Inline headers
 #include "include/DDASEvent.h"
 #include "include/ddaschannel.h"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";
-    static const char* classesHeaders[] = {
+    static const char* classesHeaders[]={
 "DDASEvent", payloadCode, "@",
 "ddaschannel", payloadCode, "@",
-nullptr
-};
+nullptr};
+
     static bool isInitialized = false;
     if (!isInitialized) {
       TROOT::RegisterModule("DDASdict",
         headers, includePaths, payloadCode, fwdDeclCode,
-        TriggerDictionaryInitialization_DDASdict_Impl, {}, classesHeaders, /*hasCxxModule*/false);
+        TriggerDictionaryInitialization_DDASdict_Impl, {}, classesHeaders);
       isInitialized = true;
     }
   }

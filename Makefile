@@ -8,16 +8,20 @@ OBJECTS = objs/histo.o objs/ddasDet.o objs/ddasArray.o objs/diagnostics.o objs/R
 #ALLOBJECTS := $(patsubst %.cpp,%.o,$(wildcard *.cpp))
 ALLOBJECTS := $(patsubst $(SRCDIR)%.cpp,$(OBJDIR)%.o,$(wildcard $(SRCDIR)*.cpp))
 
-CFLAGS= -c -fPIC -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
+CFLAGS= -c -fPIC -W -I$(shell root-config --incdir) -g -I$(INCDIR) -std=c++14
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 
-all: sortPID sort5 #sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
+all: sortPID sorte18018 quickSort #sort5 #sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
 
 root:  objs src/DDASdict.cpp
 
+lib: objs lib/libddaschannel.so
+
 objs: 
 	mkdir -p objs	
+
+lib/libddaschannel.so: 
 
 src/DDASdict.cpp: $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
 	rootcint -f src/DDASdict.cpp $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
@@ -57,8 +61,15 @@ sort4_v3: objs/sort4_v3.o $(OBJECTS) src/DDASdict.cpp
 sort5: objs/sort5.o $(OBJECTS) src/DDASdict.cpp
 	$(COMPILER) -o sort5 objs/sort5.o $(OBJECTS) $(LINKOPTION)
 
+sorte18018: objs/sorte18018.o $(OBJECTS) src/DDASdict.cpp
+	$(COMPILER) -o sorte18018 objs/sorte18018.o $(OBJECTS) $(LINKOPTION)
+
 sortPID: objs/sortPID.o $(OBJECTS) src/DDASdict.cpp
 	$(COMPILER) -o sortPID objs/sortPID.o $(OBJECTS) $(LINKOPTION)
+
+quickSort: objs/quickSortSummary.o $(OBJECTS) src/DDASdict.cpp
+	$(COMPILER) -o quickSort objs/quickSortSummary.o $(OBJECTS) $(LINKOPTION)
+
 
 andyBuild: objs/andyBuild.o $(OBJECTS)
 	$(COMPILER) -o andyBuild objs/andyBuild.o $(OBJECTS) $(LINKOPTION)

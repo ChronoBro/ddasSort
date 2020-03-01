@@ -35,7 +35,7 @@ class histo
   histo(std::string name0);
   void write(); //!< write the root spectra to file
   void histos();
-
+                                                                                   
   //TGraph * traces[50]; //bad idea to hard code this... should come up with better method to fill traces
 
   std::vector<TGraph*> graphTraces;
@@ -71,6 +71,7 @@ class histo
   TH2I  *h_cal_DSSD_hits;
 
   TH2I  *h_PID;
+  TH2I  *h_PID_PIN1_XFP;
   TH2I  *h_PID_gated;
   TH2I  *h_PIN1vsPIN2;
   TH2I  *hImplantXY;
@@ -93,6 +94,7 @@ class histo
   TH1D  *hGammaEnergy;
   TH2D  *hGammaVsDecayTGated;
   TH1D  *hPromptGammaEnergy;
+  TH1D  *hPromptGammaEnergy_gated;
   TH2D  *hGammaVsDecay;
   TH2D  *hGammaVsDecayEtot;
   TH2D  *hGammaVsDecayAll;
@@ -103,6 +105,8 @@ class histo
   TH1D  *calibratedSSDhiGain;
   TH1I  *rawScint;
 
+  TH2D  *expSummary;
+  
   std::string name;
   
 };

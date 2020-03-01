@@ -47,10 +47,11 @@ int RBDDASChannel::channelMap(){
   int slotsPerCrate = 13;
   
   //old map for e12024
-  return curChannel->GetCrateID()*64+(curChannel->GetSlotID()-2)*16+curChannel->GetChannelID();
+  //return curChannel->GetCrateID()*64+(curChannel->GetSlotID()-2)*16+curChannel->GetChannelID();
 
+  
   //what I think the unique map should be
-  //return curChannel->GetCrateID()*slotsPerCrate*channelsPerSlot+(curChannel->GetSlotID)*channelsPerSlot + curChannel->GetChannelID();
+  return curChannel->GetCrateID()*slotsPerCrate*channelsPerSlot+(curChannel->GetSlotID()-2.)*channelsPerSlot + curChannel->GetChannelID(); //-2 to take into account that first few slots are taken up by daq computer
   
 }
 
@@ -63,7 +64,7 @@ void RBDDASChannel::unpack(){
 
     curChannel = curEvent->GetData()[0];
     
-    fChanNo = curChannel->GetCrateID()*64+(curChannel->GetSlotID()-2)*16+curChannel->GetChannelID(); //right now this is specific to experiment, we should come up with more generalized way to handle channel numbers
+    fChanNo = channelMap(); //right now this is specific to experiment, we should come up with more generalized way to handle channel numbers
     //should probably just choose ONE convention and use that from now on, but I'll worry about that later
     
       fSignal = curChannel->GetEnergy();
