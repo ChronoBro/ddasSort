@@ -33,7 +33,7 @@ class RBDDdet{
   void Print();
   std::string getName(){return name;}
   void setName(std::string name0){name = name0;}
-  bool fired(return events.size() > 0;)
+  bool fired(){return events.size() > 0;}
  
  private:
   int assignedChannel;
