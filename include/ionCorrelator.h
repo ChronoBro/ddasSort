@@ -8,8 +8,9 @@
 //
 //#include <TBits.h>
 //#include <TCanvas.h>
-//#include <TFile.h>
+#include <TFile.h>
 //#include <TGraph.h>
+#include <TCutG.h>
 #include <TH1D.h>
 #include <TNamed.h>
 #include <TObject.h>
@@ -51,6 +52,12 @@ public:
   int getImplantBackStrip(){return backImplantStrip;}
 
   double getDecayTime(){return(decayFront.time-implantFront.time);}
+
+  TFile * filterFile;
+  TCutG * filter;
+
+  int maxNTraces = 5; //This is PER implant event
+  int nTraces = 0;
 
   bool implantOverlap(int frontStrip, int backStrip){
     if( abs(frontStrip - frontImplantStrip) < 2*stripTolerance-1.){ //to take into account possible overlap of decays

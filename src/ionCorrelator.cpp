@@ -11,7 +11,11 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   stripTolerance = stripTolerance0;
   frontImplantStrip = 40 - (implantFront.channel - 103);
   backImplantStrip = 40 - (implantBack.channel - 183);
+  
 
+  filterFile = new TFile("root-files/filter.root");
+  filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
+  filterFile->Close();
   // std::cout << std::endl;
   // std::cout << "frontImplantStrip : " << frontImplantStrip << std::endl;
   // std::cout << "backImplantStrip : " << backImplantStrip << std::endl;
@@ -31,9 +35,6 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
   double frontAddBackE = 0.;
 
-  TFile* filterFile = new TFile("root-files/filter.root");
-  TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
-  filterFile->Close();
   
 
   for(auto& frontEvent : frontEvents){
@@ -111,12 +112,25 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
 	  firstEvent = false;
 	}
+
+	//only should really leave below on for beta-delayed proton emitters with no beta-gamma branch
+	//and for a small number of counts
+	if(frontEvent.energy < 1400 && nTraces < maxNTraces){ //keV
+	  std::ostringstream nameMe;
+	  nameMe << "Energy-" << frontEvent.energy << "_fStrip-" << frontStrip << "_bStrip-" << backStrip<<"_base-" << test2.GetBaseline();
+	  TH1D * trace= new TH1D; //need to create new block of memory for trace to be saved
+	  test2.SetMSPS(100.); //so that time is correct on traces
+	  trace = (TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str());
+	  Histo->traceHistos.push_back(trace);
+	  //delete trace;
+	  nTraces++;
+	}
 	    
 	decayFront = frontEvent;
 	decayBack = backEvent;;
 	foundDecay = true;
 
-	Histo->trace_vs_signal->Fill(test2.GetQDC(),frontEvent.signal);
+	//Histo->trace_vs_signal->Fill(test2.GetQDC(),frontEvent.signal);
 
 	return foundDecay;
 	//break;

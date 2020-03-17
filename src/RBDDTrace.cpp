@@ -194,7 +194,9 @@ TH1D* RBDDTrace::GetTraceHisto(){
     double timeUnit = 1./fMSPS; //timeunit will be in us if in MEGA samples/second
 
     if(fTrace.size()>0){
-      fTraceHisto = new TH1D("trace","trace",fTrace.size(),0,(double)fTrace.size()*timeUnit);
+      std::ostringstream nameMe;
+      nameMe << "QDC-" << fQDC << "_base-" << fB;
+      fTraceHisto = new TH1D(nameMe.str().c_str(),nameMe.str().c_str(),fTrace.size(),0,(double)fTrace.size()*timeUnit); //need to give Trace Unique Name for ROOT not to complain (even though it still works...)
       fTraceHisto->GetXaxis()->SetTitle("time (us)");
       for(unsigned int iBin=0;iBin<fTrace.size();iBin++){
 	fTraceHisto->SetBinContent(iBin,fTrace[iBin]-fB); //I like to remove baseline for plotting
@@ -203,7 +205,7 @@ TH1D* RBDDTrace::GetTraceHisto(){
       return fTraceHisto;
     }
     else{
-      cerr << "no trace to output stored in RBDDTrace Object" << endl;
+      cerr << "no trace to output in RBDDTrace Object" << endl;
       return 0;
     }
 
