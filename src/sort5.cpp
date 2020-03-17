@@ -130,8 +130,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
@@ -218,7 +218,9 @@ int main(int argc,char *argv[]){
   double lastTime = 0;
   bool alreadyTriggered = false;
 
-  for(long long int iEntry=0;iEntry<dataChain.GetEntries();iEntry=lastEntry+1){
+  double activeTime;
+
+  for(long long int iEntry=0;iEntry<fNEntries;iEntry=lastEntry+1){
 
     bool needIonOverlapCheck = oldIonNumber != implantedIonList.size();
 
@@ -309,24 +311,12 @@ int main(int argc,char *argv[]){
 
       }	
 
-
-      
-      if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
-      counterList.count("foundIon");
-
-      if(fImplantEFMaxStrip == -100 && fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
-      if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
-
-      
-
-      Histo->h_PID_gated->Fill(curTOF,PIN1energy);
-
       double Ethreshold=100.;
       double stripTolerance= setup.getStripTolerance();//2.;//3.;
 
-      ionCorrelator ionOfInterest(corrWindow, Ethreshold, stripTolerance, frontImplant, backImplant, Histo); 
-      
-      //check for overlaps before adding to list
+      ionCorrelator ionOfInterest(corrWindow, Ethreshold, stripTolerance, frontImplant, backImplant, Histo);       
+
+      //check for overlaps
       int it= 0;
       bool foundOverlap = false;
       for(auto & ion : implantedIonList){
@@ -339,8 +329,20 @@ int main(int argc,char *argv[]){
 	}
       }
 
-      if(foundOverlap){continue;}
+      
+      if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
+      counterList.count("foundIon");
 
+      if(fImplantEFMaxStrip == -100 && fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
+      if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
+
+
+      
+
+      Histo->h_PID_gated->Fill(curTOF,PIN1energy);
+
+
+      if(foundOverlap){continue;}
       implantedIonList.push_back(ionOfInterest);
 	  
     } //end of original trigger
