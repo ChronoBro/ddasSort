@@ -1,4 +1,4 @@
-void makeGatesPID(string dataName0, string outFile0, string gateName){
+void makeFilter(string dataName0, string outFile0, string gateName){
 
   TCanvas * c1 = new TCanvas("PID","PID",800,600);
   
@@ -27,10 +27,21 @@ void makeGatesPID(string dataName0, string outFile0, string gateName){
 
     outfile << directory.str() << gateName;
   
-    TFile * outFile = new TFile(outFile.str().c_str(),"UPDATE");
+    TFile * outFile = new TFile(outfile.str().c_str(),"UPDATE");
 
+    ostringstream gateName0;
+    gateName0 << "../Gates/" << gateName;
+
+    ofstream txtVersion(gateName0.str());
+
+    txtVersion << filter->GetN() << endl;
+
+    for(int i=0;i<filter->GetN();i++){
+      txtVersion << filter->GetX()[i] << "\t" << filter->GetY()[i] << endl;
+    }
+
+    txtVersion.close();
     filter->Write();
-
     outFile->Close();
 
   }
