@@ -57,15 +57,15 @@ public:
   Double_t          FindPeak();//{/*need to implement*/}
   
   std::vector<Double_t> GetTrace(){return fTrace;}
-  TH1D*             GetTraceHisto();//{return fTraceHisto;}
-  Double_t          GetMaximum(); //max and QDC are calculated at the same time 
-  Double_t          GetQDC();//this and above should just return values or do calculation if not done
-  Double_t          GetBaseline();
-  Double_t          GetSum(Int_t sumWinID);
-  Double_t          GetSum(Double_t winBegin, Double_t winEnd);
-  Int_t             GetSumAndStore(Double_t winBegin, Double_t winEnd);
-  Double_t          GetCFDTime(Double_t fraction = 0.5);
-  bool              filter(); //returns true if trace passes filter, false if should be filtered out
+  TH1D*           GetTraceHisto();//{return fTraceHisto;}
+  double          GetMaximum(); //max and QDC are calculated at the same time 
+  double          GetQDC();//this and above should just return values or do calculation if not done
+  double          GetBaseline();
+  double          GetSum(Int_t sumWinID);
+  double          GetSum(Double_t winBegin, Double_t winEnd);
+  int             GetSumAndStore(Double_t winBegin, Double_t winEnd);
+  double          GetCFDTime(Double_t fraction = 0.5);
+  bool            filter(); //returns true if trace passes filter, false if should be filtered out
 
   void  SetBaseSampleFraction(double fraction){fBaseSampleFraction = fraction;}
   void  SetBaseSamples(Int_t nSamples){fBaseSamples = nSamples;}

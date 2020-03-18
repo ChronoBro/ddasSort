@@ -10,17 +10,14 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   frontImplantStrip = 40 - (implantFront.channel - 103);
   backImplantStrip = 40 - (implantBack.channel - 183);
 
+  //traceFilter = new gatePar("Gates/realTrace.cut");
+
+  traceFilter.open("Gates/realTrace.cut");
 
   //the below two lines are causing massive memory leak that is grinding processes to a halt...
   //need to figure out a solution for adding contours
-  filterFile = new TFile("root-files/filter.root");
-  filter = new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
-  //filterFile->AddDirectory(NULL);
-  //filter->SetDirectory(NULL);
-  // filter->SetBit(kCanDelete,0);
-  // filterFile->SetBit(kCanDelete,0);
-  // delete filterFile;
-
+  // filterFile = new TFile("root-files/filter.root");
+  // filter = new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
 
   // std::cout << std::endl;
   // std::cout << "frontImplantStrip : " << frontImplantStrip << std::endl;
@@ -41,12 +38,6 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
   double frontAddBackE = 0.;
 
-  //TFile filterFile("root-files/filter.root");
-  // TFile * filterFile = new TFile("root-files/filter.root");
-  // TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
-  // filterFile->Close();
-  //delete filterFile;
-
   for(auto& frontEvent : frontEvents){
     double frontStrip = frontEvent.channel - 64.;
 
@@ -55,7 +46,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
       Histo->trace_vs_signal->Fill(test2.GetQDC(), frontEvent.signal);
 
-      if( !filter->IsInside(test2.GetQDC(), frontEvent.signal))
+      if( !traceFilter.isInside(test2.GetQDC(), frontEvent.signal))
       	{
       	  break;
       	}
