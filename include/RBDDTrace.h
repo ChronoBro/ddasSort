@@ -35,7 +35,7 @@ protected:
   double           fMSPS = 1;
   std::vector<Double_t> fSum;          //!
   
-  TH1D            *fTraceHisto;   //!
+  TH1D            *fTraceHisto = NULL;   //!
   void             analyze();
   bool isAnalyzed = false;
   bool isHistCreated = false;
@@ -44,7 +44,7 @@ protected:
 
 public:
   RBDDTrace(){}
-  ~RBDDTrace(){}
+  ~RBDDTrace(){if(isHistCreated)delete fTraceHisto;}
   //RBDDTrace(std::vector<Double_t> trace);
   RBDDTrace(std::vector<Double_t> trace, double sampleFraction = 20.);
   RBDDTrace(std::vector<unsigned short> trace, double sampleFraction = 20.);

@@ -1,6 +1,4 @@
 #include "ionCorrelator.h"
-#include "TFile.h"
-#include "TCutG.h"
 
 ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo0){
   implantFront = implantFront0;
@@ -11,11 +9,19 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   stripTolerance = stripTolerance0;
   frontImplantStrip = 40 - (implantFront.channel - 103);
   backImplantStrip = 40 - (implantBack.channel - 183);
-  
 
+
+  //the below two lines are causing massive memory leak that is grinding processes to a halt...
+  //need to figure out a solution for adding contours
   filterFile = new TFile("root-files/filter.root");
-  filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
-  filterFile->Close();
+  filter = new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
+  //filterFile->AddDirectory(NULL);
+  //filter->SetDirectory(NULL);
+  // filter->SetBit(kCanDelete,0);
+  // filterFile->SetBit(kCanDelete,0);
+  // delete filterFile;
+
+
   // std::cout << std::endl;
   // std::cout << "frontImplantStrip : " << frontImplantStrip << std::endl;
   // std::cout << "backImplantStrip : " << backImplantStrip << std::endl;
@@ -35,7 +41,11 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
   double frontAddBackE = 0.;
 
-  
+  //TFile filterFile("root-files/filter.root");
+  // TFile * filterFile = new TFile("root-files/filter.root");
+  // TCutG * filter =  new TCutG(*(TCutG*)filterFile->FindObjectAny("CUTG"));
+  // filterFile->Close();
+  //delete filterFile;
 
   for(auto& frontEvent : frontEvents){
     double frontStrip = frontEvent.channel - 64.;
@@ -45,7 +55,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
       Histo->trace_vs_signal->Fill(test2.GetQDC(), frontEvent.signal);
 
-      if( !filter->IsInside(test2.GetQDC(), frontEvent.signal) )
+      if( !filter->IsInside(test2.GetQDC(), frontEvent.signal))
       	{
       	  break;
       	}
@@ -115,19 +125,22 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
 	//only should really leave below on for beta-delayed proton emitters with no beta-gamma branch
 	//and for a small number of counts
-	if(frontEvent.energy < 1400 && nTraces < maxNTraces){ //keV
+	if(frontEvent.energy < 1400 && nTraces < maxNTraces && decayTime < TCutoff){ 
 	  std::ostringstream nameMe;
 	  nameMe << "Energy-" << frontEvent.energy << "_fStrip-" << frontStrip << "_bStrip-" << backStrip<<"_base-" << test2.GetBaseline();
-	  TH1D * trace= new TH1D; //need to create new block of memory for trace to be saved
+	  //TH1D * trace= new TH1D; //need to create new block of memory for trace to be saved
 	  test2.SetMSPS(100.); //so that time is correct on traces
-	  trace = (TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str());
-	  Histo->traceHistos.push_back(trace);
+	  //trace = (TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str());
+	  //Histo->traceHistos.push_back(trace);
+	  //test2.GetTraceHisto()->SetName(nameMe.str().c_str());
+	  Histo->traceHistos.push_back((TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str())); //need to create an object for it to point to, so at least need a clone
+	  //Histo->traceHistos.push_back(test2.GetTraceHisto());
 	  //delete trace;
 	  nTraces++;
 	}
 	    
 	decayFront = frontEvent;
-	decayBack = backEvent;;
+	decayBack = backEvent;
 	foundDecay = true;
 
 	//Histo->trace_vs_signal->Fill(test2.GetQDC(),frontEvent.signal);

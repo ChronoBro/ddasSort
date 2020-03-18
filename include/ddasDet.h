@@ -3,15 +3,16 @@
 #include "DDASEvent.h" 
 #include "math.h"
 #include <algorithm>
+#include "event.h"
 
-struct Event{
-  double energy = -1;  //calibrated energy
-  unsigned int signal = -1; //Raw signal
-  int channel = -1;
-  double time = 0;
-  long long int entry = -1;
-  std::vector<unsigned short> trace;
-};
+/* struct Event{ */
+/*   double energy = -1;  //calibrated energy */
+/*   unsigned int signal = -1; //Raw signal */
+/*   int channel = -1; */
+/*   double time = 0; */
+/*   long long int entry = -1; */
+/*   std::vector<unsigned short> trace; */
+/* }; */
 
 
 class ddasDet{

@@ -130,8 +130,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
@@ -262,9 +262,9 @@ int main(int argc,char *argv[]){
       if(fGate72Rb->IsInside(curTOF,PIN1energy)){counterList.count("found72Rb");}
       if(fGate70Kr->IsInside(curTOF,PIN1energy)){counterList.count("found70Kr");}
 
-      for( auto &SeGAEvent: SeGA.getEventList() ){
-    	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
-      }
+      // for( auto &SeGAEvent: SeGA.getEventList() ){
+      // 	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
+      // }
 
       double Emax = 0;
       Event frontImplant;
@@ -277,8 +277,8 @@ int main(int argc,char *argv[]){
     	double QDC = trace.GetQDC();
 
     	//if(frontEvent.signal > Emax){
-    	if(QDC > Emax){
-    	  //Emax = frontEvent.signal;
+	if(QDC > Emax){
+    	  Emax = frontEvent.signal;
     	  Emax = QDC;
     	  fImplantEFMaxStrip =  40 - (frontEvent.channel - 103);
     	  implantTime = frontEvent.time;
@@ -301,8 +301,8 @@ int main(int argc,char *argv[]){
     	double QDC = trace.GetQDC();
 
     	//if(backEvent.signal > Emax){
-    	if(QDC > Emax){
-    	  //Emax = backEvent.signal;
+	if(QDC > Emax){
+    	  Emax = backEvent.signal;
     	  Emax = QDC;
 	  if(backEvent.channel < 0){cout << "OK..." << endl;}
     	  fImplantEBMaxStrip = 40 - (backEvent.channel - 183);	  
@@ -322,6 +322,7 @@ int main(int argc,char *argv[]){
       for(auto & ion : implantedIonList){
 	if(ion.implantOverlap(fImplantEFMaxStrip, fImplantEBMaxStrip)){
 	  foundOverlap = true;
+	  //implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
 	  implantedIonList.erase(implantedIonList.begin()+it);
 	}
 	else{
@@ -399,6 +400,7 @@ int main(int argc,char *argv[]){
     double curTime = eventHandler->GetBuffer().back().time;
     for(auto & ion : implantedIonList){
       if(curTime > 0 && (curTime - ion.getFrontImplant().time) > corrWindow ){
+	//implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
 	implantedIonList.erase(implantedIonList.begin()+it);
       }
       else{

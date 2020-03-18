@@ -17,6 +17,7 @@
 #include "histo.h"
 #include "RBDDarray.h"
 #include "RBDDTrace.h"
+#include "TCutG.h"
 //#include <TTree.h>
 //#include <TList.h>
 
@@ -39,9 +40,12 @@ protected:
 
 public:
   ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo);
+  //~ionCorrelator(){delete filter;}
   bool analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents);
 
   bool shouldDelete(){return abs(decayFront.time - implantFront.time) > corrWindow;}
+
+  void deleteFilter(){delete filterFile; delete filter;}
 
   int getCounts(){return counter;}
   Event getFrontImplant(){return implantFront;}
@@ -56,7 +60,7 @@ public:
   TFile * filterFile;
   TCutG * filter;
 
-  int maxNTraces = 5; //This is PER implant event
+  int maxNTraces = 2; //This is PER implant event
   int nTraces = 0;
 
   bool implantOverlap(int frontStrip, int backStrip){
