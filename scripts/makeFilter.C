@@ -30,7 +30,7 @@ void makeFilter(string dataName0, string outFile0, string gateName){
     TFile * outFile = new TFile(outfile.str().c_str(),"UPDATE");
 
     ostringstream gateName0;
-    gateName0 << "../Gates/" << gateName;
+    gateName0 << "../Gates/" << gateName << ".cut";
 
     ofstream txtVersion(gateName0.str());
 
