@@ -12,8 +12,9 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
 
   //traceFilter = new gatePar("Gates/realTrace.cut");
 
-  traceFilter.open("Gates/realTrace.cut");
+  //traceFilter.open("Gates/realTrace.cut");
   //traceFilter.open("Gates/testTrace.cut");
+  traceFilter.open("Gates/testTrace3.cut");
 
   //the below two lines are causing massive memory leak that is grinding processes to a halt...
   //need to figure out a solution for adding contours

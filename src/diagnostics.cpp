@@ -40,6 +40,19 @@ void diagnostics::count(std::string counterName){
 
 }
 
+void diagnostics::sub(std::string counterName){
+
+  for(auto & nCounter : list){
+    if( !nCounter.name.compare(counterName) ){ //returns 0 if true, so I want NOT of returned value
+	nCounter.n--;
+      }	
+  }
+  
+  //std::cout<< std::endl << "No matching counter found for " << counterName << std::endl;
+
+}
+
+
 void diagnostics::reset(std::string counterName){
 
   for(auto & nCounter : list){
@@ -49,6 +62,20 @@ void diagnostics::reset(std::string counterName){
   }
   
   //std::cout<< std::endl << "No matching counter found for " << counterName << std::endl;
+
+}
+
+long long int diagnostics::value(std::string counterName){
+
+
+  for(auto & nCounter : list){
+    if( !nCounter.name.compare(counterName) ){ //returns 0 if true, so I want NOT of returned value
+      return nCounter.n;
+      }	
+  }
+
+  std::cout<< std::endl << "No matching counter found for " << counterName << std::endl;
+  return 0;
 
 }
 

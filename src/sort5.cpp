@@ -130,8 +130,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
@@ -160,6 +160,7 @@ int main(int argc,char *argv[]){
   counterList.add("found70Kr");
   counterList.add("XFP_CFD");
   counterList.add("totalIon");
+  counterList.add("activeIon");
 
   /*****************************************
    
@@ -218,7 +219,7 @@ int main(int argc,char *argv[]){
   double lastTime = 0;
   bool alreadyTriggered = false;
 
-  double activeTime;
+  double activeTime = 0;
 
   for(long long int iEntry=0;iEntry<fNEntries;iEntry=lastEntry+1){
 
@@ -319,9 +320,13 @@ int main(int argc,char *argv[]){
       //check for overlaps
       int it= 0;
       bool foundOverlap = false;
+      double curTime2 = eventHandler->GetBuffer().back().time;
       for(auto & ion : implantedIonList){
+	double testTime = (curTime2 - ion.getFrontImplant().time);
 	if(ion.implantOverlap(fImplantEFMaxStrip, fImplantEBMaxStrip)){
 	  foundOverlap = true;
+	  if(testTime > 1E9){activeTime += testTime-1.0E9;} //trying to keep track of how long ionCorrelator's last
+	  else{counterList.sub("activeIon");}
 	  //implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
 	  implantedIonList.erase(implantedIonList.begin()+it);
 	}
@@ -344,6 +349,7 @@ int main(int argc,char *argv[]){
 
 
       if(foundOverlap){continue;}
+      counterList.count("activeIon");
       implantedIonList.push_back(ionOfInterest);
 	  
     } //end of original trigger
@@ -399,7 +405,9 @@ int main(int argc,char *argv[]){
     int it= 0;
     double curTime = eventHandler->GetBuffer().back().time;
     for(auto & ion : implantedIonList){
-      if(curTime > 0 && (curTime - ion.getFrontImplant().time) > corrWindow ){
+      double testTime = (curTime - ion.getFrontImplant().time);
+      if(curTime > 0 && testTime > corrWindow ){
+	if(testTime > 1E9){activeTime += testTime-1.0E9;}
 	//implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
 	implantedIonList.erase(implantedIonList.begin()+it);
       }
@@ -411,25 +419,31 @@ int main(int argc,char *argv[]){
     lastTime = curTime;
 
   } //end of loop over entries
+
+  //This is a bit more subtle... I need to make sure that I'm only averaging ion correlators with an active time > 1s
+  //If almost all are going that far then below will be OK, otherwise I need to be more careful
+  //I think I'm handling this properly now
+  activeTime = activeTime/double(counterList.value("activeIon"));
+  Histo->hDecayEnergyBackground->Scale(2.0E8/(activeTime)); //I want to scale background by TcutOff/Average Background Analysis Time
     
 
   
   Histo->write(); // this forces the histrograms to be read out to file
 
-  cout << "Total number of Ions of Interest found: " << counterList.returnValue("foundIon") << endl;
-  cout << "XFP counts: " << counterList.returnValue("XFP_CFD") << endl;
-  cout << "Total number of decay events found in correlation window: " << counterList.returnValue("decays") << endl;
+  cout << "Total number of Ions of Interest found: " << counterList.value("foundIon") << endl;
+  cout << "XFP counts: " << counterList.value("XFP_CFD") << endl;
+  cout << "Total number of decay events found in correlation window: " << counterList.value("decays") << endl;
   //cout << "Total number of decay events found in correlation window: " <<  << endl;
-  cout << "Total number of Ions lost in implantation (no strips): " << counterList.returnValue("lostIonNoImplantation") << endl;
-  cout << "Total number of Ions with one strip in implantation: " << counterList.returnValue("lostIonOneStripImplantation") << endl;
-  //cout << "Total number of Ions lost in decay: " << counterList.returnValue("foundIon") - counterList.returnValue("decays") - counterList.returnValue("lostIonNoImplantation")-counterList.returnValue("lostIonOneStripImplantation") << endl;
-  cout << "Decays lost to second Implantation: " << counterList.returnValue("lostIonSecondImplant") << endl;
-  //cout << "Total triggers: " << counterList.returnValue("foundIon") + counterList.returnValue("lostIonSecondImplant") << endl;
-  cout << "Implants Found in Wait Window: " << counterList.returnValue("ImplantWaitWindow") << endl;
-  cout << "found74Sr: " << counterList.returnValue("found74Sr") << endl;
-  cout << "found72Rb: " << counterList.returnValue("found72Rb") << endl;
-  cout << "found70Kr: " << counterList.returnValue("found70Kr") << endl;
-  cout << "average particle rate (Hz): " << counterList.returnValue("totalIon")/(lastTime-firstTime)*1E9 << endl;
+  cout << "Total number of Ions lost in implantation (no strips): " << counterList.value("lostIonNoImplantation") << endl;
+  cout << "Total number of Ions with one strip in implantation: " << counterList.value("lostIonOneStripImplantation") << endl;
+  //cout << "Total number of Ions lost in decay: " << counterList.value("foundIon") - counterList.value("decays") - counterList.value("lostIonNoImplantation")-counterList.value("lostIonOneStripImplantation") << endl;
+  cout << "Decays lost to second Implantation: " << counterList.value("lostIonSecondImplant") << endl;
+  //cout << "Total triggers: " << counterList.value("foundIon") + counterList.value("lostIonSecondImplant") << endl;
+  cout << "Implants Found in Wait Window: " << counterList.value("ImplantWaitWindow") << endl;
+  cout << "found74Sr: " << counterList.value("found74Sr") << endl;
+  cout << "found72Rb: " << counterList.value("found72Rb") << endl;
+  cout << "found70Kr: " << counterList.value("found70Kr") << endl;
+  cout << "average particle rate (Hz): " << counterList.value("totalIon")/(lastTime-firstTime)*1E9 << endl;
 
   cout << endl;
 
@@ -443,4 +457,4 @@ int main(int argc,char *argv[]){
   cout << endl;
 
   return 1; //cuz I'm old school
-}
+  }

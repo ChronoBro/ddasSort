@@ -25,7 +25,7 @@ void makeFilter(string dataName0, string outFile0, string gateName){
     filter = (TCutG*)c1->WaitPrimitive("CUTG");
     filter->SetName(gateName.c_str());
 
-    outfile << directory.str() << gateName;
+    outfile << directory.str() << gateName << ".root";
   
     TFile * outFile = new TFile(outfile.str().c_str(),"UPDATE");
 

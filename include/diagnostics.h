@@ -17,8 +17,10 @@ class diagnostics{
   diagnostics(std::vector<std::string> counts);
   
   void add(std::string counterName);
+  void sub(std::string counterName);
   void count(std::string counterName);
-  long long int returnValue(std::string counterName);
+  long long int value(std::string counterName);
+  long long int returnValue(std::string counterName); //deprecated
   void reset(std::string counterName);
 
  private:
