@@ -25,13 +25,15 @@ void makeGatesPID(string dataName0, string outFile0, string gateName){
     pidGate = (TCutG*)c1->WaitPrimitive("CUTG");
     pidGate->SetName(gateName.c_str());
 
-    outfile << directory.str() << gateName;
+    outfile << directory.str() << outFile0;
   
-    TFile * outFile = new TFile(outFile.str().c_str(),"UPDATE");
+    TFile * outFile = new TFile(outfile.str().c_str(),"UPDATE");
 
     pidGate->Write();
 
     outFile->Close();
+
+    cout << "written to file: " << outfile.str() << endl;
 
   }
   else{

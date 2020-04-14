@@ -34,7 +34,7 @@
 
 #include "TDataMember.h"
 
-// The generated code does not explicitly qualifies STL entities
+// The generated code does not explicitly qualify STL entities
 namespace std {} using namespace std;
 
 // Header files passed as explicit arguments
@@ -440,7 +440,7 @@ namespace {
 0
     };
     static const char* includePaths[] = {
-"/opt/root-build/include",
+"/opt/root-build/include/",
 "/home/hoff/ddasSort/",
 0
     };
@@ -449,7 +449,7 @@ namespace {
 #pragma clang diagnostic ignored "-Wkeyword-compat"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
-extern int __Cling_Autoloading_Map;
+extern int __Cling_AutoLoading_Map;
 class __attribute__((annotate("$clingAutoload$include/DDASEvent.h")))  ddaschannel;
 namespace std{template <typename _Tp> class __attribute__((annotate("$clingAutoload$bits/allocator.h")))  __attribute__((annotate("$clingAutoload$string")))  allocator;
 }
@@ -466,16 +466,16 @@ class __attribute__((annotate("$clingAutoload$include/DDASEvent.h")))  DDASEvent
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";
-    static const char* classesHeaders[]={
+    static const char* classesHeaders[] = {
 "DDASEvent", payloadCode, "@",
 "ddaschannel", payloadCode, "@",
-nullptr};
-
+nullptr
+};
     static bool isInitialized = false;
     if (!isInitialized) {
       TROOT::RegisterModule("DDASdict",
         headers, includePaths, payloadCode, fwdDeclCode,
-        TriggerDictionaryInitialization_DDASdict_Impl, {}, classesHeaders, /*has no C++ module*/false);
+        TriggerDictionaryInitialization_DDASdict_Impl, {}, classesHeaders, /*hasCxxModule*/false);
       isInitialized = true;
     }
   }

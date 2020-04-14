@@ -132,6 +132,7 @@ int main(int argc,char *argv[]){
   TCutG *fGate74Sr;
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
   fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Br"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
@@ -321,19 +322,19 @@ int main(int argc,char *argv[]){
       int it= 0;
       bool foundOverlap = false;
       double curTime2 = eventHandler->GetBuffer().back().time;
-      for(auto & ion : implantedIonList){
-	double testTime = (curTime2 - ion.getFrontImplant().time);
-	if(ion.implantOverlap(fImplantEFMaxStrip, fImplantEBMaxStrip)){
-	  foundOverlap = true;
-	  if(testTime > 1E9){activeTime += testTime-1.0E9;} //trying to keep track of how long ionCorrelator's last
-	  else{counterList.sub("activeIon");}
-	  //implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
-	  implantedIonList.erase(implantedIonList.begin()+it);
-	}
-	else{
-	it++;
-	}
-      }
+      // for(auto & ion : implantedIonList){
+      // 	double testTime = (curTime2 - ion.getFrontImplant().time);
+      // 	if(ion.implantOverlap(fImplantEFMaxStrip, fImplantEBMaxStrip)){
+      // 	  foundOverlap = true;
+      // 	  if(testTime > 1E9){activeTime += testTime-1.0E9;} //trying to keep track of how long ionCorrelator's last
+      // 	  else{counterList.sub("activeIon");}
+      // 	  //implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
+      // 	  implantedIonList.erase(implantedIonList.begin()+it);
+      // 	}
+      // 	else{
+      // 	it++;
+      // 	}
+      // } // 4/13/2020, turning this off to see if anything changes in 71Kr spectrum... it does! and thus background is different... but that's OK because we have a better background estimation now!
 
       
       if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
@@ -409,7 +410,7 @@ int main(int argc,char *argv[]){
       if(curTime > 0 && testTime > corrWindow ){
 	if(testTime > 1E9){activeTime += testTime-1.0E9;}
 	//implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
-	implantedIonList.erase(implantedIonList.begin()+it);
+	implantedIonList.erase(implantedIonList.begin()+it); 
       }
       else{
 	it++;
