@@ -83,6 +83,7 @@ class histo
   TH1D  *hDecayTimeEgate;
   TH1D  *hDecayEnergyTGate;
   TH1D  *hDecayEnergyTot_TGate;
+  TH1D  *hDecayEnergyAvg_TGate;
   TH1D  *hDecayEnergyTot_firstEvent;
   TH1D  *hDecayEnergy;
   TH1D  *hDecayEnergyBackground;
@@ -91,6 +92,7 @@ class histo
   TH1D  *hDecayEnergyAll;
   TH1D  *hDecayEnergyAmp;
   TH1D  *hGammaEnergy;
+  TH1D  *hGammaEnergy_R3events;
   TH2D  *hGammaVsDecayTGated;
   TH1D  *hPromptGammaEnergy;
   TH2D  *hGammaVsDecay;

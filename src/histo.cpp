@@ -84,7 +84,7 @@ void histo::histos(){
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PID_gated  = new TH2I("h_PID_gated","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
-  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",2000,0,2E9); // ms
+  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",5000,0,5E9); // ms
   hDecayTimeGS   = new TH1D("hDecayTimeGS","Implant-decay correlation time",2000,0,2E9); // ms
   hDecayTimeEx   = new TH1D("hDecayTimeEx","Implant-decay correlation time",2000,0,2E9); // ms
 
@@ -119,12 +119,14 @@ void histo::histos(){
   hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
+  hDecayEnergyAvg_TGate = new TH1D("hDecayEnergyAvg_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_firstEvent = new TH1D("hDecayEnergyTot_firstEvent","Decay energy (DSSD) first Event",10000,0,10000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hDecayEnergyBackground = new TH1D("hDecayEnergyBackground","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTotBackground = new TH1D("hDecayEnergyTotBackground","Decay energy (DSSD)",10000,0,10000);
 
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
+  hGammaEnergy_R3events = new TH1D("hGammaEnergy_R3events","SeGA gamma energy",10000,0,10000);
   hPromptGammaEnergy = new TH1D("hPromptGammaEnergy","SeGA gamma energy",10000,0,10000);
   hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayEtot = new TH2D("hGammaVsDecayEtot","Gamma E vs Decay E",1500,0,15000,10000,0,10000);

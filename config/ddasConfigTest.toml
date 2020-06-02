@@ -8,7 +8,7 @@ dataDir = "remote/root-files/" # Assumes NSCL ddasDumper + UnbuildData.C format
 #Also, don't forget the / at the end of directories!
 
 [Analysis]
-coinWindow = 5000 # 5us
+coinWindow = 8000  #5000 # 5us
 corrWindow = 5E9 # 5s
 stripTolerance = 3
 

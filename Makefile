@@ -21,6 +21,7 @@ objs:
 
 src/DDASdict.cpp: $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
 	rootcint -f src/DDASdict.cpp $(INCDIR)/DDASEvent.h $(INCDIR)/ddaschannel.h $(INCDIR)/LinkDef.h
+	mv src/DDASdict_rdict.pcm .
 
 objs/DDASdict.o: objs src/DDASdict.cpp
 
@@ -65,5 +66,5 @@ andyBuild: objs/andyBuild.o $(OBJECTS)
 
 
 clean:
-	rm -f $(OBJDIR)*.o src/*dict*
+	rm -f $(OBJDIR)*.o src/*dict* DDASdict_rdict.pcm
 

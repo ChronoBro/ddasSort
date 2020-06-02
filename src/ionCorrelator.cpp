@@ -45,8 +45,32 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
     //if(frontEvent.energy <1500){ //apparently I needed this low energy gate for the filter to only work on things that were actually BAD 9/22/2019
       RBDDTrace test2(frontEvent.trace);
-
+      test2.SetMSPS(100.); //so that time is correct on traces
       Histo->trace_vs_signal->Fill(test2.GetQDC(), frontEvent.signal);
+
+      // std::ostringstream nameMe;
+      // nameMe << "";
+      // if(test2.GetQDC() < 0 && frontEvent.signal > 20000. && frontEvent.signal < 25000){ 
+      // 	nameMe << "R1_trace-Energy_" << frontEvent.energy;
+      // }
+      // else if(test2.GetQDC() < 0 && frontEvent.signal > 27000.){
+      // 	nameMe << "R2_trace-Energy_" << frontEvent.energy;
+      // }
+      // else if(frontEvent.signal > 10000 && frontEvent.signal > 15000 && test2.GetQDC() > 300000. && test2.GetQDC() < 400000.){
+      // 	nameMe << "R3_trace-Energy_" << frontEvent.energy;
+      // 	// for(auto & gamma : segaEvents){
+      // 	//        Histo->hGammaEnergy_R3events->Fill(gamma.energy);
+      // 	// }
+    
+      // }
+	
+      // if(nTraces < maxNTraces && !nameMe.str().empty()){
+      // 	Histo->traceHistos.push_back((TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str())); //need to create an object for it to point to, so at least need a clone
+      // 	//Histo->traceHistos.push_back(test2.GetTraceHisto());
+      // 	//delete trace;
+      // 	nTraces++;
+      // }
+
 
       if( !traceFilter.isInside(test2.GetQDC(), frontEvent.signal))
       	{
@@ -118,7 +142,9 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
 	//only should really leave below on for beta-delayed proton emitters with no beta-gamma branch
 	//and for a small number of counts
-	if(frontEvent.energy < 1400 && nTraces < maxNTraces && decayTime < TCutoff){ 
+	//if(frontEvent.energy < 1400 && nTraces < maxNTraces && decayTime < TCutoff){ 
+	if(decayTime < 3E3 && nTraces < maxNTraces){
+	  //std::cout << "found a low decayTime event... must be a buffer issue" << std::endl;
 	  std::ostringstream nameMe;
 	  nameMe << "Energy-" << frontEvent.energy << "_fStrip-" << frontStrip << "_bStrip-" << backStrip<<"_base-" << test2.GetBaseline();
 	  //TH1D * trace= new TH1D; //need to create new block of memory for trace to be saved

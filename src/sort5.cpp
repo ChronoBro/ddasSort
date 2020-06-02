@@ -130,8 +130,8 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Br"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
@@ -214,10 +214,12 @@ int main(int argc,char *argv[]){
   long unsigned int oldIonNumber = 0;
 
   std::vector<ionCorrelator> decayIonList;
-
+  std::vector<Event> lastBufferHandled;
 
   double firstTime = 0;
   double lastTime = 0;
+  double curTime = 0;
+  double totalTime = 0;
   bool alreadyTriggered = false;
 
   double activeTime = 0;
@@ -373,6 +375,18 @@ int main(int argc,char *argv[]){
 	  backDecay = DSSDhiGainBack.maxE();
 
 
+	  for( auto & frontEvent : DSSDhiGainFront.getEventList() ){
+	    RBDDTrace test(frontEvent.trace);
+	    test.SetMSPS(100.); //so that time is correct on traces
+
+	    if(frontEvent.signal > 10000 && frontEvent.signal > 15000 && test.GetQDC() > 300000. && test.GetQDC() < 400000.){
+	      //nameMe << "R3_trace-Energy_" << frontEvent.energy;
+	      for(auto & gamma : SeGA.getEventList()){
+		Histo->hGammaEnergy_R3events->Fill(gamma.energy);
+	      }
+	    }
+
+	  }
 	  // RBDDTrace test(frontDecay.trace);
 	  // if(test.GetQDC() < -50000.){
 	  //   std::cout << "bad channel = " << frontDecay.channel << std::endl;
@@ -385,6 +399,8 @@ int main(int argc,char *argv[]){
 	      double TGate = 2E8;
 	      if(ion.getDecayTime() < TGate){
 		Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
+		double avg = (frontDecay.energy+backDecay.energy)/2.;
+		Histo->hDecayEnergyTot_TGate->Fill(avg);
 	      }
 	      else{
 		Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
@@ -404,7 +420,7 @@ int main(int argc,char *argv[]){
 
     //should check if correlator needs to be deleted if decayTime over corrWindow
     int it= 0;
-    double curTime = eventHandler->GetBuffer().back().time;
+    curTime = eventHandler->GetBuffer().back().time;
     for(auto & ion : implantedIonList){
       double testTime = (curTime - ion.getFrontImplant().time);
       if(curTime > 0 && testTime > corrWindow ){
@@ -417,9 +433,17 @@ int main(int argc,char *argv[]){
       }
     }
 
+    if(lastTime > curTime){
+      //cout << "Tree switch?" << endl;
+      totalTime += lastTime;
+    }
+
     lastTime = curTime;
+    lastBufferHandled = eventHandler->GetBuffer();
 
   } //end of loop over entries
+
+  totalTime += curTime;
 
   //This is a bit more subtle... I need to make sure that I'm only averaging ion correlators with an active time > 1s
   //If almost all are going that far then below will be OK, otherwise I need to be more careful
@@ -444,7 +468,7 @@ int main(int argc,char *argv[]){
   cout << "found74Sr: " << counterList.value("found74Sr") << endl;
   cout << "found72Rb: " << counterList.value("found72Rb") << endl;
   cout << "found70Kr: " << counterList.value("found70Kr") << endl;
-  cout << "average particle rate (Hz): " << counterList.value("totalIon")/(lastTime-firstTime)*1E9 << endl;
+  cout << "average particle rate (Hz): " << counterList.value("totalIon")/(totalTime)*1E9 << endl;
 
   cout << endl;
 
