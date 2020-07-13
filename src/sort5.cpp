@@ -99,7 +99,7 @@ int main(int argc,char *argv[]){
   
   cout << endl;
 
-  long long int fNEntries = dataChain.GetEntries(); //64bit int, because I was using int for the entries I wasn't able to access long lists, hence sort failing for a long list of data files
+  long long int fNEntries = dataChain.GetEntries(); //64bit int, because I was using int for the entries I wasn't able to access long lists, henceso rt failing for a long list of data files
 
   cout << "Number of entries in TChain = " << fNEntries << endl;
   cout << endl;
@@ -266,10 +266,6 @@ int main(int argc,char *argv[]){
       if(fGate72Rb->IsInside(curTOF,PIN1energy)){counterList.count("found72Rb");}
       if(fGate70Kr->IsInside(curTOF,PIN1energy)){counterList.count("found70Kr");}
 
-      // for( auto &SeGAEvent: SeGA.getEventList() ){
-      // 	Histo->hPromptGammaEnergy->Fill(SeGAEvent.energy);
-      // }
-
       double Emax = 0;
       Event frontImplant;
       for(auto &frontEvent : DSSDloGainFront.getEventList()){
@@ -342,6 +338,13 @@ int main(int argc,char *argv[]){
       if(!foundIonOfInterest){continue;} //only continue analysis if ion of interest is found
       counterList.count("foundIon");
 
+      for( auto &SeGAEvent: SeGA.getEventList() ){
+	// std::cout << "time diff... = " << SeGAEvent.time-implantTime << endl;
+	// std::cout << "energy = " << SeGAEvent.energy << endl;
+      	Histo->hGammaEvsImplantT->Fill(SeGAEvent.time - implantTime,SeGAEvent.energy);
+      }
+
+
       if(fImplantEFMaxStrip == -100 && fImplantEBMaxStrip == -100){counterList.count("lostIonNoImplantation");continue;} 
       if(fImplantEFMaxStrip == -100 || fImplantEBMaxStrip == -100){counterList.count("lostIonOneStripImplantation");continue;}
 
@@ -382,11 +385,13 @@ int main(int argc,char *argv[]){
 	    if(frontEvent.signal > 10000 && frontEvent.signal > 15000 && test.GetQDC() > 300000. && test.GetQDC() < 400000.){
 	      //nameMe << "R3_trace-Energy_" << frontEvent.energy;
 	      for(auto & gamma : SeGA.getEventList()){
-		Histo->hGammaEnergy_R3events->Fill(gamma.energy);
+	  	Histo->hGammaEnergy_R3events->Fill(gamma.energy);
 	      }
+	      break;
 	    }
 
 	  }
+
 	  // RBDDTrace test(frontDecay.trace);
 	  // if(test.GetQDC() < -50000.){
 	  //   std::cout << "bad channel = " << frontDecay.channel << std::endl;
@@ -396,7 +401,7 @@ int main(int argc,char *argv[]){
 	  for(auto & ion : implantedIonList){
 	    if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
 	      counterList.count("decays");
-	      double TGate = 2E8;
+	      double TGate = 5E8;
 	      if(ion.getDecayTime() < TGate){
 		Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
 		double avg = (frontDecay.energy+backDecay.energy)/2.;
@@ -418,9 +423,34 @@ int main(int argc,char *argv[]){
 	  
     } //end of second trigger
 
+
+    //quick bug fix would be to kill all ions if tree switch is observed...
+    //I know what that means... it will be a long-lasting bandaid
+    //moved below code above correlator removal 7/13/2020
+
+    curTime = eventHandler->GetBuffer().back().time;
+    if(lastTime > curTime){
+      //cout << "Tree switch?" << endl;
+      for(auto & ion: implantedIonList){
+	double testTime = (lastTime - ion.getFrontImplant().time);
+	if(testTime > 1E9){activeTime += testTime-1.0E9;}
+	if(testTime < 1E9){
+	  std::cout << "Dan there are background ions you aren't measuring so you should not trust scaled background" << std::endl;
+	}
+      }
+
+      implantedIonList.clear();
+
+      totalTime += lastTime;
+      eventHandler->GetBuffer().clear(); //will clearing this out cause those events to go away?
+    }
+
+
+    // 7/13/2020, Have identified bug that when trees switch the ions don't get killed because incorrect active time and keep filling spectra
+    //... very bad!
+
     //should check if correlator needs to be deleted if decayTime over corrWindow
     int it= 0;
-    curTime = eventHandler->GetBuffer().back().time;
     for(auto & ion : implantedIonList){
       double testTime = (curTime - ion.getFrontImplant().time);
       if(curTime > 0 && testTime > corrWindow ){
@@ -431,11 +461,6 @@ int main(int argc,char *argv[]){
       else{
 	it++;
       }
-    }
-
-    if(lastTime > curTime){
-      //cout << "Tree switch?" << endl;
-      totalTime += lastTime;
     }
 
     lastTime = curTime;
@@ -449,7 +474,7 @@ int main(int argc,char *argv[]){
   //If almost all are going that far then below will be OK, otherwise I need to be more careful
   //I think I'm handling this properly now
   activeTime = activeTime/double(counterList.value("activeIon"));
-  Histo->hDecayEnergyBackground->Scale(2.0E8/(activeTime)); //I want to scale background by TcutOff/Average Background Analysis Time
+  Histo->hDecayEnergyBackgroundScaled->Scale(5.0E8/(activeTime)); //I want to scale background by TcutOff/Average Background Analysis Time
     
 
   

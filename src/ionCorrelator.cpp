@@ -16,6 +16,24 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   //traceFilter.open("Gates/testTrace.cut");
   traceFilter.open("Gates/testTrace3.cut");
 
+  segaDelay[0] = 0.;
+  segaDelay[1] = 0.;
+  segaDelay[2] = 0.;
+  segaDelay[3] = 0.;
+  segaDelay[4] = 0.;
+  segaDelay[5] = 0.;
+  segaDelay[6] = 0.;
+  segaDelay[7] = 0.;
+  segaDelay[8] = 0.;
+  segaDelay[9] = 0.;
+  segaDelay[10] = 0.;
+  segaDelay[11] = 0.;
+  segaDelay[12] = 0.;
+  segaDelay[13] = 0.;
+  segaDelay[14] = 0.;
+  segaDelay[15] = 0.;
+
+
   //the below two lines are causing massive memory leak that is grinding processes to a halt...
   //need to figure out a solution for adding contours
   // filterFile = new TFile("root-files/filter.root");
@@ -71,7 +89,9 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
       // 	nTraces++;
       // }
 
-
+      /********************************
+      //remember to reinitiate this Dan!
+      *********************************/
       if( !traceFilter.isInside(test2.GetQDC(), frontEvent.signal))
       	{
       	  break;
@@ -92,7 +112,17 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  && backEvent.energy > Ethreshold
 	  ){
 
+
+	double decayTime = frontEvent.time-implantTime;	
+
+	if(decayTime <= 0){
+	  std::cout << "difference = " << decayTime << std::endl;
+	  std::cout << "implantTime = " << implantTime << std::endl;
+	  std::cout << "decayTime = " << frontEvent.time << std::endl;
+	}
+
 	Histo->hDecayTime->Fill(frontEvent.time-implantTime);
+	Histo->hDecayTimeLogAll->Fill(frontEvent.time-implantTime);
 	if(frontEvent.energy > 3000 && frontEvent.energy < 3800){
 	  Histo->hDecayTimeEx->Fill(frontEvent.time-implantTime);
 	}
@@ -100,16 +130,16 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  Histo->hDecayTimeGS->Fill(frontEvent.time-implantTime);
 	}
 
-
-	Histo->hDecayEnergy->Fill(frontEvent.energy);
+	//7/13/2020, there are a large number of "underflow" time events (<0) that are polluting the spectra
+	//My first step is to see the effect, then I will try to diagnose where they are coming from. 
+	if(decayTime>0)Histo->hDecayEnergy->Fill(frontEvent.energy);
 	//Histo->hDecayEnergyTot->Fill(frontDecayAddBack.energy);
 	//counterList.count("decays");
 	counter++;
     
-	double decayTime = frontEvent.time-implantTime;
-	double TCutoff = 2E8; //200ms
+	double TCutoff = 5E8; //500ms
 
-	if(decayTime < TCutoff){
+	if(decayTime < TCutoff && decayTime>0){
 	  //Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
 	  Histo->hDecayEnergyTGate->Fill(frontEvent.energy);
 	  for(auto & segaEvent : segaEvents){
@@ -117,46 +147,70 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	    Histo->hGammaVsDecayTGated->Fill(frontEvent.energy,segaEvent.energy);
 	    //if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
 	    Histo->hGammaEnergyG->Fill(segaEvent.energy);
+	    Histo->hGammaTvsDet->Fill(segaEvent.time-frontEvent.time,segaEvent.channel-16.);//to get offset to 0
 	    //}
+	    Histo->hGammaTvsDecayT->Fill((segaEvent.time-frontEvent.time),segaEvent.energy);
+	    for(auto & segaEvent2 : segaEvents){
+		if(segaEvent.energy == segaEvent2.energy)continue;
+		Histo->hGammaEvsGammaE->Fill(segaEvent.energy, segaEvent2.energy);
+		//Histo->hGammaEvsGammaE->Fill(segaEvent2.energy, segaEvent.energy);
+	    }
 	  }
-
 	}
+
+ 
 
 	for(auto & segaEvent : segaEvents){
 	  Histo->hGammaEnergy->Fill(segaEvent.energy);
 	  Histo->hGammaVsDecay->Fill(frontEvent.energy,segaEvent.energy);
 	}
 
+	if(decayTime < 0){
+	  Histo->hDecayEnergyBackgroundUnderflow->Fill(frontEvent.energy);
+	}
 
 	    
 	if(decayTime > 1E9){
 	  //Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
 	  Histo->hDecayEnergyBackground->Fill(frontEvent.energy);
+	  Histo->hDecayEnergyBackgroundScaled->Fill(frontEvent.energy);
+	}
+
+	if(secondEvent){
+	  if(decayTime < TCutoff && decayTime > 0) Histo->hDecayEnergy_secondEventTGate->Fill(frontEvent.energy);
+	  second = frontEvent;
+	  // std::cout << std::endl << "First Event Time = " << first.time << std::endl;
+	  // std::cout << std::endl << "Second Event Time = " << second.time << std::endl;
+	  // std::cout << std::endl << "Time difference between second and first is: " << second.time - first.time << std::endl;
 	}
 
 	if(firstEvent){
-	  //Histo->hDecayEnergyTot_firstEvent->Fill(frontDecayAddBack.energy);
+	  Histo->hDecayEnergy_firstEvent->Fill(frontEvent.energy);
+	  if(decayTime < TCutoff && decayTime > 0) Histo->hDecayEnergy_firstEventTGate->Fill(frontEvent.energy);
+	  if(decayTime > 1E9) Histo->hDecayEnergy_firstEventBackground->Fill(frontEvent.energy);
 	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
 	  firstEvent = false;
+	  secondEvent = true;
+	  first = frontEvent;
 	}
 
 	//only should really leave below on for beta-delayed proton emitters with no beta-gamma branch
 	//and for a small number of counts
 	//if(frontEvent.energy < 1400 && nTraces < maxNTraces && decayTime < TCutoff){ 
-	if(decayTime < 3E3 && nTraces < maxNTraces){
-	  //std::cout << "found a low decayTime event... must be a buffer issue" << std::endl;
-	  std::ostringstream nameMe;
-	  nameMe << "Energy-" << frontEvent.energy << "_fStrip-" << frontStrip << "_bStrip-" << backStrip<<"_base-" << test2.GetBaseline();
-	  //TH1D * trace= new TH1D; //need to create new block of memory for trace to be saved
-	  test2.SetMSPS(100.); //so that time is correct on traces
-	  //trace = (TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str());
-	  //Histo->traceHistos.push_back(trace);
-	  //test2.GetTraceHisto()->SetName(nameMe.str().c_str());
-	  Histo->traceHistos.push_back((TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str())); //need to create an object for it to point to, so at least need a clone
-	  //Histo->traceHistos.push_back(test2.GetTraceHisto());
-	  //delete trace;
-	  nTraces++;
-	}
+	// if(decayTime < 3E3 && nTraces < maxNTraces){
+	//   //std::cout << "found a low decayTime event... must be a buffer issue" << std::endl;
+	//   std::ostringstream nameMe;
+	//   nameMe << "Energy-" << frontEvent.energy << "_fStrip-" << frontStrip << "_bStrip-" << backStrip<<"_base-" << test2.GetBaseline();
+	//   //TH1D * trace= new TH1D; //need to create new block of memory for trace to be saved
+	//   test2.SetMSPS(100.); //so that time is correct on traces
+	//   //trace = (TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str());
+	//   //Histo->traceHistos.push_back(trace);
+	//   //test2.GetTraceHisto()->SetName(nameMe.str().c_str());
+	//   Histo->traceHistos.push_back((TH1D*)test2.GetTraceHisto()->Clone(nameMe.str().c_str())); //need to create an object for it to point to, so at least need a clone
+	//   //Histo->traceHistos.push_back(test2.GetTraceHisto());
+	//   //delete trace;
+	//   nTraces++;
+	// }
 	    
 	decayFront = frontEvent;
 	decayBack = backEvent;

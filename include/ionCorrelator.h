@@ -37,6 +37,9 @@ protected:
   int backImplantStrip = -100;
   int counter = 0.;
   bool firstEvent = true;
+  bool secondEvent = false;
+  Event first;
+  Event second;
   histo *Histo;
 
 public:
@@ -55,6 +58,7 @@ public:
   int getImplantBackStrip(){return backImplantStrip;}
 
   double getDecayTime(){return(decayFront.time-implantFront.time);}
+  double segaDelay[16];
 
   gatePar traceFilter;
   /* TFile * filterFile; */

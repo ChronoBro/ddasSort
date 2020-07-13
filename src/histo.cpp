@@ -111,6 +111,7 @@ void histo::histos(){
   //edges[0]=0;
 
   hDecayTimeLog   = new TH1D("hDecayTimeLog","Implant-decay correlation time log bins",Nbins,edges); // ms
+  hDecayTimeLogAll   = new TH1D("hDecayTimeLogAll","Implant-decay correlation time log bins",Nbins,edges); // ms
   hDecayTimeLogVsDecayEtot = new TH2D("hDecayTimeLogVsDecayEtot","time correlations with decay energy",10000,0,10000,Nbins,edges);
 
   hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",2000,0,2E9); // ms
@@ -121,8 +122,14 @@ void histo::histos(){
   hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyAvg_TGate = new TH1D("hDecayEnergyAvg_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_firstEvent = new TH1D("hDecayEnergyTot_firstEvent","Decay energy (DSSD) first Event",10000,0,10000);
+  hDecayEnergy_firstEvent = new TH1D("hDecayEnergy_firstEvent","Decay energy (DSSD) first Event",10000,0,10000);
+  hDecayEnergy_secondEventTGate = new TH1D("hDecayEnergy_secondEventTGate","Decay energy (DSSD) first Event",10000,0,10000);
+  hDecayEnergy_firstEventTGate = new TH1D("hDecayEnergy_firstEventTGate","Decay energy (DSSD) first Event",10000,0,10000);
+  hDecayEnergy_firstEventBackground = new TH1D("hDecayEnergy_firstEventBackground","Decay energy (DSSD) first Event",10000,0,10000);
   hDecayEnergyAmp = new TH1D("hDecayEnergyAmp","Decay energy (DSSD Amplitude calc.)",5000,0,5000);
   hDecayEnergyBackground = new TH1D("hDecayEnergyBackground","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergyBackgroundUnderflow = new TH1D("hDecayEnergyBackgroundUnderflow","Decay energy (DSSD)",10000,0,10000);
+  hDecayEnergyBackgroundScaled = new TH1D("hDecayEnergyBackgroundScaled","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTotBackground = new TH1D("hDecayEnergyTotBackground","Decay energy (DSSD)",10000,0,10000);
 
   hGammaEnergy = new TH1D("hGammaEnergy","SeGA gamma energy",10000,0,10000);
@@ -133,6 +140,10 @@ void histo::histos(){
   hGammaVsDecayTGated = new TH2D("hGammaVsDecayTGated","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayAll = new TH2D("hGammaVsDecayAll","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
+  hGammaTvsDecayT = new TH2D("hGammaTdecayTvsGammaE","gamma decayT vs gammaE",500,-2500,2500,10000,0,10000);
+  hGammaEvsImplantT = new TH2D("hGammaTimplantTvsGammaE","gamma implantT vs gammaE",500,-2500,2500,10000,0,10000);
+  hGammaTvsDet = new TH2D("hGammaTvsDet","gamma decay T vs det",500,-2500,2500,16,-0.5,15.5);
+  hGammaEvsGammaE = new TH2D("hGammaEvsGammaE","gamma decayT vs gammaE",10000,0,10000,10000,0,10000);
   
   //Is this matrix that much of a memory hog? memory usage more than doubles with this histogram, weird
   //gg_prompt = new TH2D("gamma-gamma prompt","gamma-gamma prompt",10000,0,10000,10000,0,10000);
@@ -148,6 +159,7 @@ void histo::histos(){
   calibratedSSDhiGain = new TH1D("calibratedSSDhiGainAll","SSD energy",10000,0,10000);
   rawScint = new TH1I("rawScint", "Raw Scintillator",(int)pow(2,10),0,pow(2,15));
 
+  hGammaVsTime = new TH2D("gammaVsTime","gammaVsTime",5000,0,5E9,10000,0,10000);
 }
 
 

@@ -79,14 +79,21 @@ class histo
   TH1D  *hDecayTimeGS;
   TH1D  *hDecayTimeEx;
   TH1D  *hDecayTimeLog;
+  TH1D  *hDecayTimeLogAll;
   TH2D  *hDecayTimeLogVsDecayEtot;
   TH1D  *hDecayTimeEgate;
   TH1D  *hDecayEnergyTGate;
   TH1D  *hDecayEnergyTot_TGate;
   TH1D  *hDecayEnergyAvg_TGate;
   TH1D  *hDecayEnergyTot_firstEvent;
+  TH1D  *hDecayEnergy_firstEvent;
+  TH1D  *hDecayEnergy_firstEventTGate;
+  TH1D  *hDecayEnergy_secondEventTGate;
+  TH1D  *hDecayEnergy_firstEventBackground;
   TH1D  *hDecayEnergy;
   TH1D  *hDecayEnergyBackground;
+  TH1D  *hDecayEnergyBackgroundUnderflow;
+  TH1D  *hDecayEnergyBackgroundScaled;
   TH1D  *hDecayEnergyTotBackground;
   TH1D  *hDecayEnergyTot;
   TH1D  *hDecayEnergyAll;
@@ -94,16 +101,22 @@ class histo
   TH1D  *hGammaEnergy;
   TH1D  *hGammaEnergy_R3events;
   TH2D  *hGammaVsDecayTGated;
+  TH2D  *hGammaEvsGammaE;;
   TH1D  *hPromptGammaEnergy;
   TH2D  *hGammaVsDecay;
+  TH2D  *hGammaTvsDecayT;
+  TH2D  *hGammaEvsImplantT;;
   TH2D  *hGammaVsDecayEtot;
   TH2D  *hGammaVsDecayAll;
+  TH2D * hGammaTvsDet;
   TH2D  *gg_prompt;
   TH1D  *hGammaEnergyG;
   TH2D  *hSeGAEnergy;
   TH1I  *rawSSDhiGain;
   TH1D  *calibratedSSDhiGain;
   TH1I  *rawScint;
+
+  TH2D  *hGammaVsTime;
 
   std::string name;
   
