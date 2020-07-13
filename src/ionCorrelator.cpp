@@ -115,11 +115,11 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
 	double decayTime = frontEvent.time-implantTime;	
 
-	if(decayTime <= 0){
-	  std::cout << "difference = " << decayTime << std::endl;
-	  std::cout << "implantTime = " << implantTime << std::endl;
-	  std::cout << "decayTime = " << frontEvent.time << std::endl;
-	}
+	// if(decayTime <= 0){
+	//   std::cout << "difference = " << decayTime << std::endl;
+	//   std::cout << "implantTime = " << implantTime << std::endl;
+	//   std::cout << "decayTime = " << frontEvent.time << std::endl;
+	// }
 
 	Histo->hDecayTime->Fill(frontEvent.time-implantTime);
 	Histo->hDecayTimeLogAll->Fill(frontEvent.time-implantTime);
