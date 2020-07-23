@@ -250,6 +250,11 @@ int main(int argc,char *argv[]){
 
       //eventHandler->Print(); //if you want a human-readable list of events
 
+      //just for testing
+      // for(auto & event : eventHandler->GetBuffer()){
+      // 	Histo->hTriggerTest->Fill(event.time - eventHandler->triggerTime);
+      // }
+
       foundTOF = TOF.getEvents().size() > 0; 
 
       if(foundTOF){ //check that TOF actually got filled
@@ -361,65 +366,71 @@ int main(int argc,char *argv[]){
     } //end of original trigger
     else if(eventHandler->isTriggered( triggerCondition ) ){
 	
-	lastEntry = eventHandler->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events
+      lastEntry = eventHandler->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events
 
-	Event frontDecay;
-	Event frontDecayAddBack;
-	Event backDecay;
+      //just for testing purposes
+      // for(auto & event : eventHandler->GetBuffer()){
+      // 	Histo->hTriggerTest->Fill(event.time - eventHandler->triggerTime);
+      // }
+
+
+      Event frontDecay;
+      Event frontDecayAddBack;
+      Event backDecay;
 	
-	bool foundFront = DSSDhiGainFront.getEventList().size() > 0;
-	bool foundBack = DSSDhiGainBack.getEventList().size() > 0;
-	bool implantEvent = PIN1.getEvents().size() > 0;
+      bool foundFront = DSSDhiGainFront.getEventList().size() > 0;
+      bool foundBack = DSSDhiGainBack.getEventList().size() > 0;
+      bool implantEvent = PIN1.getEvents().size() > 0;
 
-	//need to make sure that there is a DSSDfront and DSSDback event before analyzing
-	if(foundBack && foundFront && !implantEvent){
-	  frontDecay  = DSSDhiGainFront.maxE();
-	  frontDecayAddBack  = DSSDhiGainFront.addBack();
-	  backDecay = DSSDhiGainBack.maxE();
+      //need to make sure that there is a DSSDfront and DSSDback event before analyzing
+      if(foundBack && foundFront && !implantEvent){
+	frontDecay  = DSSDhiGainFront.maxE();
+	frontDecayAddBack  = DSSDhiGainFront.addBack();
+	backDecay = DSSDhiGainBack.maxE();
 
 
-	  for( auto & frontEvent : DSSDhiGainFront.getEventList() ){
-	    RBDDTrace test(frontEvent.trace);
-	    test.SetMSPS(100.); //so that time is correct on traces
+	for( auto & frontEvent : DSSDhiGainFront.getEventList() ){
+	  RBDDTrace test(frontEvent.trace);
+	  test.SetMSPS(100.); //so that time is correct on traces
 
-	    if(frontEvent.signal > 10000 && frontEvent.signal > 15000 && test.GetQDC() > 300000. && test.GetQDC() < 400000.){
-	      //nameMe << "R3_trace-Energy_" << frontEvent.energy;
-	      for(auto & gamma : SeGA.getEventList()){
-	  	Histo->hGammaEnergy_R3events->Fill(gamma.energy);
-	      }
-	      break;
+	  if(frontEvent.signal > 10000 && frontEvent.signal > 15000 && test.GetQDC() > 300000. && test.GetQDC() < 400000.){
+	    //nameMe << "R3_trace-Energy_" << frontEvent.energy;
+	    for(auto & gamma : SeGA.getEventList()){
+	      Histo->hGammaEnergy_R3events->Fill(gamma.energy);
 	    }
-
+	    break;
 	  }
 
-	  // RBDDTrace test(frontDecay.trace);
-	  // if(test.GetQDC() < -50000.){
-	  //   std::cout << "bad channel = " << frontDecay.channel << std::endl;
-	  //   eventHandler->Print();
-	  // }
+	}
 
-	  for(auto & ion : implantedIonList){
-	    if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
-	      counterList.count("decays");
-	      double TGate = 5E8;
-	      if(ion.getDecayTime() < TGate){
-		Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
-		double avg = (frontDecay.energy+backDecay.energy)/2.;
-		Histo->hDecayEnergyTot_TGate->Fill(avg);
-	      }
-	      else{
-		Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
-	      }
-	  
+	// RBDDTrace test(frontDecay.trace);
+	// if(test.GetQDC() < -50000.){
+	//   std::cout << "bad channel = " << frontDecay.channel << std::endl;
+	//   eventHandler->Print();
+	// }
+
+	for(auto & ion : implantedIonList){
+	  if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
+	    counterList.count("decays");
+	    double TGate = 5E8;
+	    if(ion.getDecayTime() < TGate){
+	      Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
+	      double avg = (frontDecay.energy+backDecay.energy)/2.;
+	      Histo->hDecayEnergyTot_TGate->Fill(avg);
+	    }
+	    else{
+	      Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
 	    }
 	  
 	  }
+	  
+	}
 	
 
-	}
-	else if(implantEvent){
-	  cout << "Dan you need to figure out a way to handle this" << endl;
-	}
+      }
+      else if(implantEvent){
+	cout << "Dan you need to figure out a way to handle this" << endl;
+      }
 	  
     } //end of second trigger
 

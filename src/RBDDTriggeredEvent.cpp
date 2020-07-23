@@ -313,6 +313,7 @@ long long int RBDDTriggeredEvent::FillBuffer(TChain &dataChain, long long int iE
   
     for(auto & bufferEvent : buffer ){
       double timeDiff = abs(fillerChannel->GetTimestamp()-bufferEvent.time);
+      //std::cout << "time diff = " << timeDiff << std::endl;
       if(timeDiff > fWindowWidth){buffer.erase( buffer.begin() );} 
       else{break;}
     }
@@ -427,7 +428,8 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
 
   //this should be a quick fix for the trigger not being put with the buffer
   //this would mean that the last event is improperly grouped and that should be fixed ultimately
-  if(buffer.back().time - triggerTime > fWindowWidth){ //I originally had fWindowWidth/2. ... this was dumb...
+  if(buffer.back().time - triggerTime > fWindowWidth/2.){ //I originally had fWindowWidth/2. ... this was dumb...
+                                                       //was it dumb? That is what I want...
     // Event trigger;
     // trigger.signal = triggerSignal;
     // trigger.time = triggerTime;
@@ -444,15 +446,42 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
   }
 
   //now that buffer shouldn't have extranous event at end we can pop off events from the front of the buffer
-  for(auto & bufferEvent : buffer ){
-      double timeDiff = abs(triggerTime-bufferEvent.time);
-      if(buffer.size() == 1){break;} //need to make sure there is always at least one thing in my buffer... or else calling it will segfault
-      if(timeDiff > fWindowWidth/2.){buffer.erase( buffer.begin() );} 
-      else{break;}
-    }
+  //need to make sure there is always at least one thing in my buffer... or else calling it will segfault
+  if(buffer.size() > 1){
+    // for(auto & bufferEvent : buffer ){
+    //   double timeDiff = abs(triggerTime-bufferEvent.time);
+    //   if(timeDiff < fWindowWidth/2.){break;}
+    //   else if(timeDiff > fWindowWidth/2.){buffer.erase( buffer.begin() );} 
+    // }
+    // 7/23/2020: Trying new algorithm for popping events off front. Seems to not be working as intended.
+
+    //auto it = buffer.begin();
+    int iEvent = 0;
+    while (iEvent != (int)buffer.size()-1)
+      {
+	// remove odd numbers
+	double testTime = buffer[iEvent].time;
+	if (abs(triggerTime - testTime) > fWindowWidth/2.) {
+	  // erase() invalidates the iterator, use returned iterator
+	  buffer.erase(buffer.begin()+iEvent);
+	}
+	else if(abs(triggerTime - testTime) < fWindowWidth/2.){
+	  break;
+	}
+	// Notice that iterator is incremented only on the else part (why?) DH: IDK found this online
+	// DH if I had to guess, its because when you erase the iterator has been shifted down so no need to increment
+	else {
+	  ++iEvent;
+	}
+      }
+    // 7/23/2020 OK above algorithm appears to work for filling buffer now....
+
+  }
+
   
 
   //if one calls FillBuffer first then the buffer should only have events from the first half of window
+  //not true Dan!
 
   //dump the buffer to the detectors so people can use it without having to call dumpBuffer() Dan!
   //nevermind... looks like pointers to RBDDdets aren't in scope here to it will segfault...

@@ -54,6 +54,7 @@ class histo
   TH2I  *h_raw_DSSD_hits;
   TH2I  *h_raw_DSSD_hitsMap;
   TH2I  *h_raw_DSSD_hitsXY;
+  TH1D  *hTriggerTest;
 
 // Energy calculated from trace amplitude
 //  TH2I  *h_raw_summary_A;
@@ -83,6 +84,7 @@ class histo
   TH2D  *hDecayTimeLogVsDecayEtot;
   TH1D  *hDecayTimeEgate;
   TH1D  *hDecayEnergyTGate;
+  TH1D  *hDecayEnergyTGateStrict;
   TH1D  *hDecayEnergyTot_TGate;
   TH1D  *hDecayEnergyAvg_TGate;
   TH1D  *hDecayEnergyTot_firstEvent;

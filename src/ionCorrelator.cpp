@@ -158,7 +158,9 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  }
 	}
 
- 
+	if(decayTime > 600 && decayTime < 6000){
+	  Histo->hDecayEnergyTGateStrict->Fill(frontEvent.energy);
+	}
 
 	for(auto & segaEvent : segaEvents){
 	  Histo->hGammaEnergy->Fill(segaEvent.energy);

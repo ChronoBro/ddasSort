@@ -80,6 +80,7 @@ void histo::histos(){
   h_raw_DSSD_hitsXY  = new TH2I("h_raw_DSSD_hitsXY", "DSSD hit pattern (xy position)",  40,-20,20,40,-20,20);
   h_raw_DSSD_hitsXY->GetXaxis()->SetTitle("x (mm)");
   h_raw_DSSD_hitsXY->GetYaxis()->SetTitle("y (mm)");
+  hTriggerTest = new TH1D("h_triggerTest", "triggerTest",2000,-10000,10000);
   
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PID_gated  = new TH2I("h_PID_gated","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
@@ -119,6 +120,7 @@ void histo::histos(){
   hDecayEnergyTot = new TH1D("hDecayEnergyTot","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyAll = new TH1D("hDecayEnergyAll","Decay energy (DSSD)",10000,0,10000);
   hDecayEnergyTGate = new TH1D("hDecayEnergyTGate","Decay energy (DSSD) time Gated",10000,0,10000);
+  hDecayEnergyTGateStrict = new TH1D("hDecayEnergyTGateStrict","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_TGate = new TH1D("hDecayEnergyTot_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyAvg_TGate = new TH1D("hDecayEnergyAvg_TGate","Decay energy (DSSD) time Gated",10000,0,10000);
   hDecayEnergyTot_firstEvent = new TH1D("hDecayEnergyTot_firstEvent","Decay energy (DSSD) first Event",10000,0,10000);
