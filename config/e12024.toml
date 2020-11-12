@@ -9,7 +9,7 @@ dataDir = "/home/EventData/e12024/root-files/" #"remote/root-files/" # Assumes N
 
 [Analysis]
 coinWindow = 5000 # 5us
-corrWindow = 40E9 # 20s
+corrWindow = 5E9 # 5s
 stripTolerance = 3
 
 #For detector arrays, by calling [[Arrays]] this will add to the list of Arrays
@@ -56,7 +56,3 @@ channel = 5
 [[Detectors]]
 name = "XFP"
 channel = 6
-
-[[Detectors]]
-name = "SCINT"
-channel = 15

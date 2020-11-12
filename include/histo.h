@@ -77,11 +77,13 @@ class histo
   TH2I  *hImplantXY;
   TH2I  *hDecayXY;
   TH1D  *hDecayTime;
+  TH1D  *hDecayTime_first_second;
   TH1D  *hDecayTimeGS;
   TH1D  *hDecayTimeEx;
   TH1D  *hDecayTimeLog;
   TH1D  *hDecayTimeLogAll;
-  TH2D  *hDecayTimeLogVsDecayEtot;
+  TH2D  *hDecayTime1LogVsDecayE1;
+  TH2D  *hDecayTime2LogVsDecayE2;
   TH1D  *hDecayTimeEgate;
   TH1D  *hDecayEnergyTGate;
   TH1D  *hDecayEnergyTGateStrict;
@@ -103,7 +105,9 @@ class histo
   TH1D  *hGammaEnergy;
   TH1D  *hGammaEnergy_R3events;
   TH2D  *hGammaVsDecayTGated;
-  TH2D  *hGammaEvsGammaE;;
+  TH2D  *hGammaVsDecayBackground;
+  TH2D  *hGammaEvsGammaE;
+  TH2D  *hGammaEvsGammaE_back;
   TH1D  *hPromptGammaEnergy;
   TH2D  *hGammaVsDecay;
   TH2D  *hGammaTvsDecayT;

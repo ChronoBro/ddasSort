@@ -459,20 +459,20 @@ long long int RBDDTriggeredEvent::GetCoinEvents(TChain &dataChain){
     int iEvent = 0;
     while (iEvent != (int)buffer.size()-1)
       {
-	// remove odd numbers
-	double testTime = buffer[iEvent].time;
-	if (abs(triggerTime - testTime) > fWindowWidth/2.) {
-	  // erase() invalidates the iterator, use returned iterator
-	  buffer.erase(buffer.begin()+iEvent);
-	}
-	else if(abs(triggerTime - testTime) < fWindowWidth/2.){
-	  break;
-	}
-	// Notice that iterator is incremented only on the else part (why?) DH: IDK found this online
-	// DH if I had to guess, its because when you erase the iterator has been shifted down so no need to increment
-	else {
-	  ++iEvent;
-	}
+    	// remove odd numbers
+    	double testTime = buffer[iEvent].time;
+    	if (abs(triggerTime - testTime) > fWindowWidth/2.) {
+    	  // erase() invalidates the iterator, use returned iterator
+    	  buffer.erase(buffer.begin()+iEvent);
+    	}
+    	else if(abs(triggerTime - testTime) < fWindowWidth/2.){
+    	  break;
+    	}
+    	// Notice that iterator is incremented only on the else part (why?) DH: IDK found this online
+    	// DH if I had to guess, its because when you erase the iterator has been shifted down so no need to increment
+    	else {
+    	  ++iEvent;
+    	}
       }
     // 7/23/2020 OK above algorithm appears to work for filling buffer now....
 

@@ -81,7 +81,8 @@ int main(int argc,char *argv[]){
   }
   else{
     cerr << "Example: ./sort5 ddasConfigTest 100 101 myOutputFile" << endl;
-    abort();
+    return 0;
+    //abort();
   }
 
   TChain dataChain("dchan"); //dchan is name of tree for ddasdumped files
@@ -125,24 +126,27 @@ int main(int argc,char *argv[]){
   
   // Load PID gate
 
-  TFile *fGateFile = new TFile("root-files/PIDGates2.root","READ");
+  TFile *fGateFile = new TFile("root-files/PIDGates3.root","READ");
   TCutG *fGate;          //! PID Gate
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Br"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Br"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   fGate74Sr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   fGate72Rb = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Rb")); 
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Kr")); 
-  fGate70Kr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr")); 
+  fGate70Kr = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr"));  //calling new twice on the same FindObjectAny is no good
+  //fGate = fGate70Kr; //cuz I'm lazy this is my fix...
 
   cout << "--> Loaded Gate: " << fGate->GetName() << endl << endl;
-  fGateFile->Close();
+  //fGateFile->Close();
 
 
   //creating diagnostics class for counting...
@@ -180,6 +184,7 @@ int main(int argc,char *argv[]){
   RBDDdet PIN1 = setup.getDet("PIN1");
   RBDDdet TOF = setup.getDet("TOF");
   RBDDdet XFP_CFD = setup.getDet("XFP");
+  RBDDdet SCINT = setup.getDet("SCINT");
 
   //clock ticks are in ns for DDAS
   double coinWindow2 = 10000;
@@ -208,7 +213,9 @@ int main(int argc,char *argv[]){
   eventHandler->activateArray(DSSDhiGainBack);
   eventHandler->activateArray(DSSDloGainFront);
   eventHandler->activateArray(DSSDloGainBack);
+  eventHandler->activateArray(SSD);
   eventHandler->activateDetector(XFP_CFD);
+  eventHandler->activateDetector(SCINT);
 
   std::vector<ionCorrelator> implantedIonList;
   long unsigned int oldIonNumber = 0;
@@ -236,17 +243,22 @@ int main(int argc,char *argv[]){
     
     if(eventHandler->isTriggered()){
 
+      lastEntry = eventHandler->GetCoinEvents(dataChain); //implant buffer will be filled with a list of coincidence Events
+      //double PIN1energy = eventHandler->triggerSignal;
+
+
+    IMPLANT:
       oldIonNumber = implantedIonList.size();
 
       bool foundTOF = false;
       bool foundIonOfInterest = false;
       double curTOF = 0;
-      double implantTime = eventHandler->triggerTime;
+      //double implantTime = eventHandler->triggerTime;
+      double implantTime = PIN1.getFillerEvent().signal;
       int fImplantEFMaxStrip = -100;
       int fImplantEBMaxStrip = -100;
 
-      lastEntry = eventHandler->GetCoinEvents(dataChain); //implant buffer will be filled with a list of coincidence Events
-      double PIN1energy = eventHandler->triggerSignal;
+      double PIN1energy = PIN1.getFillerEvent().signal;
 
       //eventHandler->Print(); //if you want a human-readable list of events
 
@@ -319,6 +331,18 @@ int main(int argc,char *argv[]){
       double Ethreshold=100.;
       double stripTolerance= setup.getStripTolerance();//2.;//3.;
 
+
+      //IF weird triggers are coming from implant signals then if I have a short wait time after implantation then it should be OK
+      // for(;iEntry<fNEntries;iEntry=lastEntry+1){
+      // 	lastEntry = eventHandler->FillBufferCoin(dataChain, iEntry);  
+      // 	double timeCheck =  eventHandler->GetBuffer().back().time - implantTime;
+      // 	eventHandler->Clear();
+      // 	eventHandler->GetBuffer().clear();
+      // 	//cout << timeCheck << endl;
+      // 	if( timeCheck > 2000 || eventHandler->GetBuffer().size() <2){ break;}
+      // }
+      
+
       ionCorrelator ionOfInterest(corrWindow, Ethreshold, stripTolerance, frontImplant, backImplant, Histo);       
 
       //check for overlaps
@@ -344,8 +368,8 @@ int main(int argc,char *argv[]){
       counterList.count("foundIon");
 
       for( auto &SeGAEvent: SeGA.getEventList() ){
-	// std::cout << "time diff... = " << SeGAEvent.time-implantTime << endl;
-	// std::cout << "energy = " << SeGAEvent.energy << endl;
+      	// std::cout << "time diff... = " << SeGAEvent.time-implantTime << endl;
+      	// std::cout << "energy = " << SeGAEvent.energy << endl;
       	Histo->hGammaEvsImplantT->Fill(SeGAEvent.time - implantTime,SeGAEvent.energy);
       }
 
@@ -369,9 +393,9 @@ int main(int argc,char *argv[]){
       lastEntry = eventHandler->GetCoinEvents(dataChain); //decay buffer will be filled with a list of coincidence Events
 
       //just for testing purposes
-      // for(auto & event : eventHandler->GetBuffer()){
-      // 	Histo->hTriggerTest->Fill(event.time - eventHandler->triggerTime);
-      // }
+      for(auto & event : eventHandler->GetBuffer()){
+      	Histo->hTriggerTest->Fill(event.time - eventHandler->triggerTime);
+      }
 
 
       Event frontDecay;
@@ -381,9 +405,12 @@ int main(int argc,char *argv[]){
       bool foundFront = DSSDhiGainFront.getEventList().size() > 0;
       bool foundBack = DSSDhiGainBack.getEventList().size() > 0;
       bool implantEvent = PIN1.getEvents().size() > 0;
+      bool punchThru = SSD.fired() || SCINT.fired();
 
       //need to make sure that there is a DSSDfront and DSSDback event before analyzing
-      if(foundBack && foundFront && !implantEvent){
+      if(foundBack && foundFront && !implantEvent && !punchThru){
+
+
 	frontDecay  = DSSDhiGainFront.maxE();
 	frontDecayAddBack  = DSSDhiGainFront.addBack();
 	backDecay = DSSDhiGainBack.maxE();
@@ -412,11 +439,14 @@ int main(int argc,char *argv[]){
 	for(auto & ion : implantedIonList){
 	  if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
 	    counterList.count("decays");
-	    double TGate = 5E8;
+	    double TGate = 20E9;
 	    if(ion.getDecayTime() < TGate){
 	      Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
+	      for(auto & gamma :SeGA.getEventList()){
+		Histo->hGammaVsDecayEtot->Fill(frontDecayAddBack.energy,gamma.energy);
+	      }
 	      double avg = (frontDecay.energy+backDecay.energy)/2.;
-	      Histo->hDecayEnergyTot_TGate->Fill(avg);
+	      Histo->hDecayEnergyAvg_TGate->Fill(avg);
 	    }
 	    else{
 	      Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
@@ -429,6 +459,7 @@ int main(int argc,char *argv[]){
 
       }
       else if(implantEvent){
+	goto IMPLANT; //quick fix (8/10/2020)? Ideally I should restructure my code to make the above code "methods" that can be called
 	cout << "Dan you need to figure out a way to handle this" << endl;
       }
 	  

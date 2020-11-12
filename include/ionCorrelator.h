@@ -61,6 +61,7 @@ public:
   double segaDelay[16];
 
   gatePar traceFilter;
+  gatePar gammaTimeFilter;
   /* TFile * filterFile; */
   /* TCutG * filter; */
 

@@ -85,14 +85,15 @@ void histo::histos(){
   h_PID        = new TH2I("h_PID","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PID_gated  = new TH2I("h_PID_gated","PID PIN1 Energy vs PIN2-XFP TAC", 1250,0,25000,(int)pow(2,10),0,pow(2,15));
   h_PIN1vsPIN2 = new TH2I("h_PIN1vsPIN2","PID PIN1 Energy vs PIN2 Energy", (int)pow(2,10),0,(int)pow(2,15),(int)pow(2,10),0,pow(2,15));
-  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",5000,0,5E9); // ms
+  hDecayTime   = new TH1D("hDecayTime","Implant-decay correlation time",10000,0,10E9); // ms
+  hDecayTime_first_second   = new TH1D("hDecayTime_first_second","Implant-decay correlation time",10000,0,10E9); // ms
   hDecayTimeGS   = new TH1D("hDecayTimeGS","Implant-decay correlation time",2000,0,2E9); // ms
   hDecayTimeEx   = new TH1D("hDecayTimeEx","Implant-decay correlation time",2000,0,2E9); // ms
 
   trace_vs_signal = new TH2D("trace_vs_signal","trace_vs_signal",2E4,-1E6,1E6,1000,-1E4,1E5);
 
   int Nbins = 500;
-  double maxT = 100E9; //2 seconds
+  double maxT = 100E9; //100 seconds
   double minT = 4;//ns, smallest adc channel
   double dx = log(maxT/minT)/double(Nbins);
   Double_t edges[Nbins+1];
@@ -113,7 +114,8 @@ void histo::histos(){
 
   hDecayTimeLog   = new TH1D("hDecayTimeLog","Implant-decay correlation time log bins",Nbins,edges); // ms
   hDecayTimeLogAll   = new TH1D("hDecayTimeLogAll","Implant-decay correlation time log bins",Nbins,edges); // ms
-  hDecayTimeLogVsDecayEtot = new TH2D("hDecayTimeLogVsDecayEtot","time correlations with decay energy",10000,0,10000,Nbins,edges);
+  hDecayTime1LogVsDecayE1 = new TH2D("hDecayTime1LogVsDecayE1","time correlations with decay energy",10000,0,10000,Nbins,edges);
+  hDecayTime2LogVsDecayE2 = new TH2D("hDecayTime2LogVsDecayE2","time correlations with decay energy",10000,0,10000,Nbins,edges);
 
   hDecayTimeEgate   = new TH1D("hDecayTimeEgate","Implant-decay correlation time energy gated",2000,0,2E9); // ms
   hDecayEnergy = new TH1D("hDecayEnergy","Decay energy (DSSD)",10000,0,10000);
@@ -140,12 +142,14 @@ void histo::histos(){
   hGammaVsDecay = new TH2D("hGammaVsDecay","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayEtot = new TH2D("hGammaVsDecayEtot","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayTGated = new TH2D("hGammaVsDecayTGated","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
+  hGammaVsDecayBackground = new TH2D("hGammaVsDecayBackground","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaVsDecayAll = new TH2D("hGammaVsDecayAll","Gamma E vs Decay E",1500,0,15000,10000,0,10000);
   hGammaEnergyG= new TH1D("hGammaEnergyG","SeGA gamma energy Gated",10000,0,10000);
   hGammaTvsDecayT = new TH2D("hGammaTdecayTvsGammaE","gamma decayT vs gammaE",500,-2500,2500,10000,0,10000);
-  hGammaEvsImplantT = new TH2D("hGammaTimplantTvsGammaE","gamma implantT vs gammaE",500,-2500,2500,10000,0,10000);
+  hGammaEvsImplantT = new TH2D("hGammaTimplantTvsGammaE","gamma implantT vs gammaE",1000,-5000,5000,10000,0,10000);
   hGammaTvsDet = new TH2D("hGammaTvsDet","gamma decay T vs det",500,-2500,2500,16,-0.5,15.5);
-  hGammaEvsGammaE = new TH2D("hGammaEvsGammaE","gamma decayT vs gammaE",10000,0,10000,10000,0,10000);
+  hGammaEvsGammaE = new TH2D("hGammaEvsGammaE","gammaE vs gammaE",10000,0,10000,10000,0,10000);
+  hGammaEvsGammaE_back = new TH2D("hGammaEvsGammaE_back","gammaE vs gammaE back",10000,0,10000,10000,0,10000);
   
   //Is this matrix that much of a memory hog? memory usage more than doubles with this histogram, weird
   //gg_prompt = new TH2D("gamma-gamma prompt","gamma-gamma prompt",10000,0,10000,10000,0,10000);

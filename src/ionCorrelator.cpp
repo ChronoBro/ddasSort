@@ -15,6 +15,7 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   //traceFilter.open("Gates/realTrace.cut");
   //traceFilter.open("Gates/testTrace.cut");
   traceFilter.open("Gates/testTrace3.cut");
+  gammaTimeFilter.open("Gates/gammaTimeCut.cut");
 
   segaDelay[0] = 0.;
   segaDelay[1] = 0.;
@@ -137,21 +138,23 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	//counterList.count("decays");
 	counter++;
     
-	double TCutoff = 5E8; //500ms
+	double TCutoff = 20E9; //20s
 
 	if(decayTime < TCutoff && decayTime>0){
 	  //Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
 	  Histo->hDecayEnergyTGate->Fill(frontEvent.energy);
 	  for(auto & segaEvent : segaEvents){
+	    Histo->hGammaTvsDecayT->Fill((segaEvent.time-frontEvent.time),segaEvent.energy);
+	    if( !gammaTimeFilter.isInside((segaEvent.time-frontEvent.time),segaEvent.energy) ) continue; //only consider gamma-rays within filter
 	    //Histo->hGammaEnergy->Fill(segaEvent.energy);
 	    Histo->hGammaVsDecayTGated->Fill(frontEvent.energy,segaEvent.energy);
 	    //if(frontDecayAddBack.energy > 3000 && frontDecayAddBack.energy < 3800){
 	    Histo->hGammaEnergyG->Fill(segaEvent.energy);
 	    Histo->hGammaTvsDet->Fill(segaEvent.time-frontEvent.time,segaEvent.channel-16.);//to get offset to 0
 	    //}
-	    Histo->hGammaTvsDecayT->Fill((segaEvent.time-frontEvent.time),segaEvent.energy);
 	    for(auto & segaEvent2 : segaEvents){
 		if(segaEvent.energy == segaEvent2.energy)continue;
+		if( abs(segaEvent.time - segaEvent2.time) > 200 ) continue;
 		Histo->hGammaEvsGammaE->Fill(segaEvent.energy, segaEvent2.energy);
 		//Histo->hGammaEvsGammaE->Fill(segaEvent2.energy, segaEvent.energy);
 	    }
@@ -172,15 +175,28 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	}
 
 	    
-	if(decayTime > 1E9){
+	if(decayTime > TCutoff){
 	  //Histo->hDecayEnergyTotBackground->Fill(frontDecayAddBack.energy);
 	  Histo->hDecayEnergyBackground->Fill(frontEvent.energy);
 	  Histo->hDecayEnergyBackgroundScaled->Fill(frontEvent.energy);
+	  for(auto & segaEvent : segaEvents){
+	    Histo->hGammaVsDecayBackground->Fill(frontEvent.energy, segaEvent.energy);
+	    if( !gammaTimeFilter.isInside((segaEvent.time-frontEvent.time),segaEvent.energy) ) continue; //only consider gamma-rays within filter
+	    for(auto & segaEvent2 : segaEvents){
+		if(segaEvent.energy == segaEvent2.energy)continue;
+		if( abs(segaEvent.time - segaEvent2.time) > 200 ) continue;
+		Histo->hGammaEvsGammaE_back->Fill(segaEvent.energy, segaEvent2.energy);
+	    }
+	  }
 	}
 
 	if(secondEvent){
-	  if(decayTime < TCutoff && decayTime > 0) Histo->hDecayEnergy_secondEventTGate->Fill(frontEvent.energy);
 	  second = frontEvent;
+	  if(decayTime < TCutoff && decayTime > 0){ 
+	    Histo->hDecayEnergy_secondEventTGate->Fill(frontEvent.energy);
+	  }
+	  Histo->hDecayTime_first_second->Fill(second.time-first.time);
+	  Histo->hDecayTime2LogVsDecayE2->Fill(frontEvent.energy,frontEvent.time-implantTime);
 	  // std::cout << std::endl << "First Event Time = " << first.time << std::endl;
 	  // std::cout << std::endl << "Second Event Time = " << second.time << std::endl;
 	  // std::cout << std::endl << "Time difference between second and first is: " << second.time - first.time << std::endl;
@@ -191,6 +207,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	  if(decayTime < TCutoff && decayTime > 0) Histo->hDecayEnergy_firstEventTGate->Fill(frontEvent.energy);
 	  if(decayTime > 1E9) Histo->hDecayEnergy_firstEventBackground->Fill(frontEvent.energy);
 	  Histo->hDecayTimeLog->Fill(frontEvent.time-implantTime);
+	  Histo->hDecayTime1LogVsDecayE1->Fill(frontEvent.energy,frontEvent.time-implantTime);
 	  firstEvent = false;
 	  secondEvent = true;
 	  first = frontEvent;
@@ -198,8 +215,8 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 
 	//only should really leave below on for beta-delayed proton emitters with no beta-gamma branch
 	//and for a small number of counts
-	//if(frontEvent.energy < 1400 && nTraces < maxNTraces && decayTime < TCutoff){ 
-	// if(decayTime < 3E3 && nTraces < maxNTraces){
+	// if(frontEvent.energy > 2900 && frontEvent.energy <3100 && nTraces < maxNTraces && decayTime < TCutoff){ 
+	//   //if(decayTime < 3E3 && nTraces < maxNTraces){
 	//   //std::cout << "found a low decayTime event... must be a buffer issue" << std::endl;
 	//   std::ostringstream nameMe;
 	//   nameMe << "Energy-" << frontEvent.energy << "_fStrip-" << frontStrip << "_bStrip-" << backStrip<<"_base-" << test2.GetBaseline();
