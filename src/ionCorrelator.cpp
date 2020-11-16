@@ -1,6 +1,6 @@
 #include "ionCorrelator.h"
 
-ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo0){
+ionCorrelator::ionCorrelator(double corrWindow0, double TGate0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo0){
   implantFront = implantFront0;
   implantBack = implantBack0;
   corrWindow = corrWindow0;
@@ -9,6 +9,7 @@ ionCorrelator::ionCorrelator(double corrWindow0, double Ethreshold0, double stri
   stripTolerance = stripTolerance0;
   frontImplantStrip = 40 - (implantFront.channel - 103);
   backImplantStrip = 40 - (implantBack.channel - 183);
+  TCutoff = TGate0;
 
   //traceFilter = new gatePar("Gates/realTrace.cut");
 
@@ -138,7 +139,7 @@ bool ionCorrelator::analyze(std::vector<Event> frontEvents, std::vector<Event> b
 	//counterList.count("decays");
 	counter++;
     
-	double TCutoff = 20E9; //20s
+	//double TCutoff = 20E9;//1E9;//20E9; //20s
 
 	if(decayTime < TCutoff && decayTime>0){
 	  //Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);

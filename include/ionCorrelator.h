@@ -41,9 +41,10 @@ protected:
   Event first;
   Event second;
   histo *Histo;
+  double TCutoff;
 
 public:
-  ionCorrelator(double corrWindow0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo);
+  ionCorrelator(double corrWindow0, double TGate0, double Ethreshold0, double stripTolerance0,  Event implantFront0, Event implantBack0, histo *Histo);
   //~ionCorrelator(){delete traceFilter;}
   bool analyze(std::vector<Event> frontEvents, std::vector<Event> backEvents, std::vector<Event> segaEvents);
 

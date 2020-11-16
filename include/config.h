@@ -24,6 +24,7 @@ class config{
 
   double getCoinWindow(){return coinWindow;}
   double getCorrWindow(){return corrWindow;}
+  double getTGate(){return TGate;}
   double getStripTolerance(){return stripTolerance;}
  
  private:
@@ -39,5 +40,6 @@ class config{
   double corrWindow = 0.;
   double coinWindow = 0.;
   double stripTolerance = 0.;
+  double TGate = 0.;
 
 };

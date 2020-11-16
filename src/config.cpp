@@ -136,6 +136,9 @@ config::config(std::string configName, int runStart, int runEnd, TChain &dataCha
 
     auto stripTol = config->get_qualified_as<double>("Analysis.stripTolerance");
     stripTolerance = *stripTol;
+
+    auto TG = config->get_qualified_as<double>("Analysis.TGate");
+    TGate = *TG;
     
 
   }

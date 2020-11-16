@@ -11,6 +11,7 @@ dataDir = "/home/EventData/e12024/root-files/" #"remote/root-files/" # Assumes N
 coinWindow = 5000 # 5us
 corrWindow = 40E9 # 20s
 stripTolerance = 3
+TGate = 20E9
 
 #For detector arrays, by calling [[Arrays]] this will add to the list of Arrays
 [[Arrays]]

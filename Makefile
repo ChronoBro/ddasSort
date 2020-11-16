@@ -12,7 +12,7 @@ CFLAGS= -c -fPIC -W -I$(shell root-config --incdir) -g -I$(INCDIR) #-std=c++11
 COMPILER= g++
 LINKOPTION = $(shell root-config --libs) -L./lib #-lddaschannel -Wl,-soname,libddaschannel.so,-rpath=/lib/libddaschannel.so
 
-all: sortPID sort5 sort5_gammaSearch#sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
+all: sortPID sort5 #sort5_gammaSearch#sort4_v3 sort4_v2 sort4 sort3_v2 sort3_v3 #sort3 sort3_v2 sort3_v3 sort4 #sortDev sort sort2 
 
 root:  objs src/DDASdict.cpp
 

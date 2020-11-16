@@ -192,6 +192,7 @@ int main(int argc,char *argv[]){
 
   double coinWindow = setup.getCoinWindow();
   double corrWindow = setup.getCorrWindow();
+  double TGate = setup.getTGate();
 
   // RBDDTriggeredEvent requires virtual RRBDDChannel type
   // This was done because the event handler should not have to
@@ -343,7 +344,7 @@ int main(int argc,char *argv[]){
       // }
       
 
-      ionCorrelator ionOfInterest(corrWindow, Ethreshold, stripTolerance, frontImplant, backImplant, Histo);       
+      ionCorrelator ionOfInterest(corrWindow, TGate, Ethreshold, stripTolerance, frontImplant, backImplant, Histo);       
 
       //check for overlaps
       int it= 0;
@@ -405,7 +406,7 @@ int main(int argc,char *argv[]){
       bool foundFront = DSSDhiGainFront.getEventList().size() > 0;
       bool foundBack = DSSDhiGainBack.getEventList().size() > 0;
       bool implantEvent = PIN1.getEvents().size() > 0;
-      bool punchThru = SSD.fired() || SCINT.fired();
+      bool punchThru = SCINT.fired();//SSD.fired() || ;
 
       //need to make sure that there is a DSSDfront and DSSDback event before analyzing
       if(foundBack && foundFront && !implantEvent && !punchThru){
@@ -439,7 +440,7 @@ int main(int argc,char *argv[]){
 	for(auto & ion : implantedIonList){
 	  if( ion.analyze(DSSDhiGainFront.getEventList(), DSSDhiGainBack.getEventList(), SeGA.getEventList()) ){
 	    counterList.count("decays");
-	    double TGate = 20E9;
+	    //double TGate = 20E9;//1E9;//20E9;
 	    if(ion.getDecayTime() < TGate){
 	      Histo->hDecayEnergyTot_TGate->Fill(frontDecayAddBack.energy);
 	      for(auto & gamma :SeGA.getEventList()){
