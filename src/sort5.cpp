@@ -131,10 +131,10 @@ int main(int argc,char *argv[]){
   TCutG *fGate72Rb;
   TCutG *fGate70Kr;
   TCutG *fGate74Sr;
-  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
+  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Kr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_73Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_71Br"));
-  fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Br"));
+  //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Br"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_70Kr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_74Sr"));
   //fGate = new TCutG(*(TCutG*)fGateFile->FindObjectAny("cut_72Rb"));
@@ -497,7 +497,7 @@ int main(int argc,char *argv[]){
     for(auto & ion : implantedIonList){
       double testTime = (curTime - ion.getFrontImplant().time);
       if(curTime > 0 && testTime > corrWindow ){
-	if(testTime > 1E9){activeTime += testTime-1.0E9;}
+	if(testTime > TGate){activeTime += testTime-TGate;}
 	//implantedIonList[it].deleteFilter();//to handle ROOT's memory properly...
 	implantedIonList.erase(implantedIonList.begin()+it); 
       }
@@ -517,7 +517,7 @@ int main(int argc,char *argv[]){
   //If almost all are going that far then below will be OK, otherwise I need to be more careful
   //I think I'm handling this properly now
   activeTime = activeTime/double(counterList.value("activeIon"));
-  Histo->hDecayEnergyBackgroundScaled->Scale(5.0E8/(activeTime)); //I want to scale background by TcutOff/Average Background Analysis Time
+  Histo->hDecayEnergyBackgroundScaled->Scale(TGate/(activeTime)); //I want to scale background by TcutOff/Average Background Analysis Time
     
 
   
